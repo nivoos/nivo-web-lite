@@ -50,6 +50,7 @@ component_management:
     - component_id: platform
       name: platform
       paths:
+        - "be/src/modules/domain/crm-backup/**"
         - "be/src/modules/platform/*/**"
         - "be/src/modules/projections/*/**"
     - component_id: package-nivo-web-lite-shared

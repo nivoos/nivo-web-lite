@@ -26,7 +26,26 @@
           "provider": "postgres"
         }
       ],
-      "optionalSlots": ["be.contract.openapi"]
+      "optionalSlots": ["be.contract.openapi"],
+      "dbFunctions": [
+        {
+          "name": "public.crm_backup_tables",
+          "reason": "CRM backup: the fixed list of backup tables in restore order, one source for export and restore"
+        },
+        {
+          "name": "public.crm_backup_page",
+          "reason": "CRM backup (format @2): a generic column-for-column table copy with ids and the database-set timestamps kept, which an entity cannot express (one page as JSON rows)"
+        },
+        {
+          "name": "public.crm_backup_count",
+          "reason": "CRM backup (format @2): a generic column-for-column table copy with ids and the database-set timestamps kept, which an entity cannot express (the row count of a listed table)"
+        },
+        {
+          "name": "public.crm_backup_insert",
+          "reason": "CRM backup (format @2): a generic column-for-column table copy with ids and the database-set timestamps kept, which an entity cannot express (the insert of JSON rows as exported)"
+        }
+      ],
+      "patterns": []
     },
     "packages": {}
   }
