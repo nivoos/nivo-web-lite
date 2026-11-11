@@ -62,3 +62,37 @@ export class InvoiceDraftResponse implements InvoiceDraftView {
     @ApiProperty({ type: String, enum: ["placeholder", "price_sheet"] })
     readonly priceSource!: InvoiceDraftView["priceSource"]
 }
+
+/** A VAT invoice of the workspace. */
+export class WorkspaceInvoiceResponse {
+    /** The 8-digit number. */
+    @ApiProperty({ type: String, maxLength: 8 })
+    readonly invoiceNo!: string
+
+    /** Issued on. */
+    @ApiProperty({ type: String, format: "date", nullable: true })
+    readonly issuedOn!: string | null
+
+    /** Amount, whole VND; null when the source has none. */
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly amountVnd!: number | null
+
+    /** True when the PDF is in the documents folder. */
+    @ApiProperty({ type: Boolean })
+    readonly hasDocument!: boolean
+
+    /** The customer code the source wrote; null when it wrote none. */
+    @ApiProperty({ type: String, maxLength: 80, nullable: true })
+    readonly customerCode!: string | null
+}
+
+/** One page of the workspace's VAT invoices. */
+export class WorkspaceInvoicePageResponse {
+    /** The invoices of this page. */
+    @ApiProperty({ type: WorkspaceInvoiceResponse, isArray: true, maxItems: 50 })
+    readonly items!: ReadonlyArray<WorkspaceInvoiceResponse>
+
+    /** The cursor of the next page; null on the last page. */
+    @ApiProperty({ type: String, maxLength: 2048, nullable: true })
+    readonly nextCursor!: string | null
+}

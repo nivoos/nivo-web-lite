@@ -417,3 +417,33 @@ export class DocumentLinkResponse {
     @ApiProperty({ type: String, format: "date-time" })
     readonly expiresAt!: string
 }
+
+/** How many rows of one table are in one state. */
+export class StateCountResponse {
+    /** The state (service status, renewal state, ticket status) as stored. */
+    @ApiProperty({ type: String, maxLength: 40 })
+    readonly state!: string
+
+    /** The number of rows in it. */
+    @ApiProperty({ type: "integer", minimum: 0 })
+    readonly count!: number
+}
+
+/** The per-state counts of the workspace for the workbench; VAT invoices carry no state in the books and are counted whole. */
+export class StateCountsResponse {
+    /** Services by status. */
+    @ApiProperty({ type: StateCountResponse, isArray: true, maxItems: 20 })
+    readonly services!: ReadonlyArray<StateCountResponse>
+
+    /** Renewal requests by state. */
+    @ApiProperty({ type: StateCountResponse, isArray: true, maxItems: 20 })
+    readonly renewals!: ReadonlyArray<StateCountResponse>
+
+    /** Tickets by status. */
+    @ApiProperty({ type: StateCountResponse, isArray: true, maxItems: 20 })
+    readonly tickets!: ReadonlyArray<StateCountResponse>
+
+    /** The number of VAT invoices. */
+    @ApiProperty({ type: "integer", minimum: 0 })
+    readonly invoices!: number
+}

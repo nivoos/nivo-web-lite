@@ -1855,6 +1855,59 @@
         "properties": {},
         "type": "object"
       },
+      "StateCountResponse": {
+        "properties": {
+          "count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "state": {
+            "maxLength": 40,
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "count"
+        ],
+        "type": "object"
+      },
+      "StateCountsResponse": {
+        "properties": {
+          "invoices": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "renewals": {
+            "items": {
+              "$ref": "#/components/schemas/StateCountResponse"
+            },
+            "maxItems": 20,
+            "type": "array"
+          },
+          "services": {
+            "items": {
+              "$ref": "#/components/schemas/StateCountResponse"
+            },
+            "maxItems": 20,
+            "type": "array"
+          },
+          "tickets": {
+            "items": {
+              "$ref": "#/components/schemas/StateCountResponse"
+            },
+            "maxItems": 20,
+            "type": "array"
+          }
+        },
+        "required": [
+          "services",
+          "renewals",
+          "tickets",
+          "invoices"
+        ],
+        "type": "object"
+      },
       "TicketNoteResponse": {
         "properties": {
           "author": {
@@ -2133,6 +2186,61 @@
         },
         "required": [
           "author"
+        ],
+        "type": "object"
+      },
+      "WorkspaceInvoicePageResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceInvoiceResponse"
+            },
+            "maxItems": 50,
+            "type": "array"
+          },
+          "nextCursor": {
+            "maxLength": 2048,
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "type": "object"
+      },
+      "WorkspaceInvoiceResponse": {
+        "properties": {
+          "amountVnd": {
+            "format": "int64",
+            "nullable": true,
+            "type": "integer"
+          },
+          "customerCode": {
+            "maxLength": 80,
+            "nullable": true,
+            "type": "string"
+          },
+          "hasDocument": {
+            "type": "boolean"
+          },
+          "invoiceNo": {
+            "maxLength": 8,
+            "type": "string"
+          },
+          "issuedOn": {
+            "format": "date",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "invoiceNo",
+          "issuedOn",
+          "amountVnd",
+          "hasDocument",
+          "customerCode"
         ],
         "type": "object"
       }
@@ -3307,6 +3415,94 @@
         "x-crm-effect": "read"
       }
     },
+    "/v1/invoices": {
+      "get": {
+        "operationId": "invoice.list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "maxLength": 2048,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "customerCode",
+            "required": false,
+            "schema": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "issuedFrom",
+            "required": false,
+            "schema": {
+              "format": "date",
+              "maxLength": 10,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "issuedTo",
+            "required": false,
+            "schema": {
+              "format": "date",
+              "maxLength": 10,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceInvoicePageResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "serviceKey": []
+          }
+        ],
+        "summary": "List the workspace's VAT invoices by number, optionally of one customer code and an issue period.",
+        "tags": [
+          "invoice"
+        ],
+        "x-crm-effect": "read"
+      }
+    },
     "/v1/payables": {
       "get": {
         "operationId": "payable.list",
@@ -4266,6 +4462,44 @@
         "summary": "Get a service's state from its provider plugin (manual: a person checks; fixture: the CRM's own row, nothing called).",
         "tags": [
           "service"
+        ],
+        "x-crm-effect": "read"
+      }
+    },
+    "/v1/summary/counts": {
+      "get": {
+        "operationId": "summary.count.get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StateCountsResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "serviceKey": []
+          }
+        ],
+        "summary": "Count the workspace's services, renewals and tickets per state, and its VAT invoices.",
+        "tags": [
+          "customer"
         ],
         "x-crm-effect": "read"
       }

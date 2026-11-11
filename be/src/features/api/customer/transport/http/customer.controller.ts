@@ -12,6 +12,7 @@ import { ListCustomerContractsQuery } from "../../application/list-customer-cont
 import { ListCustomerInvoicesQuery } from "../../application/list-customer-invoices.query"
 import { ListCustomerDocumentsQuery } from "../../application/list-customer-documents.query"
 import { GetCustomerDocumentLinkQuery } from "../../application/get-customer-document-link.query"
+import { GetStateCountsQuery } from "../../application/get-state-counts.query"
 import { GetCustomerBalanceQuery } from "../../application/get-customer-balance.query"
 import { LinkContactCommand } from "../../application/link-contact.command"
 import {
@@ -30,6 +31,7 @@ import {
     DocumentLinkResponse,
     DocumentPageResponse,
     InvoicePageResponse,
+    StateCountsResponse,
 } from "./dto/customer.response"
 import {
     toBalanceRequest,
@@ -204,5 +206,17 @@ export class CustomerController {
         return this.queryBus.execute(
             new GetCustomerDocumentLinkQuery({ request: toDocumentLinkRequest(workspaceId, path, query) }),
         )
+    }
+
+    /** `summary.count.get`: The per-state counts of the workspace (services, renewals, tickets) and its number of VAT invoices. */
+    @Get("v1/summary/counts")
+    @CrmOperation({
+        id: "summary.count.get",
+        summary: "Count the workspace's services, renewals and tickets per state, and its VAT invoices.",
+        response: StateCountsResponse,
+        effect: "read",
+    })
+    counts(@CrmWorkspace() workspaceId: string): Promise<StateCountsResponse> {
+        return this.queryBus.execute(new GetStateCountsQuery({ request: workspaceId }))
     }
 }
