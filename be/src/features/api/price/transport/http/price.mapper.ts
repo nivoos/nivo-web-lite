@@ -1,9 +1,10 @@
 import { toPageInput } from "@modules/platform/pagination"
-import type { PriceListInput } from "@modules/domain/crm"
-import type { PageRequest } from "@modules/platform/openapi"
+import type { PriceListInput } from "../../application/list-prices.query"
+import type { ListPricesRequest } from "./dto/price.request"
 
 /** The request of `price.list`. */
-export const toListRequest = (workspaceId: string, query: PageRequest): PriceListInput => ({
+export const toListRequest = (workspaceId: string, query: ListPricesRequest): PriceListInput => ({
     workspaceId,
+    kind: query.kind,
     page: toPageInput(query),
 })

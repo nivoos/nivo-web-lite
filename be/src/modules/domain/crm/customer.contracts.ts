@@ -252,4 +252,14 @@ export interface StateCounts {
     readonly tickets: ReadonlyArray<StateCount>
     /** VAT invoices. */
     readonly invoices: number
+    /** Purchases (NEW sales) by state. */
+    readonly purchases: ReadonlyArray<StateCount>
+    /** Customers of the books. */
+    readonly customers: number
+    /** Contracts of the register. */
+    readonly contracts: number
+    /** Receivables with something still owed. */
+    readonly openReceivables: number
+    /** TK331 payable balances. */
+    readonly payables: number
 }

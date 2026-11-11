@@ -28,6 +28,37 @@ export interface PriceView {
     readonly priceSource: PriceSource
 }
 
+/** Whether a price row sells something NEW or renews what a customer has. */
+export type PriceKind = "new" | "renewal"
+
+/** One row of the price table, as `price.list` shows it and a quote prices from it. */
+export interface PriceRowView {
+    /** The row's code: what a quote names. */
+    readonly priceCode: string
+    /** The row's name. */
+    readonly name: string
+    /** A NEW sale or a renewal. */
+    readonly kind: PriceKind
+    /** The service class, or `website` for a website build. */
+    readonly serviceClass: ServiceClass | "website"
+    /** The term priced, months; null for a one-time row (a website build). */
+    readonly termMonths: number | null
+    /** The one-time set-up price, whole VND before VAT (0 when none). */
+    readonly setupVnd: number
+    /** The term's price, whole VND before VAT (0 for a one-time row). */
+    readonly netVnd: number
+    /** VAT rate, percent. */
+    readonly vatRatePercent: number
+    /** VAT of set-up plus term, whole VND. */
+    readonly vatVnd: number
+    /** What the customer pays for one, whole VND. */
+    readonly totalVnd: number
+    /** The instalments as percents of the total, in order (terms as data; one instalment of 100 when the row has no terms). */
+    readonly instalmentPercents: ReadonlyArray<number>
+    /** placeholder until the owner's price sheet is loaded. */
+    readonly priceSource: PriceSource
+}
+
 /** A renewal request. */
 export interface RenewalView {
     /** The id. */
@@ -140,6 +171,8 @@ export interface RenewalOutcomeInput extends RenewalKey {
 export interface PriceListInput {
     /** The workspace (prices are per workspace once the sheet is loaded). */
     readonly workspaceId: string
+    /** Only the rows of this kind: a NEW sale or a renewal; null: both. */
+    readonly kind: PriceKind | null
     /** The page. */
     readonly page: PageInput
 }

@@ -37,8 +37,6 @@ export type {
     InvoiceDraftCreateInput,
     InvoiceDraftKey,
     InvoiceDraftView,
-    PriceListInput,
-    PriceView,
     QuoteInput,
     RenewalExecuteInput,
     RenewalKey,
@@ -67,3 +65,4 @@ export type {
     TicketView,
 } from "./ticket.contracts"
 export { TicketsService } from "./tickets.service"
+export { PurchasesService } from "./purchases.service"

@@ -64,6 +64,20 @@ export enum CrmErrorCode {
     ImportItemInvalid = "CRM_IMPORT_ITEM_INVALID",
     /** An item names a customer (by code) the snapshot does not hold (`entity`, `field` param). */
     ImportReferenceUnknown = "CRM_IMPORT_REFERENCE_UNKNOWN",
+    /** No purchase with this id in the workspace. */
+    PurchaseNotFound = "CRM_PURCHASE_NOT_FOUND",
+    /** The purchase's state does not allow this step (`state` param). */
+    PurchaseStateRefused = "CRM_PURCHASE_STATE_REFUSED",
+    /** A quote names a price row (or a term of it) the table does not have (`priceCode` param). */
+    PriceNotFound = "CRM_PRICE_NOT_FOUND",
+    /** A quote names a PLACEHOLDER price row: no quote before the owner's price sheet (`priceCode` param). */
+    PricePlaceholder = "CRM_PRICE_PLACEHOLDER",
+    /** The quote is past its last valid day (`validUntil` param). */
+    QuoteExpired = "CRM_QUOTE_EXPIRED",
+    /** A customer with this tax id, phone or mail exists (`customerCode` param: its code). */
+    CustomerExists = "CRM_CUSTOMER_EXISTS",
+    /** The bank row already proved another renewal or purchase (`transactionRef` param). */
+    TransactionRefUsed = "CRM_TRANSACTION_REF_USED",
 }
 
 /** How each CRM code travels. */
@@ -99,6 +113,13 @@ export const CRM_ERROR_KINDS: Record<CrmErrorCode, ErrorKind> = {
     [CrmErrorCode.ImportFileInvalid]: "invalid",
     [CrmErrorCode.ImportItemInvalid]: "invalid",
     [CrmErrorCode.ImportReferenceUnknown]: "invalid",
+    [CrmErrorCode.PurchaseNotFound]: "not-found",
+    [CrmErrorCode.PurchaseStateRefused]: "conflict",
+    [CrmErrorCode.PriceNotFound]: "invalid",
+    [CrmErrorCode.PricePlaceholder]: "conflict",
+    [CrmErrorCode.QuoteExpired]: "conflict",
+    [CrmErrorCode.CustomerExists]: "conflict",
+    [CrmErrorCode.TransactionRefUsed]: "conflict",
 }
 
 /** The one error class of the CRM capability. */

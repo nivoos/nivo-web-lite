@@ -19,7 +19,7 @@ import {
     RenewalRequestEntity,
     ServiceEntity,
 } from "./persistence/entities"
-import { paymentCodeOf, priceOf, priceTable } from "./price.policy"
+import { paymentCodeOf, priceOf } from "./price.policy"
 import {
     NOT_RENEWABLE_STATUSES,
     OPEN_RENEWAL_STATES,
@@ -29,8 +29,6 @@ import {
 } from "./renewal-state.policy"
 import { isReplay, requestHashOf } from "./request-key.policy"
 import type {
-    PriceListInput,
-    PriceView,
     QuoteInput,
     RenewalExecuteInput,
     RenewalKey,
@@ -59,21 +57,6 @@ export class RenewalsService {
         @InjectIds() private readonly ids: Ids,
         @InjectRenewalProvider() private readonly providers: RenewalProviderService,
     ) {}
-
-    /** The price table (PLACEHOLDER until the owner's sheet is loaded), by class then term. */
-    listPrices(input: PriceListInput): Promise<Page<PriceView>> {
-        const limit = pageSizeOf(input.page.limit)
-        const after = decodeCursor(LISTS.prices, input.page.cursor, 1)?.[0]
-        const table = priceTable()
-        const start =
-            after === undefined
-                ? 0
-                : table.findIndex((price) => `${price.serviceClass}:${price.termMonths}` === after) + 1
-        const rows = table.slice(start, start + limit + 1)
-        return Promise.resolve(
-            pageOf(LISTS.prices, rows, limit, (row) => [`${row.serviceClass}:${row.termMonths}`], rows.slice(0, limit)),
-        )
-    }
 
     /** Opens a renewal request on the customer's yes: computes the total and the transfer code; a repeat of the key answers the same request. */
     quote(input: QuoteInput): Promise<RenewalView> {
@@ -121,7 +104,7 @@ export class RenewalsService {
                 vatVnd: price.vatVnd,
                 totalVnd: price.totalVnd,
                 priceSource: price.priceSource,
-                paymentCode: paymentCodeOf(id),
+                paymentCode: paymentCodeOf(id, "GH"),
                 transactionRef: null,
                 paidAt: null,
                 plugin: null,

@@ -1,17 +1,33 @@
 import { ApiProperty } from "@nestjs/swagger"
-import type { PriceView } from "@modules/domain/crm"
+import type { PriceRow } from "../../../application/list-prices.query"
 
-/** One price of the table (PLACEHOLDER until the owner's price sheet is loaded). */
-export class PriceResponse implements PriceView {
-    /** The service class. */
-    @ApiProperty({ type: String, enum: ["hosting", "domain", "ssl"] })
-    readonly serviceClass!: PriceView["serviceClass"]
+/** One row of the price table (PLACEHOLDER until the owner's price sheet is loaded). */
+export class PriceResponse implements PriceRow {
+    /** The row's code: what a quote names. */
+    @ApiProperty({ type: String, maxLength: 80 })
+    readonly priceCode!: string
 
-    /** The term, months. */
-    @ApiProperty({ type: "integer", minimum: 1, maximum: 120 })
-    readonly termMonths!: number
+    /** The row's name. */
+    @ApiProperty({ type: String, maxLength: 200 })
+    readonly name!: string
 
-    /** Before VAT. Whole VND. */
+    /** A NEW sale or a renewal. */
+    @ApiProperty({ type: String, enum: ["new", "renewal"] })
+    readonly kind!: PriceRow["kind"]
+
+    /** The service class, or `website` for a website build. */
+    @ApiProperty({ type: String, enum: ["hosting", "domain", "ssl", "website"] })
+    readonly serviceClass!: PriceRow["serviceClass"]
+
+    /** The term priced, months; null for a one-time row. */
+    @ApiProperty({ type: "integer", minimum: 1, maximum: 120, nullable: true })
+    readonly termMonths!: number | null
+
+    /** The one-time set-up price. Whole VND before VAT. */
+    @ApiProperty({ type: "integer", format: "int64" })
+    readonly setupVnd!: number
+
+    /** The term's price. Whole VND before VAT. */
     @ApiProperty({ type: "integer", format: "int64" })
     readonly netVnd!: number
 
@@ -23,18 +39,22 @@ export class PriceResponse implements PriceView {
     @ApiProperty({ type: "integer", format: "int64" })
     readonly vatVnd!: number
 
-    /** What the customer pays. Whole VND. */
+    /** What the customer pays for one. Whole VND. */
     @ApiProperty({ type: "integer", format: "int64" })
     readonly totalVnd!: number
 
+    /** The instalments, percents of the total, in order (terms as data). */
+    @ApiProperty({ type: "integer", isArray: true, maxItems: 12 })
+    readonly instalmentPercents!: ReadonlyArray<number>
+
     /** placeholder until the owner's price sheet is loaded. */
     @ApiProperty({ type: String, enum: ["placeholder", "price_sheet"] })
-    readonly priceSource!: PriceView["priceSource"]
+    readonly priceSource!: PriceRow["priceSource"]
 }
 
-/** One page of prices. */
+/** One page of price rows. */
 export class PricePageResponse {
-    /** The prices of this page. */
+    /** The rows of this page. */
     @ApiProperty({ type: PriceResponse, isArray: true, maxItems: 50 })
     readonly items!: ReadonlyArray<PriceResponse>
 

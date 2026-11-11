@@ -4,8 +4,9 @@ import { ApiTags } from "@nestjs/swagger"
 import { CrmWorkspace } from "@modules/domain/crm"
 import { Credential } from "@modules/domain/identity"
 import { InjectQueryBus } from "@modules/platform/cqrs"
-import { CrmOperation, PageRequest } from "@modules/platform/openapi"
+import { CrmOperation } from "@modules/platform/openapi"
 import { ListPricesQuery } from "../../application/list-prices.query"
+import { ListPricesRequest } from "./dto/price.request"
 import { PricePageResponse } from "./dto/price.response"
 import { toListRequest } from "./price.mapper"
 
@@ -21,12 +22,12 @@ export class PriceController {
     @CrmOperation({
         id: "price.list",
         summary:
-            "List the renewal price table per service class and term (PLACEHOLDER until the owner's price sheet is loaded).",
+            "List the price table by price code: NEW-sale and renewal rows (PLACEHOLDER until the owner's price sheet is loaded).",
         response: PricePageResponse,
         effect: "read",
         customerAudience: { parameter: null },
     })
-    list(@CrmWorkspace() workspaceId: string, @Query() query: PageRequest): Promise<PricePageResponse> {
+    list(@CrmWorkspace() workspaceId: string, @Query() query: ListPricesRequest): Promise<PricePageResponse> {
         return this.queryBus.execute(new ListPricesQuery({ request: toListRequest(workspaceId, query) }))
     }
 }

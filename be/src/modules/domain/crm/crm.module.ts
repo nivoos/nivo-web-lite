@@ -11,6 +11,9 @@ import { InvoiceDraftsService } from "./invoice-drafts.service"
 import { RenewalsService } from "./renewals.service"
 import { ServicesBookService } from "./services-book.service"
 import { TicketsService } from "./tickets.service"
+import { PurchasesService } from "./purchases.service"
+import { CRM_PRICE_TABLE } from "./crm.decorators"
+import { priceRows } from "./price.policy"
 
 /** The domain services of the capability. */
 const SERVICES = [
@@ -22,6 +25,7 @@ const SERVICES = [
     InvoiceDraftsService,
     CrmCredentialService,
     CrmImportService,
+    PurchasesService,
 ]
 
 @Module({})
@@ -35,6 +39,7 @@ export class CrmModule extends ConfigurableModuleClass {
             providers: [
                 ...(base.providers ?? []),
                 ...SERVICES,
+                { provide: CRM_PRICE_TABLE, useFactory: priceRows },
                 OperatorOutputClient,
                 SnapshotFilesClient,
                 SnapshotExportService,

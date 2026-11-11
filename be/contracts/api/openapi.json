@@ -1,6 +1,50 @@
 {
   "components": {
     "schemas": {
+      "AcceptanceResponse": {
+        "properties": {
+          "contractNo": {
+            "maxLength": 120,
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean"
+          },
+          "firstInstalmentVnd": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "paymentCode": {
+            "maxLength": 20,
+            "type": "string"
+          },
+          "projectCode": {
+            "maxLength": 120,
+            "nullable": true,
+            "type": "string"
+          },
+          "purchase": {
+            "$ref": "#/components/schemas/PurchaseResponse"
+          },
+          "serviceCodes": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "type": "array"
+          }
+        },
+        "required": [
+          "dryRun",
+          "purchase",
+          "projectCode",
+          "contractNo",
+          "serviceCodes",
+          "paymentCode",
+          "firstInstalmentVnd"
+        ],
+        "type": "object"
+      },
       "AccessGrantResponse": {
         "properties": {
           "accessToken": {
@@ -204,6 +248,52 @@
         ],
         "type": "object"
       },
+      "CreateCustomerRequest": {
+        "properties": {
+          "address": {
+            "maxLength": 500,
+            "nullable": true,
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "company",
+              "person"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string"
+          },
+          "phone": {
+            "maxLength": 40,
+            "nullable": true,
+            "type": "string"
+          },
+          "purchaseId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "taxId": {
+            "maxLength": 20,
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "purchaseId",
+          "kind",
+          "name"
+        ],
+        "type": "object"
+      },
       "CreateInvoiceDraftRequest": {
         "properties": {
           "renewalId": {
@@ -213,6 +303,77 @@
         },
         "required": [
           "renewalId"
+        ],
+        "type": "object"
+      },
+      "CreatePurchaseQuoteRequest": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/QuoteItemRequest"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "CreatePurchaseRequest": {
+        "properties": {
+          "channel": {
+            "enum": [
+              "zalo",
+              "email",
+              "phone",
+              "web",
+              "other"
+            ],
+            "type": "string"
+          },
+          "contactName": {
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          },
+          "customerCode": {
+            "maxLength": 80,
+            "nullable": true,
+            "type": "string"
+          },
+          "domain": {
+            "maxLength": 253,
+            "nullable": true,
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          },
+          "need": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "phone": {
+            "maxLength": 40,
+            "nullable": true,
+            "type": "string"
+          },
+          "sourceRef": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "sourceRef",
+          "need"
         ],
         "type": "object"
       },
@@ -287,6 +448,18 @@
           "channel",
           "subject",
           "summary"
+        ],
+        "type": "object"
+      },
+      "CustomerCreatedResponse": {
+        "properties": {
+          "customerCode": {
+            "maxLength": 80,
+            "type": "string"
+          }
+        },
+        "required": [
+          "customerCode"
         ],
         "type": "object"
       },
@@ -760,6 +933,45 @@
           "reminderCount",
           "openReminder",
           "openRenewalId"
+        ],
+        "type": "object"
+      },
+      "FollowUpResponse": {
+        "properties": {
+          "channel": {
+            "enum": [
+              "zalo",
+              "email",
+              "phone",
+              "web",
+              "other"
+            ],
+            "type": "string"
+          },
+          "day": {
+            "format": "date",
+            "type": "string"
+          },
+          "messageRef": {
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "sent",
+              "answered",
+              "no_answer",
+              "declined"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "day",
+          "channel",
+          "outcome",
+          "messageRef"
         ],
         "type": "object"
       },
@@ -1261,9 +1473,31 @@
       },
       "PriceResponse": {
         "properties": {
+          "instalmentPercents": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 12,
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "new",
+              "renewal"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "type": "string"
+          },
           "netVnd": {
             "format": "int64",
             "type": "integer"
+          },
+          "priceCode": {
+            "maxLength": 80,
+            "type": "string"
           },
           "priceSource": {
             "enum": [
@@ -1276,13 +1510,19 @@
             "enum": [
               "hosting",
               "domain",
-              "ssl"
+              "ssl",
+              "website"
             ],
             "type": "string"
+          },
+          "setupVnd": {
+            "format": "int64",
+            "type": "integer"
           },
           "termMonths": {
             "maximum": 120,
             "minimum": 1,
+            "nullable": true,
             "type": "integer"
           },
           "totalVnd": {
@@ -1300,13 +1540,381 @@
           }
         },
         "required": [
+          "priceCode",
+          "name",
+          "kind",
           "serviceClass",
           "termMonths",
+          "setupVnd",
           "netVnd",
           "vatRatePercent",
           "vatVnd",
           "totalVnd",
+          "instalmentPercents",
           "priceSource"
+        ],
+        "type": "object"
+      },
+      "PurchaseResponse": {
+        "properties": {
+          "acceptedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "channel": {
+            "enum": [
+              "zalo",
+              "email",
+              "phone",
+              "web",
+              "other"
+            ],
+            "type": "string"
+          },
+          "code": {
+            "maxLength": 12,
+            "type": "string"
+          },
+          "contactName": {
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          },
+          "contractNo": {
+            "maxLength": 120,
+            "nullable": true,
+            "type": "string"
+          },
+          "customerCode": {
+            "maxLength": 80,
+            "nullable": true,
+            "type": "string"
+          },
+          "domain": {
+            "maxLength": 253,
+            "nullable": true,
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          },
+          "followUps": {
+            "items": {
+              "$ref": "#/components/schemas/FollowUpResponse"
+            },
+            "maxItems": 200,
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "need": {
+            "maxLength": 4000,
+            "type": "string"
+          },
+          "note": {
+            "maxLength": 1000,
+            "nullable": true,
+            "type": "string"
+          },
+          "paidAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "paymentCode": {
+            "maxLength": 20,
+            "nullable": true,
+            "type": "string"
+          },
+          "phone": {
+            "maxLength": 40,
+            "nullable": true,
+            "type": "string"
+          },
+          "projectCode": {
+            "maxLength": 120,
+            "nullable": true,
+            "type": "string"
+          },
+          "quote": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuoteResponse"
+              }
+            ],
+            "nullable": true,
+            "type": "object"
+          },
+          "sourceRef": {
+            "maxLength": 200,
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "enquiry",
+              "quoted",
+              "awaiting_payment",
+              "paid",
+              "pending_person",
+              "delivered",
+              "lost",
+              "cancelled"
+            ],
+            "type": "string"
+          },
+          "transactionRef": {
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "state",
+          "channel",
+          "sourceRef",
+          "need",
+          "contactName",
+          "phone",
+          "email",
+          "domain",
+          "customerCode",
+          "quote",
+          "paymentCode",
+          "transactionRef",
+          "paidAt",
+          "acceptedAt",
+          "projectCode",
+          "contractNo",
+          "note",
+          "followUps"
+        ],
+        "type": "object"
+      },
+      "PurchaseSummaryPageResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseSummaryResponse"
+            },
+            "maxItems": 50,
+            "type": "array"
+          },
+          "nextCursor": {
+            "maxLength": 2048,
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "type": "object"
+      },
+      "PurchaseSummaryResponse": {
+        "properties": {
+          "channel": {
+            "enum": [
+              "zalo",
+              "email",
+              "phone",
+              "web",
+              "other"
+            ],
+            "type": "string"
+          },
+          "code": {
+            "maxLength": 12,
+            "type": "string"
+          },
+          "customerCode": {
+            "maxLength": 80,
+            "nullable": true,
+            "type": "string"
+          },
+          "followUpCount": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "lastFollowUpOn": {
+            "format": "date",
+            "nullable": true,
+            "type": "string"
+          },
+          "openFollowUp": {
+            "type": "boolean"
+          },
+          "quotedOn": {
+            "format": "date",
+            "nullable": true,
+            "type": "string"
+          },
+          "reachable": {
+            "type": "boolean"
+          },
+          "sourceRef": {
+            "maxLength": 200,
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "enquiry",
+              "quoted",
+              "awaiting_payment",
+              "paid",
+              "pending_person",
+              "delivered",
+              "lost",
+              "cancelled"
+            ],
+            "type": "string"
+          },
+          "validUntil": {
+            "format": "date",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "state",
+          "channel",
+          "sourceRef",
+          "customerCode",
+          "quotedOn",
+          "validUntil",
+          "lastFollowUpOn",
+          "followUpCount",
+          "openFollowUp",
+          "reachable"
+        ],
+        "type": "object"
+      },
+      "QuoteItemRequest": {
+        "properties": {
+          "priceCode": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          },
+          "quantity": {
+            "maximum": 100,
+            "minimum": 1,
+            "nullable": true,
+            "type": "integer"
+          },
+          "termMonths": {
+            "maximum": 120,
+            "minimum": 1,
+            "nullable": true,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "priceCode"
+        ],
+        "type": "object"
+      },
+      "QuoteLineResponse": {
+        "properties": {
+          "amountVnd": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 200,
+            "type": "string"
+          },
+          "priceCode": {
+            "maxLength": 80,
+            "type": "string"
+          },
+          "quantity": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "termMonths": {
+            "nullable": true,
+            "type": "integer"
+          },
+          "unitPriceVnd": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "priceCode",
+          "name",
+          "termMonths",
+          "quantity",
+          "unitPriceVnd",
+          "amountVnd"
+        ],
+        "type": "object"
+      },
+      "QuoteResponse": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/QuoteLineResponse"
+            },
+            "maxItems": 20,
+            "type": "array"
+          },
+          "netVnd": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "priceSource": {
+            "enum": [
+              "placeholder",
+              "price_sheet"
+            ],
+            "type": "string"
+          },
+          "quotedOn": {
+            "format": "date",
+            "type": "string"
+          },
+          "totalVnd": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "validUntil": {
+            "format": "date",
+            "type": "string"
+          },
+          "vatRatePercent": {
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "vatVnd": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "lines",
+          "netVnd",
+          "vatRatePercent",
+          "vatVnd",
+          "totalVnd",
+          "priceSource",
+          "quotedOn",
+          "validUntil"
         ],
         "type": "object"
       },
@@ -1444,6 +2052,55 @@
         ],
         "type": "object"
       },
+      "RecordAcceptanceRequest": {
+        "properties": {
+          "customerCode": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "customerCode"
+        ],
+        "type": "object"
+      },
+      "RecordFollowUpRequest": {
+        "properties": {
+          "channel": {
+            "enum": [
+              "zalo",
+              "email",
+              "phone",
+              "web",
+              "other"
+            ],
+            "type": "string"
+          },
+          "messageRef": {
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "sent",
+              "answered",
+              "no_answer",
+              "declined"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "outcome"
+        ],
+        "type": "object"
+      },
       "RecordNoticeRequest": {
         "properties": {
           "channel": {
@@ -1487,6 +2144,45 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "RecordPurchaseOutcomeRequest": {
+        "properties": {
+          "confirmedBy": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string"
+          },
+          "note": {
+            "maxLength": 1000,
+            "nullable": true,
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "delivered",
+              "cancelled"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "outcome",
+          "confirmedBy"
+        ],
+        "type": "object"
+      },
+      "RecordPurchasePaymentRequest": {
+        "properties": {
+          "transactionRef": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "transactionRef"
+        ],
         "type": "object"
       },
       "RecordReceivablePaymentRequest": {
@@ -1874,9 +2570,32 @@
       },
       "StateCountsResponse": {
         "properties": {
+          "contracts": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "customers": {
+            "minimum": 0,
+            "type": "integer"
+          },
           "invoices": {
             "minimum": 0,
             "type": "integer"
+          },
+          "openReceivables": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "payables": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "purchases": {
+            "items": {
+              "$ref": "#/components/schemas/StateCountResponse"
+            },
+            "maxItems": 20,
+            "type": "array"
           },
           "renewals": {
             "items": {
@@ -1904,7 +2623,12 @@
           "services",
           "renewals",
           "tickets",
-          "invoices"
+          "invoices",
+          "purchases",
+          "customers",
+          "contracts",
+          "openReceivables",
+          "payables"
         ],
         "type": "object"
       },
@@ -2158,6 +2882,48 @@
       },
       "TokenRequest": {
         "properties": {},
+        "type": "object"
+      },
+      "UpdatePurchaseRequest": {
+        "properties": {
+          "contactName": {
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          },
+          "domain": {
+            "maxLength": 253,
+            "nullable": true,
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          },
+          "need": {
+            "maxLength": 4000,
+            "nullable": true,
+            "type": "string"
+          },
+          "note": {
+            "maxLength": 1000,
+            "nullable": true,
+            "type": "string"
+          },
+          "phone": {
+            "maxLength": 40,
+            "nullable": true,
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "lost"
+            ],
+            "nullable": true,
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "UpdateTicketRequest": {
@@ -2747,6 +3513,82 @@
         "x-public-reason": "health"
       }
     },
+    "/v1/contracts": {
+      "get": {
+        "operationId": "contract.list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "maxLength": 2048,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "maxLength": 40,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "customerCode",
+            "required": false,
+            "schema": {
+              "maxLength": 80,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractPageResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "serviceKey": []
+          }
+        ],
+        "summary": "List the workspace's contracts by number, optionally of one kind or one customer code.",
+        "tags": [
+          "customer"
+        ],
+        "x-crm-effect": "read"
+      }
+    },
     "/v1/customers": {
       "get": {
         "operationId": "customer.find",
@@ -2813,6 +3655,53 @@
           "customer"
         ],
         "x-crm-effect": "read"
+      },
+      "post": {
+        "operationId": "customer.create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerCreatedResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "serviceKey": []
+          }
+        ],
+        "summary": "Open a customer of the books for a purchase; a customer with the same tax id, phone or mail is refused with its code.",
+        "tags": [
+          "purchase"
+        ],
+        "x-crm-effect": "write",
+        "x-nivo-effect": "irreversible"
       }
     },
     "/v1/customers/{code}": {
@@ -3652,6 +4541,18 @@
               "maxLength": 2048,
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "enum": [
+                "new",
+                "renewal"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -3681,12 +4582,547 @@
             "serviceKey": []
           }
         ],
-        "summary": "List the renewal price table per service class and term (PLACEHOLDER until the owner's price sheet is loaded).",
+        "summary": "List the price table by price code: NEW-sale and renewal rows (PLACEHOLDER until the owner's price sheet is loaded).",
         "tags": [
           "price"
         ],
         "x-crm-effect": "read",
         "x-nivo-customer-audience": true
+      }
+    },
+    "/v1/purchases": {
+      "post": {
+        "operationId": "purchase.create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "serviceKey": []
+          }
+        ],
+        "summary": "Open a purchase for a new enquiry (state enquiry); the open purchase of the same channel and source is answered.",
+        "tags": [
+          "purchase"
+        ],
+        "x-crm-effect": "write",
+        "x-nivo-customer-audience": true,
+        "x-nivo-effect": "none"
+      }
+    },
+    "/v1/purchases/open": {
+      "get": {
+        "operationId": "purchase.open.list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "maxLength": 2048,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "enum": [
+                "enquiry",
+                "quoted",
+                "awaiting_payment",
+                "paid",
+                "pending_person"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sourceRef",
+            "required": false,
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseSummaryPageResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "serviceKey": []
+          }
+        ],
+        "summary": "List the open purchases with their quote and follow-up facts, optionally of one state or one source.",
+        "tags": [
+          "purchase"
+        ],
+        "x-crm-effect": "read"
+      }
+    },
+    "/v1/purchases/{id}": {
+      "get": {
+        "operationId": "purchase.get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "serviceKey": []
+          }
+        ],
+        "summary": "Get one purchase with its quote, state, payment code and reference, follow-ups and opened records.",
+        "tags": [
+          "purchase"
+        ],
+        "x-crm-effect": "read",
+        "x-nivo-customer-audience": true
+      },
+      "patch": {
+        "operationId": "purchase.update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "serviceKey": []
+          }
+        ],
+        "summary": "Change the need or the contact as said, or mark the purchase lost with a note; no other state move.",
+        "tags": [
+          "purchase"
+        ],
+        "x-crm-effect": "write",
+        "x-nivo-customer-audience": true,
+        "x-nivo-effect": "none"
+      }
+    },
+    "/v1/purchases/{id}/acceptance": {
+      "post": {
+        "operationId": "purchase.accept.record",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordAcceptanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptanceResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "serviceKey": []
+          }
+        ],
+        "summary": "Record the acceptance of the quote: open the project, services, contract record, receivable and payment code (dry by default).",
+        "tags": [
+          "purchase"
+        ],
+        "x-crm-effect": "write",
+        "x-nivo-effect": "irreversible"
+      }
+    },
+    "/v1/purchases/{id}/followups": {
+      "post": {
+        "operationId": "purchase.followup.record",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordFollowUpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "serviceKey": []
+          }
+        ],
+        "summary": "Record today's follow-up of an open purchase (one a day; a second one the same day replaces it).",
+        "tags": [
+          "purchase"
+        ],
+        "x-crm-effect": "write",
+        "x-nivo-effect": "none"
+      }
+    },
+    "/v1/purchases/{id}/outcome": {
+      "post": {
+        "operationId": "purchase.outcome.record",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordPurchaseOutcomeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "serviceKey": []
+          }
+        ],
+        "summary": "Record a person's outcome: delivered once paid, or cancelled while open.",
+        "tags": [
+          "purchase"
+        ],
+        "x-crm-effect": "write",
+        "x-nivo-effect": "irreversible"
+      }
+    },
+    "/v1/purchases/{id}/payments": {
+      "post": {
+        "operationId": "purchase.payment.record",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordPurchasePaymentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "serviceKey": []
+          }
+        ],
+        "summary": "Mark an accepted purchase paid by the bank row that proves it (no amount); a row used by another request is refused.",
+        "tags": [
+          "purchase"
+        ],
+        "x-crm-effect": "write",
+        "x-nivo-effect": "none"
+      }
+    },
+    "/v1/purchases/{id}/quotes": {
+      "post": {
+        "operationId": "purchase.quote.create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseQuoteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "serviceKey": []
+          }
+        ],
+        "summary": "Quote a purchase from the price table (the CRM computes every amount); the purchase moves to quoted.",
+        "tags": [
+          "purchase"
+        ],
+        "x-crm-effect": "write",
+        "x-nivo-customer-audience": true,
+        "x-nivo-effect": "none"
       }
     },
     "/v1/receivables/overdue": {

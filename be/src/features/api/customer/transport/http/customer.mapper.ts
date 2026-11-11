@@ -2,10 +2,12 @@ import { toPageInput } from "@modules/platform/pagination"
 import type { ContactLinkInput, CustomerFindInput, CustomerKey, CustomerListInput } from "@modules/domain/crm"
 import type { PageRequest } from "@modules/platform/openapi"
 import type { DocumentLinkInput } from "../../application/get-customer-document-link.query"
+import type { ContractListInput } from "../../application/list-contracts.query"
 import type {
     CustomerPathRequest,
     DocumentLinkRequest,
     FindCustomerRequest,
+    ListContractsRequest,
     LinkContactRequest,
 } from "./dto/customer.request"
 
@@ -69,3 +71,11 @@ export const toDocumentLinkRequest = (
     path: CustomerPathRequest,
     query: DocumentLinkRequest,
 ): DocumentLinkInput => ({ workspaceId, code: path.code, path: query.path })
+
+/** The request of `contract.list`. */
+export const toContractRegisterRequest = (workspaceId: string, query: ListContractsRequest): ContractListInput => ({
+    workspaceId,
+    kind: query.kind,
+    customerCode: query.customerCode,
+    page: toPageInput(query),
+})

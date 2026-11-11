@@ -8,6 +8,7 @@ import { ListCustomerInvoicesHandler } from "./application/list-customer-invoice
 import { ListCustomerDocumentsHandler } from "./application/list-customer-documents.handler"
 import { GetCustomerDocumentLinkHandler } from "./application/get-customer-document-link.handler"
 import { GetStateCountsHandler } from "./application/get-state-counts.handler"
+import { ListContractsHandler } from "./application/list-contracts.handler"
 import { GetCustomerBalanceHandler } from "./application/get-customer-balance.handler"
 import { LinkContactHandler } from "./application/link-contact.handler"
 
@@ -21,6 +22,7 @@ import { LinkContactHandler } from "./application/link-contact.handler"
         ListCustomerDocumentsHandler,
         GetCustomerDocumentLinkHandler,
         GetStateCountsHandler,
+        ListContractsHandler,
         GetCustomerBalanceHandler,
         LinkContactHandler,
     ],

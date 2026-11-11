@@ -369,9 +369,17 @@ describe("CustomerBookService.documentLink", () => {
 })
 
 describe("CustomerBookService.countsByState", () => {
-    it("counts services, renewals and tickets per stored state and the VAT invoices of the workspace", async () => {
-        const em = mockEntityManager({ count: [InvoiceEntity, 7] })
-        const [services, renewals, tickets] = queueQueryBuilders(em, [
+    it("counts services, renewals, tickets and purchases per stored state, and the desk's other totals", async () => {
+        const em = mockEntityManager({
+            count: [
+                [InvoiceEntity, 7],
+                [CustomerEntity, 5],
+                [ContractEntity, 2],
+                [ReceivableEntity, 1],
+                [LedgerBalanceEntity, 4],
+            ],
+        })
+        const [services, renewals, tickets, purchases] = queueQueryBuilders(em, [
             {
                 getRawMany: [
                     { state: "active", count: "3" },
@@ -380,6 +388,7 @@ describe("CustomerBookService.countsByState", () => {
             },
             { getRawMany: [{ state: "paid", count: "2" }] },
             { getRawMany: [] },
+            { getRawMany: [{ state: "enquiry", count: "6" }] },
         ])
 
         await expect((await build(em)).book.countsByState(WS)).resolves.toEqual({
@@ -390,11 +399,14 @@ describe("CustomerBookService.countsByState", () => {
             renewals: [{ state: "paid", count: 2 }],
             tickets: [],
             invoices: 7,
+            purchases: [{ state: "enquiry", count: 6 }],
+            customers: 5,
+            contracts: 2,
+            openReceivables: 1,
+            payables: 4,
         })
-        expect([services, renewals, tickets].map((fake) => fake?.callsOf("where")[0]?.[1])).toEqual([
-            { workspaceId: WS },
-            { workspaceId: WS },
-            { workspaceId: WS },
-        ])
+        expect([services, renewals, tickets, purchases].map((fake) => fake?.callsOf("where")[0]?.[1])).toEqual(
+            Array.from({ length: 4 }, () => ({ workspaceId: WS })),
+        )
     })
 })

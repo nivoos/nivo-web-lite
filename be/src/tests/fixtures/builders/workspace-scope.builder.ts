@@ -3,6 +3,7 @@ import type {
     CollectionsService,
     CustomerBookService,
     InvoiceDraftsService,
+    PurchasesService,
     RenewalsService,
     ServicesBookService,
     TicketsService,
@@ -93,7 +94,6 @@ export const COLLECTION_OPERATIONS: ReadonlyArray<ScopedOperation<CollectionsSer
 
 /** The price and renewal operations. */
 export const RENEWAL_OPERATIONS: ReadonlyArray<ScopedOperation<RenewalsService>> = [
-    ["price.list", (s, ws) => s.listPrices({ workspaceId: ws, page: PAGE })],
     [
         "renewal.quote.create",
         (s, ws) => s.quote({ workspaceId: ws, requestKey: "q-1", serviceCode: "SYN-HOST", termMonths: 12 }),
@@ -168,7 +168,81 @@ export const INVOICE_DRAFT_OPERATIONS: ReadonlyArray<ScopedOperation<InvoiceDraf
     ],
 ]
 
-/** Every operationId of the tables above: the 32 REST operations of the CRM. */
+/** The price, NEW-sale and contract-register operations. */
+export const PURCHASE_OPERATIONS: ReadonlyArray<ScopedOperation<PurchasesService>> = [
+    ["price.list", (s, ws) => s.listPrices({ workspaceId: ws, kind: null, page: PAGE })],
+    [
+        "purchase.create",
+        (s, ws) =>
+            s.create({
+                workspaceId: ws,
+                channel: "zalo",
+                sourceRef: "conv-1",
+                need: "n",
+                contactName: null,
+                phone: null,
+                email: null,
+                domain: null,
+                customerCode: null,
+            }),
+    ],
+    [
+        "purchase.update",
+        (s, ws) =>
+            s.update({
+                workspaceId: ws,
+                id: SOME_ID,
+                need: "n",
+                contactName: null,
+                phone: null,
+                email: null,
+                domain: null,
+                state: null,
+                note: null,
+            }),
+    ],
+    ["purchase.get", (s, ws) => s.get({ workspaceId: ws, id: SOME_ID })],
+    ["purchase.open.list", (s, ws) => s.listOpen({ workspaceId: ws, state: null, sourceRef: null, page: PAGE })],
+    [
+        "purchase.quote.create",
+        (s, ws) =>
+            s.quote({ workspaceId: ws, id: SOME_ID, items: [{ priceCode: "x", termMonths: null, quantity: null }] }),
+    ],
+    [
+        "purchase.followup.record",
+        (s, ws) => s.followUp({ workspaceId: ws, id: SOME_ID, channel: "zalo", outcome: "sent", messageRef: null }),
+    ],
+    [
+        "customer.create",
+        (s, ws) =>
+            s.createCustomer({
+                workspaceId: ws,
+                purchaseId: SOME_ID,
+                kind: "company",
+                name: "n",
+                taxId: "0100000000",
+                address: null,
+                phone: null,
+                email: null,
+            }),
+    ],
+    [
+        "purchase.accept.record",
+        (s, ws) => s.accept({ workspaceId: ws, id: SOME_ID, customerCode: "SYN-001", dryRun: true }),
+    ],
+    ["purchase.payment.record", (s, ws) => s.recordPayment({ workspaceId: ws, id: SOME_ID, transactionRef: "t" })],
+    [
+        "purchase.outcome.record",
+        (s, ws) =>
+            s.recordOutcome({ workspaceId: ws, id: SOME_ID, outcome: "cancelled", confirmedBy: "a", note: null }),
+    ],
+    [
+        "contract.list",
+        (s, ws) => s.listContracts({ workspaceId: ws, kind: "sale", customerCode: "SYN-001", page: PAGE }),
+    ],
+]
+
+/** Every operationId of the tables above: the 43 REST operations of the CRM. */
 export const CRM_OPERATION_IDS: ReadonlyArray<string> = [
     ...CUSTOMER_OPERATIONS,
     ...SERVICE_OPERATIONS,
@@ -176,6 +250,7 @@ export const CRM_OPERATION_IDS: ReadonlyArray<string> = [
     ...RENEWAL_OPERATIONS,
     ...TICKET_OPERATIONS,
     ...INVOICE_DRAFT_OPERATIONS,
+    ...PURCHASE_OPERATIONS,
 ].map(([id]) => id)
 
 /** The operations that read no workspace table: the price list is the CRM's own table in code, the same for every workspace. */

@@ -23,6 +23,7 @@ import {
     DocumentEntity,
     InvoiceEntity,
     LedgerBalanceEntity,
+    PurchaseEntity,
     ReceivableEntity,
     RenewalRequestEntity,
     ServiceEntity,
@@ -282,15 +283,22 @@ export class CustomerBookService {
         return { url: link.url, expiresAt: link.expiresAt }
     }
 
-    /** The per-state counts of the workspace (services, renewals, tickets) and its number of VAT invoices. */
+    /** The desk's counts: services, renewals, tickets and purchases per state; invoices, customers, contracts, open receivables and payables. */
     async countsByState(workspaceId: string): Promise<StateCounts> {
-        const [services, renewals, tickets, invoices] = await Promise.all([
+        const [services, renewals, tickets, purchases] = await Promise.all([
             this.stateCountsOf(ServiceEntity, "status", workspaceId),
             this.stateCountsOf(RenewalRequestEntity, "state", workspaceId),
             this.stateCountsOf(TicketEntity, "status", workspaceId),
-            this.entityManager.count(InvoiceEntity, { where: { workspaceId } }),
+            this.stateCountsOf(PurchaseEntity, "state", workspaceId),
         ])
-        return { services, renewals, tickets, invoices }
+        const [invoices, customers, contracts, openReceivables, payables] = await Promise.all([
+            this.entityManager.count(InvoiceEntity, { where: { workspaceId } }),
+            this.entityManager.count(CustomerEntity, { where: { workspaceId } }),
+            this.entityManager.count(ContractEntity, { where: { workspaceId } }),
+            this.entityManager.count(ReceivableEntity, { where: { workspaceId, remainingVnd: MoreThan(0) } }),
+            this.entityManager.count(LedgerBalanceEntity, { where: { workspaceId, account: "331" } }),
+        ])
+        return { services, renewals, tickets, invoices, purchases, customers, contracts, openReceivables, payables }
     }
 
     /** The TK131 balance and the open receivables of a customer, side by side (facts only, never summed together). */
@@ -354,7 +362,7 @@ export class CustomerBookService {
 
     /** The rows of one table of the workspace grouped by one state column, by state. */
     private async stateCountsOf(
-        target: typeof ServiceEntity | typeof RenewalRequestEntity | typeof TicketEntity,
+        target: typeof ServiceEntity | typeof RenewalRequestEntity | typeof TicketEntity | typeof PurchaseEntity,
         column: "status" | "state",
         workspaceId: string,
     ): Promise<Array<StateCount>> {

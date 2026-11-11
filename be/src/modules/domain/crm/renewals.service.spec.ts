@@ -16,7 +16,6 @@ import {
 import { CLOCK } from "@modules/platform/clock"
 import { IDS } from "@modules/platform/ids"
 import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
-import { decodeCursor } from "@modules/platform/pagination"
 import { isRecord } from "@modules/platform/primitives"
 import { WS, customerRow, renewalRow, serviceRow, uuid } from "@tests/fixtures/builders/crm.builder"
 import { RENEWAL_OPERATIONS, NO_STRAYS, straysOf } from "@tests/fixtures/builders/workspace-scope.builder"
@@ -84,26 +83,6 @@ const executeStubs = (state: "awaiting_payment" | "paid", transactionRef: string
         exists: [ProviderAccountEntity, false],
     }) as const
 
-describe("RenewalsService listPrices", () => {
-    it("pages the placeholder table by class and term", async () => {
-        const { renewals } = await build(mockEntityManager())
-        const first = await renewals.listPrices({ workspaceId: WS, page: { limit: 4, cursor: null } })
-        expect(first.items.map((price) => `${price.serviceClass}:${price.termMonths}`)).toEqual([
-            "domain:12",
-            "domain:24",
-            "domain:36",
-            "hosting:12",
-        ])
-        expect(decodeCursor("price.list", first.nextCursor, 1)).toEqual(["hosting:12"])
-        const last = await renewals.listPrices({ workspaceId: WS, page: { limit: 50, cursor: first.nextCursor } })
-        expect([
-            last.items.length,
-            last.nextCursor,
-            last.items.every((price) => price.priceSource === "placeholder"),
-        ]).toEqual([5, null, true])
-    })
-})
-
 describe("RenewalsService quote", () => {
     it("opens a request awaiting payment with the CRM's own total and transfer code", async () => {
         const em = mockEntityManager({
@@ -128,7 +107,7 @@ describe("RenewalsService quote", () => {
                 vatVnd: 120_000,
                 totalVnd: 1_320_000,
                 priceSource: "placeholder",
-                paymentCode: paymentCodeOf(id),
+                paymentCode: paymentCodeOf(id, "GH"),
                 dryRun: true,
                 createdAt: NOW,
             }),

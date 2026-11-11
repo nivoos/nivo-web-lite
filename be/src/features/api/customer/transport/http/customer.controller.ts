@@ -13,12 +13,14 @@ import { ListCustomerInvoicesQuery } from "../../application/list-customer-invoi
 import { ListCustomerDocumentsQuery } from "../../application/list-customer-documents.query"
 import { GetCustomerDocumentLinkQuery } from "../../application/get-customer-document-link.query"
 import { GetStateCountsQuery } from "../../application/get-state-counts.query"
+import { ListContractsQuery } from "../../application/list-contracts.query"
 import { GetCustomerBalanceQuery } from "../../application/get-customer-balance.query"
 import { LinkContactCommand } from "../../application/link-contact.command"
 import {
     CustomerPathRequest,
     DocumentLinkRequest,
     FindCustomerRequest,
+    ListContractsRequest,
     LinkContactRequest,
 } from "./dto/customer.request"
 import {
@@ -36,10 +38,11 @@ import {
 import {
     toBalanceRequest,
     toDocumentLinkRequest,
+    toListContractsRequest,
     toFindRequest,
     toGetRequest,
     toLinkContactRequest,
-    toListContractsRequest,
+    toContractRegisterRequest,
     toListDocumentsRequest,
     toListInvoicesRequest,
     toListServicesRequest,
@@ -218,5 +221,20 @@ export class CustomerController {
     })
     counts(@CrmWorkspace() workspaceId: string): Promise<StateCountsResponse> {
         return this.queryBus.execute(new GetStateCountsQuery({ request: workspaceId }))
+    }
+
+    /** `contract.list`: the workspace's contract register by number. */
+    @Get("v1/contracts")
+    @CrmOperation({
+        id: "contract.list",
+        summary: "List the workspace's contracts by number, optionally of one kind or one customer code.",
+        response: ContractPageResponse,
+        effect: "read",
+    })
+    listAllContracts(
+        @CrmWorkspace() workspaceId: string,
+        @Query() query: ListContractsRequest,
+    ): Promise<ContractPageResponse> {
+        return this.queryBus.execute(new ListContractsQuery({ request: toContractRegisterRequest(workspaceId, query) }))
     }
 }

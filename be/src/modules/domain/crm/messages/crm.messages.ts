@@ -38,6 +38,14 @@ export const CRM_MESSAGES: MessageBundle = {
         "errors.CRM_IMPORT_FILE_INVALID": "Tệp {{entity}} thiếu, không khớp sha256 trong manifest hoặc sai schema @1.",
         "errors.CRM_IMPORT_ITEM_INVALID": "Một mục của {{entity}} thiếu trường hoặc sai kiểu.",
         "errors.CRM_IMPORT_REFERENCE_UNKNOWN": "Một mục của {{entity}} trỏ tới khách hàng không có trong ảnh dữ liệu.",
+        "errors.CRM_PURCHASE_NOT_FOUND": "Không tìm thấy yêu cầu mua.",
+        "errors.CRM_PURCHASE_STATE_REFUSED": "Trạng thái {{state}} của yêu cầu mua không cho phép bước này.",
+        "errors.CRM_PRICE_NOT_FOUND": "Bảng giá không có dòng {{priceCode}} với kỳ hạn này.",
+        "errors.CRM_PRICE_PLACEHOLDER":
+            "Dòng giá {{priceCode}} còn là giá tạm: chưa báo giá trước khi có bảng giá của chủ.",
+        "errors.CRM_QUOTE_EXPIRED": "Báo giá đã hết hạn ngày {{validUntil}}.",
+        "errors.CRM_CUSTOMER_EXISTS": "Đã có khách hàng {{customerCode}} với mã số thuế, điện thoại hoặc thư này.",
+        "errors.CRM_TRANSACTION_REF_USED": "Giao dịch ngân hàng {{transactionRef}} đã được ghi cho yêu cầu khác.",
     },
     en: {
         "crm.invoice-draft.renewal-line": "Renewal of {{serviceClass}} {{serviceCode}}, {{termMonths}} months",
@@ -76,5 +84,13 @@ export const CRM_MESSAGES: MessageBundle = {
             "The {{entity}} file is missing, does not match its manifest sha256, or is not schema @1.",
         "errors.CRM_IMPORT_ITEM_INVALID": "An item of {{entity}} lacks a field or carries a mistyped one.",
         "errors.CRM_IMPORT_REFERENCE_UNKNOWN": "An item of {{entity}} names a customer the snapshot does not hold.",
+        "errors.CRM_PURCHASE_NOT_FOUND": "The purchase has no such id in the workspace.",
+        "errors.CRM_PURCHASE_STATE_REFUSED": "The purchase's state {{state}} does not allow this step.",
+        "errors.CRM_PRICE_NOT_FOUND": "The price table has no row {{priceCode}} with this term.",
+        "errors.CRM_PRICE_PLACEHOLDER":
+            "The price row {{priceCode}} is a placeholder: no quote before the owner's price sheet.",
+        "errors.CRM_QUOTE_EXPIRED": "The quote expired on {{validUntil}}.",
+        "errors.CRM_CUSTOMER_EXISTS": "Customer {{customerCode}} already has this tax id, phone or mail.",
+        "errors.CRM_TRANSACTION_REF_USED": "The bank row {{transactionRef}} already proved another request.",
     },
 }

@@ -61,8 +61,8 @@ describe("CrmCredentialService: a live credential", () => {
         ).resolves.toEqual({ kind: "api-key", subject: `crm-credential:${uuid(112)}`, workspaceId: OTHER_WS })
     })
 
-    it("is the workspace source of all 32 operations, each listed once in the scope tables of the service specs", () => {
-        expect([CRM_OPERATION_IDS.length, new Set(CRM_OPERATION_IDS).size]).toEqual([32, 32])
+    it("is the workspace source of all 43 operations, each listed once in the scope tables of the service specs", () => {
+        expect([CRM_OPERATION_IDS.length, new Set(CRM_OPERATION_IDS).size]).toEqual([43, 43])
     })
 })
 

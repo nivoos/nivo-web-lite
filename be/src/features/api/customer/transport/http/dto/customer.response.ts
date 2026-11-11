@@ -446,4 +446,24 @@ export class StateCountsResponse {
     /** The number of VAT invoices. */
     @ApiProperty({ type: "integer", minimum: 0 })
     readonly invoices!: number
+
+    /** Purchases (NEW sales) by state. */
+    @ApiProperty({ type: StateCountResponse, isArray: true, maxItems: 20 })
+    readonly purchases!: ReadonlyArray<StateCountResponse>
+
+    /** The number of customers of the books. */
+    @ApiProperty({ type: "integer", minimum: 0 })
+    readonly customers!: number
+
+    /** The number of contracts of the register. */
+    @ApiProperty({ type: "integer", minimum: 0 })
+    readonly contracts!: number
+
+    /** The number of receivables with something still owed. */
+    @ApiProperty({ type: "integer", minimum: 0 })
+    readonly openReceivables!: number
+
+    /** The number of TK331 payable balances. */
+    @ApiProperty({ type: "integer", minimum: 0 })
+    readonly payables!: number
 }

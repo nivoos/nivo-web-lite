@@ -4,6 +4,7 @@ import { CustomerHttpModule } from "@features/api/customer"
 import { InvoiceHttpModule } from "@features/api/invoice"
 import { PayableHttpModule } from "@features/api/payable"
 import { PriceHttpModule } from "@features/api/price"
+import { PurchaseHttpModule } from "@features/api/purchase"
 import { ReceivableHttpModule } from "@features/api/receivable"
 import { RenewalHttpModule } from "@features/api/renewal"
 import { ServiceHttpModule } from "@features/api/service"
@@ -20,4 +21,5 @@ export const apiModules = (): Array<Type<unknown> | DynamicModule> => [
     RenewalHttpModule.register({}),
     TicketHttpModule.register({}),
     InvoiceHttpModule.register({}),
+    PurchaseHttpModule.register({}),
 ]

@@ -54,3 +54,20 @@ export class DocumentLinkRequest {
     @MinLength(1)
     readonly path!: string
 }
+
+/** The query of `contract.list`: an optional kind and customer code, and the page. */
+export class ListContractsRequest extends PageRequest {
+    /** Only the contracts of this kind (as the register writes it: sale, purchase, labour, nda, dpa, other). */
+    @ApiProperty({ type: String, maxLength: 40, required: false })
+    @IsOptional()
+    @IsString()
+    @MaxLength(40)
+    readonly kind: string | null = null
+
+    /** Only the contracts of this customer code. */
+    @ApiProperty({ type: String, maxLength: 80, required: false })
+    @IsOptional()
+    @IsString()
+    @MaxLength(80)
+    readonly customerCode: string | null = null
+}
