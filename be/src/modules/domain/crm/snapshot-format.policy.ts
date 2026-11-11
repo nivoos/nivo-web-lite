@@ -1,6 +1,7 @@
 import { isRecord } from "@modules/platform/primitives"
 import type { CustomerKind } from "./customer.contracts"
 import { CrmError, CrmErrorCode } from "./errors/crm.error"
+import type { PurchaseChannel, PurchaseState } from "./purchase.contracts"
 import type { ExpirySource, ServiceClass } from "./service.contracts"
 import {
     SNAPSHOT_FORMAT,
@@ -11,6 +12,24 @@ import {
 } from "./snapshot.contracts"
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/u
+
+/** An ISO 8601 UTC instant (`Z`), as the format writes instants. */
+const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z$/u
+
+/** The states of a purchase (format @1 extension, 2026-11-12). */
+export const SNAPSHOT_PURCHASE_STATES: ReadonlyArray<PurchaseState> = [
+    "enquiry",
+    "quoted",
+    "awaiting_payment",
+    "paid",
+    "pending_person",
+    "delivered",
+    "lost",
+    "cancelled",
+]
+
+/** The channels of an enquiry or a follow-up. */
+export const SNAPSHOT_CHANNELS: ReadonlyArray<PurchaseChannel> = ["zalo", "email", "phone", "web", "other"]
 
 /** The customer kinds of the format (schema enum). */
 export const SNAPSHOT_CUSTOMER_KINDS: ReadonlyArray<CustomerKind> = ["company", "person", "unknown", "placeholder"]
@@ -177,6 +196,41 @@ export const SNAPSHOT_ENTITIES: ReadonlyMap<string, SnapshotEntityFormat> = new 
         }),
     ],
     [
+        "purchases",
+        formatOf("purchases", {
+            code: "text",
+            state: SNAPSHOT_PURCHASE_STATES,
+            channel: SNAPSHOT_CHANNELS,
+            sourceRef: "text",
+            need: "text",
+            contactName: "text?",
+            phone: "text?",
+            email: "text?",
+            domain: "text?",
+            customerCode: "text?",
+            quote: "object?",
+            paymentCode: "text?",
+            transactionRef: "text?",
+            paidAt: "instant?",
+            acceptedAt: "instant?",
+            projectCode: "text?",
+            contractNo: "text?",
+            note: "text?",
+            confirmedBy: "text?",
+            confirmedAt: "instant?",
+        }),
+    ],
+    [
+        "purchase-followups",
+        formatOf("purchase-followups", {
+            purchaseCode: "text",
+            day: "text",
+            channel: SNAPSHOT_CHANNELS,
+            outcome: ["sent", "answered", "no_answer", "declined"],
+            messageRef: "text?",
+        }),
+    ],
+    [
         "issues",
         formatOf("issues", {
             entity: "text",
@@ -219,7 +273,10 @@ const fits = (kind: SnapshotFieldKind, value: unknown): boolean => {
         case "origin":
             return isOrigin(value)
         case "object":
+        case "object?":
             return isRecord(value)
+        case "instant?":
+            return typeof value === "string" && INSTANT.test(value)
     }
 }
 

@@ -8,6 +8,8 @@ import type {
     LedgerBalanceEntity,
     ProjectEntity,
     ProviderAccountEntity,
+    PurchaseEntity,
+    PurchaseFollowupEntity,
     ReceivableEntity,
     ServiceEntity,
     WebsiteEntity,
@@ -20,6 +22,8 @@ export interface SnapshotNames {
     readonly customers: ReadonlyMap<string, string>
     /** Website id to domain. */
     readonly websites: ReadonlyMap<string, string>
+    /** Purchase id to code. */
+    readonly purchases: ReadonlyMap<string, string>
 }
 
 /** A format @1 money value of whole VND, or null when the source has none. */
@@ -193,4 +197,62 @@ export const issueItemOf = (row: ImportIssueEntity): SnapshotItem => ({
     severity: row.severity,
     raw: row.raw,
     origin: originOf(row),
+})
+
+/** An instant as ISO 8601 UTC text, or null. */
+const instantOf = (value: Date | null): string | null => (value === null ? null : value.toISOString())
+
+/** The quote of a purchase as the format writes it (money values, lines), or null before the first quote. */
+const quoteItemOf = (row: PurchaseEntity) =>
+    row.lines === null
+        ? null
+        : {
+              lines: row.lines.map((line) => ({
+                  priceCode: line.priceCode,
+                  name: line.name,
+                  termMonths: line.termMonths,
+                  quantity: line.quantity,
+                  unitPrice: moneyOf(line.unitPriceVnd),
+                  amount: moneyOf(line.amountVnd),
+              })),
+              net: moneyOf(row.netVnd),
+              vatRatePercent: row.vatRatePercent,
+              vat: moneyOf(row.vatVnd),
+              total: moneyOf(row.totalVnd),
+              priceSource: row.priceSource,
+              quotedOn: row.quotedOn,
+              validUntil: row.validUntil,
+          }
+
+/** A purchase item (format @1 extension). */
+export const purchaseItemOf = (row: PurchaseEntity): SnapshotItem => ({
+    code: row.code,
+    state: row.state,
+    channel: row.channel,
+    sourceRef: row.sourceRef,
+    need: row.need,
+    contactName: row.contactName,
+    phone: row.phone,
+    email: row.email,
+    domain: row.domain,
+    customerCode: row.customerCode,
+    quote: quoteItemOf(row),
+    paymentCode: row.paymentCode,
+    transactionRef: row.transactionRef,
+    paidAt: instantOf(row.paidAt),
+    acceptedAt: instantOf(row.acceptedAt),
+    projectCode: row.projectCode,
+    contractNo: row.contractNo,
+    note: row.note,
+    confirmedBy: row.confirmedBy,
+    confirmedAt: instantOf(row.confirmedAt),
+})
+
+/** A follow-up item, its purchase by code. */
+export const followUpItemOf = (row: PurchaseFollowupEntity, names: SnapshotNames): SnapshotItem => ({
+    purchaseCode: nameOf(names.purchases, row.purchaseId),
+    day: row.day,
+    channel: row.channel,
+    outcome: row.outcome,
+    messageRef: row.messageRef,
 })

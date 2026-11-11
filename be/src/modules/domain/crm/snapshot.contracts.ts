@@ -6,7 +6,17 @@ export const SNAPSHOT_FORMAT = "nivo-web-lite-data@1"
  * allows for the field (its JSON Schema `enum`).
  */
 export type SnapshotFieldKind =
-    "text" | "text?" | "int" | "bool?" | "date?" | "money?" | "origin" | "object" | ReadonlyArray<string>
+    | "text"
+    | "text?"
+    | "int"
+    | "bool?"
+    | "date?"
+    | "money?"
+    | "origin"
+    | "object"
+    | "object?"
+    | "instant?"
+    | ReadonlyArray<string>
 
 /** The declared fields of one entity file of format @1: its schema id and each field's kind. */
 export interface SnapshotEntityFormat {

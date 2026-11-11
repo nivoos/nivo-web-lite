@@ -16,6 +16,8 @@ import {
     LedgerBalanceEntity,
     ProjectEntity,
     ProviderAccountEntity,
+    PurchaseEntity,
+    PurchaseFollowupEntity,
     ReceivableEntity,
     ServiceEntity,
     WebsiteEntity,
@@ -162,6 +164,26 @@ const PLANS: ReadonlyMap<string, ExportPlan> = new Map<string, ExportPlan>([
         },
     ],
     [
+        "purchases",
+        {
+            key: ["code"],
+            read: async (m, w) =>
+                (await m.find(PurchaseEntity, { where: { workspaceId: w }, take: EXPORT_READ_MAX })).map((r) =>
+                    items.purchaseItemOf(r),
+                ),
+        },
+    ],
+    [
+        "purchase-followups",
+        {
+            key: ["purchaseCode", "day"],
+            read: async (m, w, n) =>
+                (await m.find(PurchaseFollowupEntity, { where: { workspaceId: w }, take: EXPORT_READ_MAX })).map((r) =>
+                    items.followUpItemOf(r, n),
+                ),
+        },
+    ],
+    [
         "issues",
         {
             key: ["entity", "origin.file", "origin.sheet", "origin.row", "field", "reason"],
@@ -181,14 +203,9 @@ const fieldOf = (item: SnapshotItem, field: string): string => {
     return String(isRecord(value) ? value[tail] : undefined)
 }
 
-/** Compares two texts by Unicode code point, as the format sorts. */
-const byCodePoint = (left: string, right: string): number => {
-    const a = Array.from(left, (char) => char.codePointAt(0) ?? 0)
-    const b = Array.from(right, (char) => char.codePointAt(0) ?? 0)
-    const at = a.findIndex((point, index) => point !== b[index])
-    if (at >= 0 && at < b.length) return (a[at] ?? 0) - (b[at] ?? 0)
-    return a.length - b.length
-}
+/** Compares two texts by Unicode code point, as the format sorts (UTF-8 byte order is code point order). */
+const byCodePoint = (left: string, right: string): number =>
+    Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"))
 
 /** The items sorted by their natural key (fields joined by U+001F, code point order). */
 const sortedBy = (list: ReadonlyArray<SnapshotItem>, key: ReadonlyArray<string>): Array<SnapshotItem> => {
@@ -233,15 +250,17 @@ export class SnapshotExportService {
         return summary
     }
 
-    /** Customer and website ids of the workspace to their natural keys. */
+    /** Customer, website and purchase ids of the workspace to their natural keys. */
     private async namesOf(workspaceId: string): Promise<items.SnapshotNames> {
-        const [customers, websites] = await Promise.all([
+        const [customers, websites, purchases] = await Promise.all([
             this.entityManager.find(CustomerEntity, { where: { workspaceId }, take: EXPORT_READ_MAX }),
             this.entityManager.find(WebsiteEntity, { where: { workspaceId }, take: EXPORT_READ_MAX }),
+            this.entityManager.find(PurchaseEntity, { where: { workspaceId }, take: EXPORT_READ_MAX }),
         ])
         return {
             customers: new Map(customers.map((row) => [row.id, row.code])),
             websites: new Map(websites.map((row) => [row.id, row.domain])),
+            purchases: new Map(purchases.map((row) => [row.id, row.code])),
         }
     }
 

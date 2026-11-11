@@ -10,12 +10,21 @@ import type {
     LedgerBalanceEntity,
     ProjectEntity,
     ProviderAccountEntity,
+    PurchaseEntity,
+    PurchaseFollowupEntity,
     ReceivableEntity,
     ServiceEntity,
     WebsiteEntity,
 } from "./persistence/entities"
 import type { SnapshotItem } from "./snapshot.contracts"
-import { SNAPSHOT_CUSTOMER_KINDS, SNAPSHOT_EXPIRY_SOURCES, SNAPSHOT_SERVICE_CLASSES } from "./snapshot-format.policy"
+import type { PurchaseLineValue } from "./purchase.contracts"
+import {
+    SNAPSHOT_CHANNELS,
+    SNAPSHOT_CUSTOMER_KINDS,
+    SNAPSHOT_EXPIRY_SOURCES,
+    SNAPSHOT_PURCHASE_STATES,
+    SNAPSHOT_SERVICE_CLASSES,
+} from "./snapshot-format.policy"
 
 /** The ids the import resolved so far, by natural key, for the references of later entities. */
 export interface SnapshotRefs {
@@ -25,6 +34,8 @@ export interface SnapshotRefs {
     readonly websites: ReadonlyMap<string, string>
     /** Project code to its id and customer id. */
     readonly projects: ReadonlyMap<string, { readonly id: string; readonly customerId: string }>
+    /** Purchase code to id. */
+    readonly purchases: ReadonlyMap<string, string>
 }
 
 /** What every sourced row of one import carries: its workspace, the run and the item's content hash. */
@@ -287,3 +298,103 @@ export const issueRowOf = (item: SnapshotItem, stamp: SnapshotStamp): Partial<Im
         lastImportRunId: stamp.runId,
     }
 }
+
+/** An instant field as a date, or null. */
+const instantOrNull = (item: SnapshotItem, field: string): Date | null => {
+    const value = textOrNull(item, field)
+    return value === null ? null : new Date(value)
+}
+
+/** The whole VND of a money value inside a nested record (0 when it is not one). */
+const amountIn = (record: Readonly<Record<string, unknown>>, field: string): number => {
+    const value = record[field]
+    return isRecord(value) && typeof value["amount"] === "number" ? value["amount"] : 0
+}
+
+/** The stored lines of a quote's `lines` list (a malformed line is dropped). */
+const linesOf = (value: unknown): ReadonlyArray<PurchaseLineValue> =>
+    (Array.isArray(value) ? value : []).flatMap((line: unknown) =>
+        isRecord(line)
+            ? [
+                  {
+                      priceCode: String(line["priceCode"]),
+                      name: String(line["name"]),
+                      termMonths: typeof line["termMonths"] === "number" ? line["termMonths"] : null,
+                      quantity: typeof line["quantity"] === "number" ? line["quantity"] : 1,
+                      unitPriceVnd: amountIn(line, "unitPrice"),
+                      amountVnd: amountIn(line, "amount"),
+                  },
+              ]
+            : [],
+    )
+
+/** The quote columns of a purchase item (all null when it has no quote). */
+const quoteColumnsOf = (item: SnapshotItem): Partial<PurchaseEntity> => {
+    const quote = item["quote"]
+    if (!isRecord(quote)) {
+        return {
+            lines: null,
+            netVnd: null,
+            vatRatePercent: null,
+            vatVnd: null,
+            totalVnd: null,
+            priceSource: null,
+            quotedOn: null,
+            validUntil: null,
+        }
+    }
+    return {
+        lines: linesOf(quote["lines"]),
+        netVnd: amountIn(quote, "net"),
+        vatRatePercent: typeof quote["vatRatePercent"] === "number" ? quote["vatRatePercent"] : 0,
+        vatVnd: amountIn(quote, "vat"),
+        totalVnd: amountIn(quote, "total"),
+        priceSource: quote["priceSource"] === "price_sheet" ? "price_sheet" : "placeholder",
+        quotedOn: typeof quote["quotedOn"] === "string" ? quote["quotedOn"] : null,
+        validUntil: typeof quote["validUntil"] === "string" ? quote["validUntil"] : null,
+    }
+}
+
+/** A purchase row (format @1 extension): the sale as the CRM kept it, its customer a soft reference by code. */
+export const purchaseRowOf = (
+    item: SnapshotItem,
+    workspaceId: string,
+    refs: SnapshotRefs,
+): Partial<PurchaseEntity> => ({
+    workspaceId,
+    code: text(item, "code"),
+    state: oneOf(SNAPSHOT_PURCHASE_STATES, item, "state"),
+    channel: oneOf(SNAPSHOT_CHANNELS, item, "channel"),
+    sourceRef: text(item, "sourceRef"),
+    need: text(item, "need"),
+    contactName: textOrNull(item, "contactName"),
+    phone: textOrNull(item, "phone"),
+    email: textOrNull(item, "email"),
+    domain: textOrNull(item, "domain"),
+    customerCode: textOrNull(item, "customerCode"),
+    customerId: soft(refs.customers, textOrNull(item, "customerCode")),
+    ...quoteColumnsOf(item),
+    paymentCode: textOrNull(item, "paymentCode"),
+    transactionRef: textOrNull(item, "transactionRef"),
+    paidAt: instantOrNull(item, "paidAt"),
+    acceptedAt: instantOrNull(item, "acceptedAt"),
+    projectCode: textOrNull(item, "projectCode"),
+    contractNo: textOrNull(item, "contractNo"),
+    note: textOrNull(item, "note"),
+    confirmedBy: textOrNull(item, "confirmedBy"),
+    confirmedAt: instantOrNull(item, "confirmedAt"),
+})
+
+/** A follow-up row of a purchase of the snapshot. */
+export const followUpRowOf = (
+    item: SnapshotItem,
+    workspaceId: string,
+    refs: SnapshotRefs,
+): Partial<PurchaseFollowupEntity> => ({
+    workspaceId,
+    purchaseId: required(refs.purchases, text(item, "purchaseCode"), "purchase-followups", "purchaseCode"),
+    day: text(item, "day"),
+    channel: oneOf(SNAPSHOT_CHANNELS, item, "channel"),
+    outcome: oneOf(["sent", "answered", "no_answer", "declined"] as const, item, "outcome"),
+    messageRef: textOrNull(item, "messageRef"),
+})

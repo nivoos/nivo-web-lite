@@ -16,6 +16,8 @@ import {
     LedgerBalanceEntity,
     ProjectEntity,
     ProviderAccountEntity,
+    PurchaseEntity,
+    PurchaseFollowupEntity,
     ReceivableEntity,
     ServiceEntity,
     WebsiteEntity,
@@ -211,6 +213,51 @@ const ITEMS: Readonly<Record<string, ReadonlyArray<SnapshotItem>>> = {
             origin: ORIGIN,
         },
     ],
+    purchases: [
+        {
+            code: "MUA-ABCDEFGH",
+            state: "paid",
+            channel: "zalo",
+            sourceRef: "conv-9",
+            need: "A shop website",
+            contactName: "Synthetic Buyer",
+            phone: null,
+            email: null,
+            domain: null,
+            customerCode: "SYN-001",
+            quote: {
+                lines: [
+                    {
+                        priceCode: "new-website",
+                        name: "Website build",
+                        termMonths: null,
+                        quantity: 1,
+                        unitPrice: VND(9),
+                        amount: VND(9),
+                    },
+                ],
+                net: VND(9),
+                vatRatePercent: 10,
+                vat: VND(1),
+                total: VND(10),
+                priceSource: "price_sheet",
+                quotedOn: "2026-11-01",
+                validUntil: "2026-11-15",
+            },
+            paymentCode: "MHABCDEFGH",
+            transactionRef: "bank-1",
+            paidAt: "2026-11-03T02:00:00.000Z",
+            acceptedAt: "2026-11-02T02:00:00.000Z",
+            projectCode: "P-ABCDEFGH",
+            contractNo: "HD-ABCDEFGH",
+            note: null,
+            confirmedBy: null,
+            confirmedAt: null,
+        },
+    ],
+    "purchase-followups": [
+        { purchaseCode: "MUA-ABCDEFGH", day: "2026-11-02", channel: "zalo", outcome: "answered", messageRef: null },
+    ],
     issues: [
         { entity: "invoices", field: "", reason: "total_row", severity: "rejected", raw: { A: "x" }, origin: ORIGIN },
     ],
@@ -227,6 +274,7 @@ const tablesOf = (): Map<unknown, Array<Record<string, unknown>>> => {
         customers: new Map(customers.map((row) => [String(row["code"]), String(row["id"])])),
         websites: new Map<string, string>(),
         projects: new Map(),
+        purchases: new Map<string, string>(),
     }
     const websites = of("websites").map((item) => withId(rows.websiteRowOf(item, stamp, refs0)))
     const refs1 = { ...refs0, websites: new Map(websites.map((row) => [String(row["domain"]), String(row["id"])])) }
@@ -240,7 +288,17 @@ const tablesOf = (): Map<unknown, Array<Record<string, unknown>>> => {
             ]),
         ),
     }
+    const purchases = of("purchases").map((item) => withId(rows.purchaseRowOf(item, WS, refs)))
+    const withPurchases = {
+        ...refs,
+        purchases: new Map(purchases.map((row) => [String(row["code"]), String(row["id"])])),
+    }
     return new Map<unknown, Array<Record<string, unknown>>>([
+        [PurchaseEntity, purchases],
+        [
+            PurchaseFollowupEntity,
+            of("purchase-followups").map((item) => withId(rows.followUpRowOf(item, WS, withPurchases))),
+        ],
         [CustomerEntity, customers],
         [WebsiteEntity, websites],
         [ProjectEntity, projects],
@@ -315,7 +373,7 @@ describe("SnapshotExportService: round trip", () => {
                 (entry) => isRecord(entry) && entry["sha256"] === sha256Hex(written.get(String(entry["path"])) ?? ""),
             ),
         ).toBe(true)
-        expect(summary.entities.map((count) => count.items)).toEqual([2, 1, 2, 2, 1, 2, 1, 1, 1, 1, 1, 1])
+        expect(summary.entities.map((count) => count.items)).toEqual([2, 1, 2, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1])
     })
 })
 

@@ -59,7 +59,7 @@ credential per enterprise workspace (or more, one per NIVO connection) with
 logged); only the sha256 of the secret is stored in `public.crm_service_credentials`. NIVO's OpenAPI provider presents it as
 `Authorization: Bearer <id>.<secret>`; the CRM looks the id up among the live credentials, compares the sha256 in constant time and
 scopes every query of the call to that credential's workspace. `cli credential revoke --id <uuid>` revokes one; it is refused from
-then on. The unit specs prove the scope over all 32 operations: each service spec runs its operations for the credentials of two
+then on. The unit specs prove the scope over all 43 operations: each service spec runs its operations for the credentials of two
 workspaces and checks that every statement names only the caller's workspace (`be/src/tests/fixtures/builders/workspace-scope.builder.ts`).
 
 ## CRM first load: the sealed data repository, format @1
@@ -78,7 +78,7 @@ outside the project: its status word map is not brought in.
 
 ## CRM REST contract for NIVO
 
-`be/contracts/api/openapi.json` (written by `starci app emit`) is the contract NIVO's OpenAPI provider pins. 32 operations,
+`be/contracts/api/openapi.json` (written by `starci app emit`) is the contract NIVO's OpenAPI provider pins. 43 operations,
 singular ids (a NIVO tool id is `crm.` + operationId), each with a summary and no description (user copy goes through the
 catalog). Every operation answers the harness `ErrorResponse` as `default`, is secured by the `serviceKey` bearer (a service
 credential of one workspace, above) and carries `x-crm-effect` (`read` | `write`). Every write declares `x-nivo-effect`:
@@ -122,3 +122,17 @@ For NIVO's CRM workbench (staff only, no customer-audience mark): `customer.find
 phone, mail, website domain; paged), `invoice.list` lists the workspace's VAT invoices (customer code, issue period; paged),
 `ticket.get` reads one ticket, `renewal.open.list` takes an optional open `state`, and `summary.count.get` answers the per-state
 counts of services, renewals and tickets with the number of VAT invoices (the books give VAT invoices no state).
+
+## NEW sales: purchases (AGENTS-GRAPHS §9)
+
+A NEW sale is ONE request object, `purchase` (twin of a renewal): `enquiry -> quoted -> awaiting_payment -> paid -> pending_person
+-> delivered`, or `lost` / `cancelled`. `purchase.create` opens it from a conversation or mail (the open purchase of the same channel
+and source is answered instead), `purchase.update` changes what was said or marks it lost, `purchase.quote.create` quotes price
+rows from the table (the CRM computes every amount; a PLACEHOLDER row is refused, so no quote before the owner's price sheet),
+`purchase.followup.record` keeps one follow-up a day, `customer.create` opens a customer of the books (refused with the existing
+code when the tax id, phone or mail is known), `purchase.accept.record` (dry by default) opens the project of a website build, one
+`pending` service per class line, the contract record, ONE receivable for the total (no terms table yet) and the payment code of
+the first instalment, `purchase.payment.record` takes the bank row (no amount; a row already used by a renewal or a purchase is
+refused) and `purchase.outcome.record` is a person's act. `price.list` shows NEW-sale and renewal rows with a `kind` filter,
+`contract.list` the workspace's register, `invoice.draft.create` drafts a paid purchase too. Purchases and their follow-ups travel
+in the data repository's format @1 (`purchases`, `purchase-followups`).

@@ -24,6 +24,8 @@ import {
     LedgerBalanceEntity,
     ProjectEntity,
     ProviderAccountEntity,
+    PurchaseEntity,
+    PurchaseFollowupEntity,
     ReceivableEntity,
     ServiceEntity,
     WebsiteEntity,
@@ -175,6 +177,25 @@ const PLANS: ReadonlyMap<string, EntityPlan> = new Map<string, EntityPlan>([
             ...sameKeys("name", "phone", "email"),
             conflict: null,
             rowOf: (item, stamp, refs) => rows.contactRowOf(item, stamp.workspaceId, refs),
+        },
+    ],
+    [
+        "purchases",
+        {
+            target: PurchaseEntity,
+            ...sameKeys("code"),
+            conflict: ["workspaceId", "code"],
+            rowOf: (item, stamp, refs) => rows.purchaseRowOf(item, stamp.workspaceId, refs),
+        },
+    ],
+    [
+        "purchase-followups",
+        {
+            target: PurchaseFollowupEntity,
+            itemKey: (item) => keyOf(item, ["purchaseCode", "day"]),
+            rowKey: (row) => keyOf(row, ["purchaseId", "day"]),
+            conflict: ["workspaceId", "purchaseId", "day"],
+            rowOf: (item, stamp, refs) => rows.followUpRowOf(item, stamp.workspaceId, refs),
         },
     ],
     ["issues", { target: ImportIssueEntity, ...issueKeys, conflict: null, rowOf: rows.issueRowOf }],
@@ -370,15 +391,17 @@ export class CrmImportService {
 
     /** The ids by natural key the later entities reference. */
     private async refsOf(tx: EntityManager, workspaceId: string): Promise<rows.SnapshotRefs> {
-        const [customers, websites, projects] = await Promise.all([
+        const [customers, websites, projects, purchases] = await Promise.all([
             tx.find(CustomerEntity, { where: { workspaceId }, take: STORED_ROWS_MAX }),
             tx.find(WebsiteEntity, { where: { workspaceId }, take: STORED_ROWS_MAX }),
             tx.find(ProjectEntity, { where: { workspaceId }, take: STORED_ROWS_MAX }),
+            tx.find(PurchaseEntity, { where: { workspaceId }, take: STORED_ROWS_MAX }),
         ])
         return {
             customers: new Map(customers.map((row) => [row.code, row.id])),
             websites: new Map(websites.map((row) => [row.domain, row.id])),
             projects: new Map(projects.map((row) => [row.code, { id: row.id, customerId: row.customerId }])),
+            purchases: new Map(purchases.map((row) => [row.code, row.id])),
         }
     }
 

@@ -114,3 +114,42 @@ describe("snapshot format policy: manifest and JSON", () => {
         )
     })
 })
+
+describe("snapshot format policy: purchases", () => {
+    it("checks a purchase's instants and its quote record", async () => {
+        const subject = await policy()
+        const entry = {
+            ...ENTRY,
+            path: "data/purchases.json",
+            entity: "purchases",
+            schema: "nivo-web-lite-data/purchases@1",
+        }
+        const purchase = {
+            code: "MUA-1",
+            state: "paid",
+            channel: "zalo",
+            sourceRef: "c",
+            need: "n",
+            contactName: null,
+            phone: null,
+            email: null,
+            domain: null,
+            customerCode: null,
+            quote: {},
+            paymentCode: null,
+            transactionRef: null,
+            paidAt: "2026-11-03T02:00:00.000Z",
+            acceptedAt: null,
+            projectCode: null,
+            contractNo: null,
+            note: null,
+            confirmedBy: null,
+            confirmedAt: null,
+        }
+        const file = (item: object): object => ({ schema: entry.schema, items: [item] })
+        expect(subject.snapshotItemsOf("purchases", file(purchase), entry)).toEqual([purchase])
+        await expect(
+            refusalOf(() => subject.snapshotItemsOf("purchases", file({ ...purchase, paidAt: "yesterday" }), entry)),
+        ).resolves.toBe(CrmErrorCode.ImportItemInvalid)
+    })
+})

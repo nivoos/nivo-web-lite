@@ -1,7 +1,15 @@
 import { Test } from "@nestjs/testing"
 import { documentRow, serviceRow } from "@tests/fixtures/builders/crm.builder"
+import { followUpRow, purchaseRow } from "@tests/fixtures/builders/purchase.builder"
 import { ContactEntity, ProviderAccountEntity } from "./persistence/entities"
-import { contactItemOf, documentItemOf, providerItemOf, serviceItemOf } from "./snapshot-items.mapper"
+import {
+    contactItemOf,
+    documentItemOf,
+    followUpItemOf,
+    providerItemOf,
+    purchaseItemOf,
+    serviceItemOf,
+} from "./snapshot-items.mapper"
 
 const SNAPSHOT_ITEMS_MAPPER: unique symbol = Symbol("snapshot-items")
 
@@ -9,6 +17,8 @@ const SNAPSHOT_ITEMS_MAPPER: unique symbol = Symbol("snapshot-items")
 interface SnapshotItemsMapper {
     readonly contactItemOf: typeof contactItemOf
     readonly documentItemOf: typeof documentItemOf
+    readonly followUpItemOf: typeof followUpItemOf
+    readonly purchaseItemOf: typeof purchaseItemOf
     readonly providerItemOf: typeof providerItemOf
     readonly serviceItemOf: typeof serviceItemOf
 }
@@ -21,6 +31,8 @@ const mapper = async (): Promise<SnapshotItemsMapper> => {
                 useFactory: (): SnapshotItemsMapper => ({
                     contactItemOf,
                     documentItemOf,
+                    followUpItemOf,
+                    purchaseItemOf,
                     providerItemOf,
                     serviceItemOf,
                 }),
@@ -34,6 +46,7 @@ const mapper = async (): Promise<SnapshotItemsMapper> => {
 const NAMES = {
     customers: new Map([["00000000-0000-4000-8000-000000000001", "SYN-001"]]),
     websites: new Map<string, string>(),
+    purchases: new Map<string, string>(),
 }
 
 describe("snapshot items mapper: what the CRM made itself", () => {
@@ -74,5 +87,14 @@ describe("snapshot items mapper: references written back", () => {
         const document = subject.documentItemOf(documentRow({ customerId: null, sha256: null }), NAMES)
         expect([service["provider"], service["customerCode"], service["domain"]]).toEqual(["", "SYN-001", null])
         expect([document["customerCode"], document["sha256"]]).toEqual([null, ""])
+    })
+})
+
+describe("snapshot items mapper: purchases", () => {
+    it("writes an unquoted purchase with no quote and no instants, and a follow-up of an unknown purchase with no code", async () => {
+        const subject = await mapper()
+        const item = subject.purchaseItemOf(purchaseRow())
+        expect([item["quote"], item["paidAt"], item["code"]]).toEqual([null, null, "MUA-ABCDEFGH"])
+        expect(subject.followUpItemOf(followUpRow(), NAMES)["purchaseCode"]).toBeNull()
     })
 })
