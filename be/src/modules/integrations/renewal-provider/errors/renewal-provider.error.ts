@@ -2,7 +2,7 @@ import { DomainError, type ErrorKind } from "@modules/platform/errors"
 
 /** Codes of the renewal provider port. */
 export enum RenewalProviderErrorCode {
-    /** `CRM_PROVIDER_PLUGINS` is not `<provider>=<manual|mock>,...` (`key` param); boot stops. */
+    /** `CRM_PROVIDER_PLUGINS` is not `<provider>=<manual|fixture>,...` (`key` param); boot stops. */
     PluginsInvalid = "RENEWAL_PROVIDER_PLUGINS_INVALID",
 }
 

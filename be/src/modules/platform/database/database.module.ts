@@ -4,11 +4,11 @@ import type { DataSource } from "typeorm"
 import { DatabaseProbeService } from "./database-probe.service"
 import { DATABASE_OPTIONS } from "./database.port"
 import { ConfigurableModuleClass, OPTIONS_TYPE } from "./database.module-definition"
-import { MigrationRunnerService } from "./migration-runner.service"
+import { DB_PUSH_COMMAND, MigrationRunnerService } from "./migration-runner.service"
 import { DatabaseError, DatabaseErrorCode } from "./errors/database.error"
 import { PRIMARY_CONNECTION } from "./primary.connection"
-import { DATABASE_PROBE, PRIMARY_ENTITY_MANAGER } from "./primary.decorators"
-import { SeedRunnerService } from "./seed-runner.service"
+import { DATABASE_PROBE, MIGRATION_COMMAND, PRIMARY_ENTITY_MANAGER, SEED_ROOT } from "./primary.decorators"
+import { SEED_ROOT_DEFAULT, SeedRunnerService } from "./seed-runner.service"
 
 /** The `schema` option of a connection, left out when the connection names none. */
 const schemaOption = (schema: string | undefined): Partial<Record<"schema", string>> =>
@@ -66,7 +66,15 @@ export class DatabaseModule extends ConfigurableModuleClass {
                     }),
                 ),
             ],
-            providers: [...(base.providers ?? []), ...managers, ...probes, MigrationRunnerService, SeedRunnerService],
+            providers: [
+                ...(base.providers ?? []),
+                ...managers,
+                ...probes,
+                { provide: MIGRATION_COMMAND, useValue: DB_PUSH_COMMAND },
+                { provide: SEED_ROOT, useValue: SEED_ROOT_DEFAULT },
+                MigrationRunnerService,
+                SeedRunnerService,
+            ],
             exports: [
                 DATABASE_OPTIONS,
                 ...probes.map((probe) => probe.provide),

@@ -44,6 +44,10 @@ jobs:
             file: be/apps/api/Dockerfile
             deployed: true
             args: false
+          - name: cli
+            file: be/apps/cli/Dockerfile
+            deployed: false
+            args: false
           - name: db
             file: .starcistacks/images/db/Dockerfile
             deployed: true

@@ -10,6 +10,12 @@
       "root": "apps/api",
       "entryFile": "main",
       "sourceRoot": "apps/api/src"
+    },
+    "cli": {
+      "type": "application",
+      "root": "apps/cli",
+      "entryFile": "main",
+      "sourceRoot": "apps/cli/src"
     }
   }
 }

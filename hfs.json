@@ -10,9 +10,13 @@
           "name": "api",
           "kind": "api",
           "contract": "rest"
+        },
+        {
+          "name": "cli",
+          "kind": "cli"
         }
       ],
-      "kinds": ["api"],
+      "kinds": ["api", "cli"],
       "connections": [
         {
           "name": "primary",

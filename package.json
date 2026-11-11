@@ -20,6 +20,7 @@
     "@starci/object-storage": "0.2.0",
     "class-transformer": "0.5.1",
     "class-validator": "0.15.1",
+    "nest-commander": "3.21.0",
     "pg": "8.23.1",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2",
@@ -65,7 +66,7 @@
     "dev:be": "cd be && ts-node-dev --respawn -r tsconfig-paths/register apps/api/src/main.ts",
     "start:api": "node be/dist/apps/api/src/main.js",
     "build:modules": "turbo run build --filter=./packages/*",
-    "docker:build": "npm run docker:build:api",
+    "docker:build": "npm run docker:build:api && npm run docker:build:cli",
     "docker:build:api": "docker build -f be/apps/api/Dockerfile -t nivo-web-lite/api:dev .",
     "build:be": "npm run build:modules --silent && cd be && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "codegen": "node scripts/codegen.mjs",
@@ -87,6 +88,9 @@
     "db:plan": "starci app db migrate --db-url-env DATABASE_URL",
     "db:dump": "starci app db dump --db-url-env DATABASE_URL --out ../nivo-web-lite-db-backups",
     "db:lint": "starci app check --gate db",
-    "contract:emit": "starci app emit"
+    "contract:emit": "starci app emit",
+    "cli": "node be/dist/apps/cli/src/main.js",
+    "migrate": "node be/dist/apps/cli/src/main.js migrate run",
+    "docker:build:cli": "docker build -f be/apps/cli/Dockerfile -t nivo-web-lite/cli:dev ."
   }
 }

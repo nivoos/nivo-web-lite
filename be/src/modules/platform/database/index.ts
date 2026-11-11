@@ -1,6 +1,5 @@
 export { DatabaseModule } from "./database.module"
 export { callDbFunction } from "./database.client"
-export { PRIMARY_CONNECTION } from "./primary.connection"
 export {
     DATABASE_PROBE,
     InjectDatabaseProbe,
