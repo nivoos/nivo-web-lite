@@ -17,7 +17,7 @@ components:
     role: service
     image: "nivo-web-lite/api:v0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     compose: infra/swarm/stack.yaml
-    purpose: The application's REST API, the NIVO Web CRM (29 operations NIVO's OpenAPI provider calls with the CRM service key), its own Google and password sign-in and its storage integration.
+    purpose: The application's REST API, the NIVO Web CRM (29 operations NIVO's OpenAPI provider calls with a CRM service credential of one workspace, issued by the cli), its own Google and password sign-in and its storage integration.
     required: true
   db:
     role: service

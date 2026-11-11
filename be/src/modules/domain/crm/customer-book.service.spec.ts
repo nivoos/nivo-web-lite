@@ -13,6 +13,7 @@ import {
     uuid,
     websiteRow,
 } from "@tests/fixtures/builders/crm.builder"
+import { CUSTOMER_OPERATIONS, NO_STRAYS, straysOf } from "@tests/fixtures/builders/workspace-scope.builder"
 import { CollectionsService } from "./collections.service"
 import { CustomerBookService } from "./customer-book.service"
 import { CrmErrorCode } from "./errors/crm.error"
@@ -286,5 +287,11 @@ describe("CustomerBookService linkContact", () => {
                 name: null,
             }),
         ).resolves.toEqual(expect.objectContaining({ created: false }))
+    })
+})
+
+describe("CustomerBookService: one credential, one workspace", () => {
+    it.each(CUSTOMER_OPERATIONS)("%s names only the calling credential's workspace", async (id, call) => {
+        expect(await straysOf(id, async (em, ws) => call((await build(em)).book, ws))).toEqual(NO_STRAYS)
     })
 })

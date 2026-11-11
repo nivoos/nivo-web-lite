@@ -1,44 +1,35 @@
-import { createHash, timingSafeEqual } from "node:crypto"
 import { Injectable } from "@nestjs/common"
+import { IsNull, type EntityManager } from "typeorm"
 import type { CredentialAuthenticator, CredentialMetadata, CredentialPrincipal } from "@modules/domain/identity"
-import { InjectCrmOptions } from "./crm.decorators"
-import type { CrmOptions } from "./crm.options"
+import { InjectPrimaryEntityManager } from "@modules/platform/database"
+import { presentedOf, sameSecret, secretSha256Of } from "./credential-secret.policy"
 import { CrmError, CrmErrorCode } from "./errors/crm.error"
+import { ServiceCredentialEntity } from "./persistence/entities"
 
-/** The subject of the service key: the credential's NAME, never its value. */
-const SUBJECT = "CRM_SERVICE_KEY"
-
-/** True when two texts are equal, in time independent of where they differ (both hashed to 32 bytes first, BE-AUTH-3). */
-const sameSecret = (presented: string, expected: string): boolean =>
-    timingSafeEqual(createHash("sha256").update(presented).digest(), createHash("sha256").update(expected).digest())
+/** A digest no presented secret is checked against for real: compared on a miss, so a miss costs the same compare as a wrong secret. */
+const NO_CREDENTIAL = secretSha256Of("")
 
 @Injectable()
 /**
  * The credential authenticator the app binds to identity (`IdentityModule.register({ credentialAuthenticator })`): a CRM door marked
- * `@Credential({ kind: "api-key" })` is admitted only with `Authorization: Bearer <CRM_SERVICE_KEY>`, compared in constant time, and
- * acts for the one workspace the key was issued for. The key is never logged or echoed.
+ * `@Credential({ kind: "api-key" })` is admitted only with `Authorization: Bearer <id>.<secret>` of a live (not revoked) service
+ * credential, the secret's sha256 compared in constant time, and acts for that credential's one workspace. The secret is never
+ * logged or echoed; the principal names the credential by id.
  */
 export class CrmCredentialService implements CredentialAuthenticator {
-    constructor(@InjectCrmOptions() private readonly options: CrmOptions) {}
+    constructor(@InjectPrimaryEntityManager() private readonly entityManager: EntityManager) {}
 
-    /** Authenticates the service key of a CRM door. */
-    authenticate(metadata: CredentialMetadata, authorization: string): Promise<CredentialPrincipal> {
-        return Promise.resolve().then(() => this.principalOf(metadata, authorization))
-    }
-
-    /** The principal of a matching key; anything else is refused. */
-    private principalOf(metadata: CredentialMetadata, authorization: string): CredentialPrincipal {
-        const [scheme, key, extra] = authorization.split(" ")
-        const presented = scheme?.toLowerCase() === "bearer" && extra === undefined ? key : undefined
-        const credential = this.options.credential
-        if (
-            metadata.kind !== "api-key" ||
-            !presented ||
-            credential === undefined ||
-            !sameSecret(presented, credential.serviceKey.reveal())
-        ) {
-            throw new CrmError({ code: CrmErrorCode.ServiceKeyRejected })
-        }
-        return { kind: "api-key", subject: SUBJECT, workspaceId: credential.workspaceId }
+    /** Authenticates the service credential of a CRM door. */
+    async authenticate(metadata: CredentialMetadata, authorization: string): Promise<CredentialPrincipal> {
+        const presented = metadata.kind === "api-key" ? presentedOf(authorization) : null
+        const credential =
+            presented === null
+                ? null
+                : await this.entityManager.findOne(ServiceCredentialEntity, {
+                      where: { id: presented.id, revokedAt: IsNull() },
+                  })
+        const matches = sameSecret(presented?.secret ?? "", credential?.secretSha256 ?? NO_CREDENTIAL)
+        if (credential === null || !matches) throw new CrmError({ code: CrmErrorCode.ServiceKeyRejected })
+        return { kind: "api-key", subject: `crm-credential:${credential.id}`, workspaceId: credential.workspaceId }
     }
 }

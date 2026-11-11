@@ -17,6 +17,7 @@ import { IDS } from "@modules/platform/ids"
 import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
 import { decodeCursor } from "@modules/platform/pagination"
 import { WS, customerRow, renewalRow, serviceRow, uuid } from "@tests/fixtures/builders/crm.builder"
+import { RENEWAL_OPERATIONS, NO_STRAYS, straysOf } from "@tests/fixtures/builders/workspace-scope.builder"
 import { CrmErrorCode } from "./errors/crm.error"
 import {
     CustomerEntity,
@@ -59,13 +60,7 @@ const viewStubs = [
     [CustomerEntity, customerRow()],
 ] as const
 
-const INPUT = {
-    workspaceId: WS,
-    serviceCode: "SYN-HOST",
-    renewalId: uuid(51),
-    requestKey: "renew-1",
-    dryRun: false,
-}
+const INPUT = { workspaceId: WS, serviceCode: "SYN-HOST", renewalId: uuid(51), requestKey: "renew-1", dryRun: false }
 
 const HASH = requestHashOf({
     operation: "service.renewal.create",
@@ -375,12 +370,7 @@ describe("RenewalsService execute (service.renewal.create)", () => {
 
 describe("RenewalsService execute (service.renewal.create)", () => {
     it("answers a recorded execution on a repeat of its key without asking again", async () => {
-        const done = renewalRow({
-            state: "pending_person",
-            executeKey: "renew-1",
-            executeHash: HASH,
-            plugin: "manual",
-        })
+        const done = renewalRow({ state: "pending_person", executeKey: "renew-1", executeHash: HASH, plugin: "manual" })
         const em = mockEntityManager({
             findOne: [
                 [RenewalRequestEntity, done],
@@ -495,5 +485,11 @@ describe("RenewalsService recordOutcome", () => {
                 note: null,
             }),
         ).rejects.toEqual(refused(CrmErrorCode.RenewalStateRefused, { state: "paid" }))
+    })
+})
+
+describe("RenewalsService: one credential, one workspace", () => {
+    it.each(RENEWAL_OPERATIONS)("%s names only the calling credential's workspace", async (id, call) => {
+        expect(await straysOf(id, async (em, ws) => call((await build(em)).renewals, ws))).toEqual(NO_STRAYS)
     })
 })

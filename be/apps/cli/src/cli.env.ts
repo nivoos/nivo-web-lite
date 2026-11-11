@@ -1,17 +1,17 @@
-import type { EnvSource, Secret } from "@modules/platform/config"
-import { parsePrimaryDatabaseConfig } from "@modules/platform/database"
+import type { EnvSource } from "@modules/platform/config"
+import { type DatabaseConnectionOptions, parsePrimaryDatabaseConfig } from "@modules/platform/database"
+import { type RenewalProviderOptions, parseRenewalProviderConfig } from "@modules/integrations/renewal-provider"
 
-/** The cli's primary database configuration before command composition. */
+/** The cli's configuration before command composition. */
 export interface CliEnv {
-    /** The logical connection name declared in `hfs.json`. */
-    readonly name: string
-    /** The PostgreSQL provider. */
-    readonly provider: "postgres"
-    /** The least-privilege database connection URL, read through the secret source. */
-    readonly url: Secret
-    /** The isolated PostgreSQL schema. */
-    readonly schema?: string
+    /** The least-privilege primary database connection, its URL read through the secret source. */
+    readonly database: DatabaseConnectionOptions
+    /** Which plugin takes each provider's renewals (`CRM_PROVIDER_PLUGINS`, a tunable): the CRM capability needs its port. */
+    readonly renewalProvider: RenewalProviderOptions
 }
 
-/** Reads the cli environment with no defaults; database secret readers prefer mounted files. */
-export const readCliEnv = (env: EnvSource): CliEnv => parsePrimaryDatabaseConfig(env)
+/** Reads the cli environment; database secret readers prefer mounted files. */
+export const readCliEnv = (env: EnvSource): CliEnv => ({
+    database: parsePrimaryDatabaseConfig(env),
+    renewalProvider: parseRenewalProviderConfig(env),
+})

@@ -43,3 +43,15 @@ recounted; any mismatch rolls everything back. Rows move through the database fu
 of TypeScript, an entity cannot copy every column with the database-set timestamps, and `sqlPassThrough` is only for text that
 is not the app's own. The commands print nothing but log the counts. Document binaries are NOT in this backup: the `documents`
 rows carry the storage key and the sha256, and the object storage is backed up by its own means.
+
+## CRM service credentials: many workspaces, one CRM
+
+Every CRM row is keyed by `workspace_id`, and every call acts for exactly one workspace: the workspace of the service credential
+that authenticated it. There is no workspace header and no environment variable naming a workspace. The operator issues one
+credential per enterprise workspace (or more, one per NIVO connection) with
+`cli credential issue --workspace <uuid> --label <text>`: the bearer `<id>.<secret>` is printed ONCE on standard output (never
+logged); only the sha256 of the secret is stored in `public.crm_service_credentials`. NIVO's OpenAPI provider presents it as
+`Authorization: Bearer <id>.<secret>`; the CRM looks the id up among the live credentials, compares the sha256 in constant time and
+scopes every query of the call to that credential's workspace. `cli credential revoke --id <uuid>` revokes one; it is refused from
+then on. The unit specs prove the scope over all 29 operations: each service spec runs its operations for the credentials of two
+workspaces and checks that every statement names only the caller's workspace (`src/tests/fixtures/builders/workspace-scope.builder.ts`).

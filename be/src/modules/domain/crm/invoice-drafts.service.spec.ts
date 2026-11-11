@@ -4,6 +4,7 @@ import { IDS } from "@modules/platform/ids"
 import { MESSAGE_CATALOG, type MessageCatalog } from "@modules/platform/i18n"
 import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
 import { WS, customerRow, invoiceDraftRow, renewalRow, serviceRow, uuid } from "@tests/fixtures/builders/crm.builder"
+import { INVOICE_DRAFT_OPERATIONS, NO_STRAYS, straysOf } from "@tests/fixtures/builders/workspace-scope.builder"
 import { CrmErrorCode } from "./errors/crm.error"
 import { InvoiceDraftsService } from "./invoice-drafts.service"
 import { CustomerEntity, InvoiceDraftEntity, RenewalRequestEntity, ServiceEntity } from "./persistence/entities"
@@ -105,5 +106,11 @@ describe("InvoiceDraftsService", () => {
         await expect((await build(none)).get({ workspaceId: WS, id: uuid(9) })).rejects.toEqual(
             expect.objectContaining({ code: CrmErrorCode.InvoiceDraftNotFound }),
         )
+    })
+})
+
+describe("InvoiceDraftsService: one credential, one workspace", () => {
+    it.each(INVOICE_DRAFT_OPERATIONS)("%s names only the calling credential's workspace", async (id, call) => {
+        expect(await straysOf(id, async (em, ws) => call(await build(em), ws))).toEqual(NO_STRAYS)
     })
 })

@@ -40,16 +40,16 @@ export enum CrmErrorCode {
     TicketUpdateEmpty = "CRM_TICKET_UPDATE_EMPTY",
     /** The provider plugin could not answer. */
     ProviderUnavailable = "CRM_PROVIDER_UNAVAILABLE",
-    /** No `Authorization: Bearer <CRM_SERVICE_KEY>`, or not the sealed key. */
+    /** No `Authorization: Bearer <id>.<secret>`, or not a live service credential. */
     ServiceKeyRejected = "CRM_SERVICE_KEY_REJECTED",
-    /** `X-Workspace-Id` is absent or not a uuid. */
-    WorkspaceInvalid = "CRM_WORKSPACE_INVALID",
-    /** `X-Workspace-Id` names another workspace than the one the service key acts for. */
-    WorkspaceForbidden = "CRM_WORKSPACE_FORBIDDEN",
     /** `Idempotency-Key` is absent or outside `[A-Za-z0-9._:-]{1,200}`. */
     IdempotencyKeyInvalid = "CRM_IDEMPOTENCY_KEY_INVALID",
-    /** `CRM_SERVICE_WORKSPACE_ID` is not a uuid (`key` param); boot stops. */
-    ConfigWorkspaceInvalid = "CRM_CONFIG_WORKSPACE_INVALID",
+    /** A credential to issue names no uuid workspace. */
+    CredentialWorkspaceInvalid = "CRM_CREDENTIAL_WORKSPACE_INVALID",
+    /** A credential label is empty or longer than 120 characters. */
+    CredentialLabelInvalid = "CRM_CREDENTIAL_LABEL_INVALID",
+    /** No live service credential has this id. */
+    CredentialNotFound = "CRM_CREDENTIAL_NOT_FOUND",
 }
 
 /** How each CRM code travels. */
@@ -74,10 +74,10 @@ export const CRM_ERROR_KINDS: Record<CrmErrorCode, ErrorKind> = {
     [CrmErrorCode.TicketUpdateEmpty]: "invalid",
     [CrmErrorCode.ProviderUnavailable]: "unavailable",
     [CrmErrorCode.ServiceKeyRejected]: "unauthenticated",
-    [CrmErrorCode.WorkspaceInvalid]: "invalid",
-    [CrmErrorCode.WorkspaceForbidden]: "forbidden",
     [CrmErrorCode.IdempotencyKeyInvalid]: "invalid",
-    [CrmErrorCode.ConfigWorkspaceInvalid]: "internal",
+    [CrmErrorCode.CredentialWorkspaceInvalid]: "invalid",
+    [CrmErrorCode.CredentialLabelInvalid]: "invalid",
+    [CrmErrorCode.CredentialNotFound]: "not-found",
 }
 
 /** The one error class of the CRM capability. */

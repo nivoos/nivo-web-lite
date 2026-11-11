@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { builder } from "@starci/jest-preset"
 import { crmEntities } from "@modules/domain/crm"
 
@@ -16,6 +17,7 @@ const PayableNoteEntity: (typeof crmEntities)[19] = crmEntities[19]
 const TicketEntity: (typeof crmEntities)[20] = crmEntities[20]
 const TicketNoteEntity: (typeof crmEntities)[21] = crmEntities[21]
 const InvoiceDraftEntity: (typeof crmEntities)[22] = crmEntities[22]
+const ServiceCredentialEntity: (typeof crmEntities)[23] = crmEntities[23]
 
 /** A row of the Customer table. */
 type CustomerEntity = InstanceType<typeof CustomerEntity>
@@ -45,6 +47,8 @@ type TicketEntity = InstanceType<typeof TicketEntity>
 type TicketNoteEntity = InstanceType<typeof TicketNoteEntity>
 /** A row of the InvoiceDraft table. */
 type InvoiceDraftEntity = InstanceType<typeof InvoiceDraftEntity>
+/** A row of the ServiceCredential table. */
+type ServiceCredentialEntity = InstanceType<typeof ServiceCredentialEntity>
 
 /** The synthetic workspace of every CRM spec. */
 export const WS = "6f1c2a9e-0000-4000-8000-00000000a001"
@@ -345,6 +349,22 @@ export const invoiceDraftRow: (overrides?: Partial<InvoiceDraftEntity>) => Invoi
             totalVnd: 1_320_000,
             state: "draft",
             priceSource: "placeholder",
+            ...stamps,
+        }),
+    )
+
+/** The secret part of the synthetic credentials' bearer: 43 base64url characters, never a real key. */
+export const SYNTHETIC_SECRET: string = "s".repeat(43)
+
+/** A synthetic live service credential of workspace WS; its secret is SYNTHETIC_SECRET. */
+export const serviceCredentialRow: (overrides?: Partial<ServiceCredentialEntity>) => ServiceCredentialEntity =
+    builder<ServiceCredentialEntity>(
+        Object.assign(new ServiceCredentialEntity(), {
+            id: uuid(111),
+            workspaceId: WS,
+            label: "Synthetic NIVO connection",
+            secretSha256: createHash("sha256").update(SYNTHETIC_SECRET, "utf8").digest("hex"),
+            revokedAt: null,
             ...stamps,
         }),
     )

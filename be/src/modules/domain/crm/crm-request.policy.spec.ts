@@ -39,17 +39,12 @@ describe("crm request policy", () => {
         subject = await policy()
     })
 
-    it("answers the workspace header in lower case when it is the key's own workspace", () => {
-        expect(subject.workspaceOf(WS.toUpperCase(), WS)).toBe(WS)
+    it("answers the workspace of the credential that authenticated the call, and nothing a caller sends", () => {
+        expect(subject.workspaceOf(WS)).toBe(WS)
     })
 
-    it("refuses a malformed header, a missing credential and another workspace", () => {
-        expect(codeOf(() => subject.workspaceOf("acme", WS))).toBe(CrmErrorCode.WorkspaceInvalid)
-        expect(codeOf(() => subject.workspaceOf([WS], WS))).toBe(CrmErrorCode.WorkspaceInvalid)
-        expect(codeOf(() => subject.workspaceOf(WS, undefined))).toBe(CrmErrorCode.ServiceKeyRejected)
-        expect(codeOf(() => subject.workspaceOf("6f1c2a9e-0000-4000-8000-00000000a002", WS))).toBe(
-            CrmErrorCode.WorkspaceForbidden,
-        )
+    it("refuses a call no credential authenticated", () => {
+        expect(codeOf(() => subject.workspaceOf(undefined))).toBe(CrmErrorCode.ServiceKeyRejected)
     })
 
     it("answers a bounded replay key and refuses an absent or foreign one", () => {

@@ -4,6 +4,7 @@ import { CLOCK } from "@modules/platform/clock"
 import { IDS } from "@modules/platform/ids"
 import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
 import { WS, customerRow, serviceRow, ticketNoteRow, ticketRow, uuid } from "@tests/fixtures/builders/crm.builder"
+import { TICKET_OPERATIONS, NO_STRAYS, straysOf } from "@tests/fixtures/builders/workspace-scope.builder"
 import { CrmErrorCode } from "./errors/crm.error"
 import { CustomerEntity, ServiceEntity, TicketEntity, TicketNoteEntity } from "./persistence/entities"
 import { requestHashOf } from "./request-key.policy"
@@ -233,5 +234,11 @@ describe("TicketsService update", () => {
         await expect((await build(repeat)).update(UPDATE)).resolves.toEqual(expect.objectContaining({ status: "open" }))
         const none = mockEntityManager({ findOne: [TicketEntity, null] })
         await expect((await build(none)).update(UPDATE)).rejects.toEqual(refused(CrmErrorCode.TicketNotFound))
+    })
+})
+
+describe("TicketsService: one credential, one workspace", () => {
+    it.each(TICKET_OPERATIONS)("%s names only the calling credential's workspace", async (id, call) => {
+        expect(await straysOf(id, async (em, ws) => call(await build(em), ws))).toEqual(NO_STRAYS)
     })
 })

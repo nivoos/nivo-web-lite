@@ -2114,7 +2114,7 @@
       },
       "serviceKey": {
         "bearerFormat": "opaque",
-        "description": "The CRM service key: the sealed secret NAMED CRM_SERVICE_KEY, never in this document.",
+        "description": "A CRM service credential `<id>.<secret>`, issued per enterprise workspace by `cli credential issue` (the secret is shown once, only its sha256 is stored). The credential's workspace scopes every call; no header names a workspace. A revoked credential is refused.",
         "scheme": "bearer",
         "type": "http"
       }
@@ -2640,15 +2640,6 @@
               "minLength": 1,
               "type": "string"
             }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -2697,15 +2688,6 @@
             "schema": {
               "maxLength": 80,
               "minLength": 1,
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
               "type": "string"
             }
           }
@@ -2758,15 +2740,6 @@
               "minLength": 1,
               "type": "string"
             }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -2815,15 +2788,6 @@
             "schema": {
               "maxLength": 80,
               "minLength": 1,
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
               "type": "string"
             }
           }
@@ -2905,15 +2869,6 @@
               "maxLength": 2048,
               "type": "string"
             }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -2981,15 +2936,6 @@
             "required": false,
             "schema": {
               "maxLength": 2048,
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
               "type": "string"
             }
           }
@@ -3061,15 +3007,6 @@
               "maxLength": 2048,
               "type": "string"
             }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -3139,15 +3076,6 @@
               "maxLength": 2048,
               "type": "string"
             }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -3188,17 +3116,7 @@
     "/v1/invoice-drafts": {
       "post": {
         "operationId": "invoice.draft.create",
-        "parameters": [
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3251,15 +3169,6 @@
           {
             "in": "path",
             "name": "id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
             "required": true,
             "schema": {
               "format": "uuid",
@@ -3324,15 +3233,6 @@
               "maxLength": 2048,
               "type": "string"
             }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -3381,15 +3281,6 @@
             "schema": {
               "maxLength": 80,
               "minLength": 1,
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
               "type": "string"
             }
           },
@@ -3470,15 +3361,6 @@
               "maxLength": 2048,
               "type": "string"
             }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -3547,15 +3429,6 @@
               "format": "date",
               "type": "string"
             }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -3604,15 +3477,6 @@
             "schema": {
               "maxLength": 120,
               "minLength": 1,
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
               "type": "string"
             }
           },
@@ -3684,15 +3548,6 @@
               "minLength": 1,
               "type": "string"
             }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
           }
         ],
         "requestBody": {
@@ -3744,15 +3599,6 @@
       "post": {
         "operationId": "renewal.quote.create",
         "parameters": [
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
           {
             "in": "header",
             "name": "Idempotency-Key",
@@ -3840,15 +3686,6 @@
               "minLength": 1,
               "type": "string"
             }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -3898,15 +3735,6 @@
               "format": "uuid",
               "type": "string"
             }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -3951,15 +3779,6 @@
           {
             "in": "path",
             "name": "id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
             "required": true,
             "schema": {
               "format": "uuid",
@@ -4019,15 +3838,6 @@
           {
             "in": "path",
             "name": "id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
             "required": true,
             "schema": {
               "format": "uuid",
@@ -4133,15 +3943,6 @@
               ],
               "type": "string"
             }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -4190,15 +3991,6 @@
             "schema": {
               "maxLength": 120,
               "minLength": 1,
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
               "type": "string"
             }
           },
@@ -4273,15 +4065,6 @@
           },
           {
             "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
             "name": "Idempotency-Key",
             "required": true,
             "schema": {
@@ -4346,15 +4129,6 @@
             "schema": {
               "maxLength": 120,
               "minLength": 1,
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
               "type": "string"
             }
           }
@@ -4442,15 +4216,6 @@
               ],
               "type": "string"
             }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -4490,15 +4255,6 @@
       "post": {
         "operationId": "ticket.create",
         "parameters": [
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
           {
             "in": "header",
             "name": "Idempotency-Key",
@@ -4566,15 +4322,6 @@
               "format": "uuid",
               "type": "string"
             }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -4617,15 +4364,6 @@
           {
             "in": "path",
             "name": "id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "X-Workspace-Id",
             "required": true,
             "schema": {
               "format": "uuid",

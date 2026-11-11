@@ -2,7 +2,7 @@ import { HttpCode, applyDecorators, type Type } from "@nestjs/common"
 import { ApiBearerAuth, ApiDefaultResponse, ApiExtension, ApiHeader, ApiOperation, ApiResponse } from "@nestjs/swagger"
 import { ErrorResponse } from "./error.response"
 
-/** The name of the CRM security scheme: `Authorization: Bearer <CRM_SERVICE_KEY>`, declared in the app's OpenAPI head. */
+/** The name of the CRM security scheme: `Authorization: Bearer <id>.<secret>` of a service credential of one workspace, declared in the app's OpenAPI head. */
 const SERVICE_KEY_SCHEME = "serviceKey"
 
 /** How an operation changes state, for the NIVO tool declaration. */
@@ -29,13 +29,6 @@ export interface CrmOperationSpec {
     readonly status?: OperationStatus
 }
 
-/** The workspace header every CRM operation reads. */
-const WORKSPACE_HEADER = ApiHeader({
-    name: "X-Workspace-Id",
-    required: true,
-    schema: { type: "string", format: "uuid" },
-})
-
 /** The replay header of a keyed write. */
 const REPLAY_HEADER = ApiHeader({
     name: "Idempotency-Key",
@@ -48,7 +41,6 @@ export const CrmOperation = (spec: CrmOperationSpec): MethodDecorator =>
     applyDecorators(
         ApiOperation({ operationId: spec.id, summary: spec.summary }),
         ApiBearerAuth(SERVICE_KEY_SCHEME),
-        WORKSPACE_HEADER,
         ...(spec.idempotencyKey === true ? [REPLAY_HEADER] : []),
         ApiExtension("x-crm-effect", spec.effect),
         ApiExtension("x-crm-money", spec.money === true),

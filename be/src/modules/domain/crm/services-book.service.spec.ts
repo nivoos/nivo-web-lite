@@ -27,6 +27,7 @@ import {
     uuid,
     websiteRow,
 } from "@tests/fixtures/builders/crm.builder"
+import { SERVICE_OPERATIONS, NO_STRAYS, straysOf } from "@tests/fixtures/builders/workspace-scope.builder"
 import { CrmErrorCode } from "./errors/crm.error"
 import {
     ContactEntity,
@@ -244,5 +245,11 @@ describe("ServicesBookService recordReminder", () => {
         await expect((await build(em)).book.recordReminder(INPUT)).rejects.toEqual(
             expect.objectContaining({ code: CrmErrorCode.ServiceNotFound }),
         )
+    })
+})
+
+describe("ServicesBookService: one credential, one workspace", () => {
+    it.each(SERVICE_OPERATIONS)("%s names only the calling credential's workspace", async (id, call) => {
+        expect(await straysOf(id, async (em, ws) => call((await build(em)).book, ws))).toEqual(NO_STRAYS)
     })
 })

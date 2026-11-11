@@ -1,59 +1,72 @@
 import { Test } from "@nestjs/testing"
-import { builder } from "@starci/jest-preset"
-import { Secret } from "@modules/platform/config"
-import { CRM_OPTIONS } from "./crm.decorators"
+import { IsNull } from "typeorm"
+import { type MockEntityManager, mockEntityManager } from "@starci/jest-preset"
+import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
+import { SYNTHETIC_SECRET, WS, serviceCredentialRow, uuid } from "@tests/fixtures/builders/crm.builder"
+import { CRM_OPERATION_IDS, OTHER_WS } from "@tests/fixtures/builders/workspace-scope.builder"
 import { CrmCredentialService } from "./crm-credential.service"
-import type { CrmOptions } from "./crm.options"
 import { CrmErrorCode } from "./errors/crm.error"
+import { ServiceCredentialEntity } from "./persistence/entities"
 
-const KEY = "synthetic-service-key-for-specs"
-const WS = "6f1c2a9e-0000-4000-8000-00000000a001"
 const API_KEY = { kind: "api-key" } as const
+const ID = uuid(111)
 
-const WITH_KEY: CrmOptions = builder<CrmOptions>({ credential: { serviceKey: new Secret(KEY), workspaceId: WS } })()
-const WITHOUT_KEY: CrmOptions = builder<CrmOptions>({})()
-
-const withKey = async (): Promise<CrmCredentialService> => {
+const build = async (em: MockEntityManager): Promise<CrmCredentialService> => {
     const moduleRef = await Test.createTestingModule({
-        providers: [CrmCredentialService, { provide: CRM_OPTIONS, useValue: WITH_KEY }],
+        providers: [CrmCredentialService, { provide: PRIMARY_ENTITY_MANAGER, useValue: em }],
     }).compile()
     return moduleRef.get(CrmCredentialService)
 }
 
-const withoutKey = async (): Promise<CrmCredentialService> => {
-    const moduleRef = await Test.createTestingModule({
-        providers: [CrmCredentialService, { provide: CRM_OPTIONS, useValue: WITHOUT_KEY }],
-    }).compile()
-    return moduleRef.get(CrmCredentialService)
-}
+const refused: unknown = expect.objectContaining({ code: CrmErrorCode.ServiceKeyRejected })
 
-describe("CrmCredentialService", () => {
-    it("admits the sealed key as a bearer credential acting for its one workspace, named by the credential's NAME", async () => {
-        await expect((await withKey()).authenticate(API_KEY, `Bearer ${KEY}`)).resolves.toEqual({
+describe("CrmCredentialService: a live credential", () => {
+    it("admits its bearer and acts for the credential's own workspace, named by id, looked up live only", async () => {
+        const em = mockEntityManager({ findOne: [ServiceCredentialEntity, serviceCredentialRow()] })
+
+        await expect((await build(em)).authenticate(API_KEY, `bearer ${ID}.${SYNTHETIC_SECRET}`)).resolves.toEqual({
             kind: "api-key",
-            subject: "CRM_SERVICE_KEY",
+            subject: `crm-credential:${ID}`,
             workspaceId: WS,
         })
+        expect(em.findOne).toHaveBeenCalledWith(ServiceCredentialEntity, { where: { id: ID, revokedAt: IsNull() } })
     })
 
-    it("refuses another key, another scheme, extra words, an empty header and another credential kind", async () => {
-        const service = await withKey()
-        for (const [metadata, authorization] of [
-            [API_KEY, `Bearer ${KEY}x`],
-            [API_KEY, `Basic ${KEY}`],
-            [API_KEY, `Bearer ${KEY} more`],
-            [API_KEY, ""],
-            [{ kind: "run-token" } as const, `Bearer ${KEY}`],
-        ] as const) {
-            await expect(service.authenticate(metadata, authorization)).rejects.toEqual(
-                expect.objectContaining({ code: CrmErrorCode.ServiceKeyRejected }),
-            )
-        }
+    it("acts for the other workspace when that workspace's credential is presented: two workspaces, two credentials", async () => {
+        const em = mockEntityManager({
+            findOne: [ServiceCredentialEntity, serviceCredentialRow({ id: uuid(112), workspaceId: OTHER_WS })],
+        })
+
+        await expect(
+            (await build(em)).authenticate(API_KEY, `Bearer ${uuid(112)}.${SYNTHETIC_SECRET}`),
+        ).resolves.toEqual({ kind: "api-key", subject: `crm-credential:${uuid(112)}`, workspaceId: OTHER_WS })
     })
 
-    it("refuses every key when the capability was composed without a credential (the cli)", async () => {
-        await expect((await withoutKey()).authenticate(API_KEY, `Bearer ${KEY}`)).rejects.toEqual(
-            expect.objectContaining({ code: CrmErrorCode.ServiceKeyRejected }),
+    it("is the workspace source of all 29 operations, each listed once in the scope tables of the service specs", () => {
+        expect([CRM_OPERATION_IDS.length, new Set(CRM_OPERATION_IDS).size]).toEqual([29, 29])
+    })
+})
+
+describe("CrmCredentialService: refusals", () => {
+    it("refuses a wrong secret and a revoked or unknown credential (the live lookup answers nothing)", async () => {
+        const wrong = mockEntityManager({ findOne: [ServiceCredentialEntity, serviceCredentialRow()] })
+        await expect((await build(wrong)).authenticate(API_KEY, `Bearer ${ID}.${"x".repeat(43)}`)).rejects.toEqual(
+            refused,
         )
+        const revoked = mockEntityManager({ findOne: [ServiceCredentialEntity, null] })
+        await expect((await build(revoked)).authenticate(API_KEY, `Bearer ${ID}.${SYNTHETIC_SECRET}`)).rejects.toEqual(
+            refused,
+        )
+    })
+
+    it("refuses a malformed header and another credential kind without reading the store", async () => {
+        const em = mockEntityManager()
+        const service = await build(em)
+        await expect(service.authenticate(API_KEY, `Basic ${ID}.${SYNTHETIC_SECRET}`)).rejects.toEqual(refused)
+        await expect(service.authenticate(API_KEY, SYNTHETIC_SECRET)).rejects.toEqual(refused)
+        await expect(service.authenticate({ kind: "run-token" }, `Bearer ${ID}.${SYNTHETIC_SECRET}`)).rejects.toEqual(
+            refused,
+        )
+        expect(em.findOne).not.toHaveBeenCalled()
     })
 })

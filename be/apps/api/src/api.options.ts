@@ -2,7 +2,6 @@ import type { PassportOptions } from "@modules/integrations/passport"
 import type { MailOptions } from "@modules/integrations/mail"
 import type { ObjectStorageOptions } from "@modules/integrations/object-storage"
 import type { RenewalProviderOptions } from "@modules/integrations/renewal-provider"
-import type { parseCrmConfig } from "@modules/domain/crm"
 import type { ServerOptions } from "@modules/platform/config"
 import type { DatabaseConnectionOptions } from "@modules/platform/database"
 import type { HttpOptions } from "@modules/platform/http"
@@ -24,8 +23,6 @@ export interface ApiOptions {
     readonly objectStorage: ObjectStorageOptions
     /** Outgoing mail: the SMTP server and the app's own mail settings. */
     readonly mail: MailOptions
-    /** The CRM's service key and the workspace it acts for. */
-    readonly crm: ReturnType<typeof parseCrmConfig>
     /** Which plugin takes each provider's renewals. */
     readonly renewalProvider: RenewalProviderOptions
 }

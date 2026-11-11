@@ -18,6 +18,7 @@ export const buildWiringProof = (): WiringProof => ({
                 schema: "public",
             },
         ],
+        renewalProvider: { plugins: { inet: "fixture" } },
     },
     overrides: [{ token: PRIMARY_DATA_SOURCE, value: { manager: {} } }],
 })

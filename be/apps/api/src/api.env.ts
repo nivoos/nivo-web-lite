@@ -6,7 +6,6 @@ import { parsePassportConfig } from "@modules/integrations/passport"
 import { parseMailConfig } from "@modules/integrations/mail"
 import { parseObjectStorageConfig } from "@modules/integrations/object-storage"
 import { parseRenewalProviderConfig } from "@modules/integrations/renewal-provider"
-import { parseCrmConfig } from "@modules/domain/crm"
 
 /** The API environment values required before composition. */
 export interface ApiEnv {
@@ -24,8 +23,6 @@ export interface ApiEnv {
     readonly objectStorage: ReturnType<typeof parseObjectStorageConfig>
     /** Outgoing mail: the SMTP server and the app's own mail settings. */
     readonly mail: ReturnType<typeof parseMailConfig>
-    /** The CRM's service key (secret NAMED `CRM_SERVICE_KEY`) and the workspace it acts for (`CRM_SERVICE_WORKSPACE_ID`). */
-    readonly crm: ReturnType<typeof parseCrmConfig>
     /** Which plugin takes each provider's renewals (`CRM_PROVIDER_PLUGINS`, a tunable). */
     readonly renewalProvider: ReturnType<typeof parseRenewalProviderConfig>
 }
@@ -39,6 +36,5 @@ export const readApiEnv = (env: EnvSource): ApiEnv => ({
     passport: parsePassportConfig(env),
     objectStorage: parseObjectStorageConfig(env),
     mail: parseMailConfig(env),
-    crm: parseCrmConfig(env),
     renewalProvider: parseRenewalProviderConfig(env),
 })

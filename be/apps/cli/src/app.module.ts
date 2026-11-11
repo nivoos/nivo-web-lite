@@ -2,6 +2,7 @@ import { Module, type DynamicModule } from "@nestjs/common"
 import { platformModules } from "./compose/platform"
 import { cliModules } from "./compose/cli"
 import { domainModules } from "./compose/domain"
+import { integrationModules } from "./compose/integrations"
 import type { CliAppOptions } from "./cli.options"
 
 @Module({})
@@ -14,7 +15,7 @@ export class AppModule {
     static register(options: CliAppOptions): DynamicModule {
         return {
             module: AppModule,
-            imports: [...platformModules(options), ...domainModules(), ...cliModules()],
+            imports: [...platformModules(options), ...integrationModules(options), ...domainModules(), ...cliModules()],
         }
     }
 }

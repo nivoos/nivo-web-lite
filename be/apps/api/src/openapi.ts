@@ -13,7 +13,8 @@ export const OPENAPI: Omit<OpenAPIObject, "paths"> = new DocumentBuilder()
             type: "http",
             scheme: "bearer",
             bearerFormat: "opaque",
-            description: "The CRM service key: the sealed secret NAMED CRM_SERVICE_KEY, never in this document.",
+            description:
+                "A CRM service credential `<id>.<secret>`, issued per enterprise workspace by `cli credential issue` (the secret is shown once, only its sha256 is stored). The credential's workspace scopes every call; no header names a workspace. A revoked credential is refused.",
         },
         "serviceKey",
     )

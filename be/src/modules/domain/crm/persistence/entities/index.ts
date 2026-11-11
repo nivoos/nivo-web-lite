@@ -21,6 +21,7 @@ import { PayableNoteEntity } from "./payable-note.entity"
 import { TicketEntity } from "./ticket.entity"
 import { TicketNoteEntity } from "./ticket-note.entity"
 import { InvoiceDraftEntity } from "./invoice-draft.entity"
+import { ServiceCredentialEntity } from "./service-credential.entity"
 
 export { UuidAbstractEntity, bigintNumberTransformer } from "./uuid-abstract.entity"
 export {
@@ -47,6 +48,7 @@ export {
     TicketEntity,
     TicketNoteEntity,
     InvoiceDraftEntity,
+    ServiceCredentialEntity,
 }
 export type { InvoiceDraftLineValue } from "./invoice-draft.entity"
 
@@ -75,6 +77,7 @@ export const crmEntities: readonly [
     typeof TicketEntity,
     typeof TicketNoteEntity,
     typeof InvoiceDraftEntity,
+    typeof ServiceCredentialEntity,
 ] = [
     CustomerEntity,
     ContactEntity,
@@ -99,4 +102,5 @@ export const crmEntities: readonly [
     TicketEntity,
     TicketNoteEntity,
     InvoiceDraftEntity,
+    ServiceCredentialEntity,
 ] as const
