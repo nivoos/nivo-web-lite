@@ -31,6 +31,11 @@ export const CRM_MESSAGES: MessageBundle = {
         "errors.CRM_CREDENTIAL_WORKSPACE_INVALID": "Workspace của khoá dịch vụ phải là uuid.",
         "errors.CRM_CREDENTIAL_LABEL_INVALID": "Nhãn của khoá dịch vụ phải dài 1 đến 120 ký tự.",
         "errors.CRM_CREDENTIAL_NOT_FOUND": "Không có khoá dịch vụ còn hiệu lực với id này.",
+        "errors.CRM_IMPORT_WORKSPACE_INVALID": "Workspace nhận ảnh dữ liệu phải là uuid.",
+        "errors.CRM_IMPORT_MANIFEST_INVALID": "Ảnh dữ liệu không có manifest.json định dạng nivo-web-lite-data@1.",
+        "errors.CRM_IMPORT_FILE_INVALID": "Tệp {{entity}} thiếu, không khớp sha256 trong manifest hoặc sai schema @1.",
+        "errors.CRM_IMPORT_ITEM_INVALID": "Một mục của {{entity}} thiếu trường hoặc sai kiểu.",
+        "errors.CRM_IMPORT_REFERENCE_UNKNOWN": "Một mục của {{entity}} trỏ tới khách hàng không có trong ảnh dữ liệu.",
     },
     en: {
         "crm.invoice-draft.renewal-line": "Renewal of {{serviceClass}} {{serviceCode}}, {{termMonths}} months",
@@ -61,5 +66,11 @@ export const CRM_MESSAGES: MessageBundle = {
         "errors.CRM_CREDENTIAL_WORKSPACE_INVALID": "The workspace of a service credential must be a uuid.",
         "errors.CRM_CREDENTIAL_LABEL_INVALID": "A service credential label is 1 to 120 characters.",
         "errors.CRM_CREDENTIAL_NOT_FOUND": "No live service credential has this id.",
+        "errors.CRM_IMPORT_WORKSPACE_INVALID": "The workspace a snapshot is imported into must be a uuid.",
+        "errors.CRM_IMPORT_MANIFEST_INVALID": "The snapshot has no manifest.json of format nivo-web-lite-data@1.",
+        "errors.CRM_IMPORT_FILE_INVALID":
+            "The {{entity}} file is missing, does not match its manifest sha256, or is not schema @1.",
+        "errors.CRM_IMPORT_ITEM_INVALID": "An item of {{entity}} lacks a field or carries a mistyped one.",
+        "errors.CRM_IMPORT_REFERENCE_UNKNOWN": "An item of {{entity}} names a customer the snapshot does not hold.",
     },
 }

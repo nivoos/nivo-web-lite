@@ -50,6 +50,16 @@ export enum CrmErrorCode {
     CredentialLabelInvalid = "CRM_CREDENTIAL_LABEL_INVALID",
     /** No live service credential has this id. */
     CredentialNotFound = "CRM_CREDENTIAL_NOT_FOUND",
+    /** The workspace an import binds a snapshot to is no uuid. */
+    ImportWorkspaceInvalid = "CRM_IMPORT_WORKSPACE_INVALID",
+    /** A snapshot has no `manifest.json` of format `nivo-web-lite-data@1`, or it names an entity the format does not have. */
+    ImportManifestInvalid = "CRM_IMPORT_MANIFEST_INVALID",
+    /** A snapshot file is missing, is not the text its manifest digests, or is not its entity's schema @1 (`entity` param). */
+    ImportFileInvalid = "CRM_IMPORT_FILE_INVALID",
+    /** An item lacks a field of its entity or carries a mistyped one (`entity`, `index` or `field` param). */
+    ImportItemInvalid = "CRM_IMPORT_ITEM_INVALID",
+    /** An item names a customer (by code) the snapshot does not hold (`entity`, `field` param). */
+    ImportReferenceUnknown = "CRM_IMPORT_REFERENCE_UNKNOWN",
 }
 
 /** How each CRM code travels. */
@@ -78,6 +88,11 @@ export const CRM_ERROR_KINDS: Record<CrmErrorCode, ErrorKind> = {
     [CrmErrorCode.CredentialWorkspaceInvalid]: "invalid",
     [CrmErrorCode.CredentialLabelInvalid]: "invalid",
     [CrmErrorCode.CredentialNotFound]: "not-found",
+    [CrmErrorCode.ImportWorkspaceInvalid]: "invalid",
+    [CrmErrorCode.ImportManifestInvalid]: "invalid",
+    [CrmErrorCode.ImportFileInvalid]: "invalid",
+    [CrmErrorCode.ImportItemInvalid]: "invalid",
+    [CrmErrorCode.ImportReferenceUnknown]: "invalid",
 }
 
 /** The one error class of the CRM capability. */

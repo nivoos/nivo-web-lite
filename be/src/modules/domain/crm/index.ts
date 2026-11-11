@@ -12,6 +12,7 @@ export type {
 } from "./collection.contracts"
 export { CrmIdempotencyKey, CrmWorkspace } from "./crm.decorators"
 export { CrmCredentialService } from "./crm-credential.service"
+export { CrmImportService } from "./crm-import.service"
 export { CrmModule } from "./crm.module"
 export { CRM_ERROR_KINDS } from "./errors/crm.error"
 export { CRM_MESSAGES } from "./messages/crm.messages"

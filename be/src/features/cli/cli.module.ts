@@ -4,6 +4,7 @@ import { MigrateModule } from "./migrate/migrate.module"
 import { SeedModule } from "./seed/seed.module"
 import { BackupModule } from "./backup/backup.module"
 import { CredentialModule } from "./credential/credential.module"
+import { ImportModule } from "./import/import.module"
 
 @Module({
     imports: [
@@ -11,6 +12,7 @@ import { CredentialModule } from "./credential/credential.module"
         SeedModule.register({}),
         BackupModule.register({}),
         CredentialModule.register({}),
+        ImportModule.register({}),
     ],
 })
 /** The cli feature root: every command group of the back end, compiled only into apps/cli. */

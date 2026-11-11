@@ -1,0 +1,340 @@
+import { Injectable } from "@nestjs/common"
+import type { EntityManager, EntityTarget, ObjectLiteral } from "typeorm"
+import { type Clock, InjectClock } from "@modules/platform/clock"
+import { InjectPrimaryEntityManager } from "@modules/platform/database"
+import { InjectLogger, type Logger } from "@modules/platform/logging"
+import { canonicalJson, eachInOrder, isRecord, sha256Hex } from "@modules/platform/primitives"
+import { CrmImportLogEvent } from "./crm-import.log-events"
+import { CrmError, CrmErrorCode } from "./errors/crm.error"
+import {
+    ContactEntity,
+    ContractEntity,
+    CustomerEntity,
+    DocumentEntity,
+    ImportIssueEntity,
+    ImportRunEntity,
+    InvoiceEntity,
+    LedgerBalanceEntity,
+    ProjectEntity,
+    ProviderAccountEntity,
+    ReceivableEntity,
+    ServiceEntity,
+    WebsiteEntity,
+} from "./persistence/entities"
+import { SNAPSHOT_ENTITIES, snapshotEntriesOf, snapshotItemsOf, snapshotJsonOf } from "./snapshot-format.policy"
+import { SnapshotFilesClient } from "./snapshot-files.client"
+import * as rows from "./snapshot-rows.mapper"
+import type {
+    SnapshotEntityCount,
+    SnapshotImportInput,
+    SnapshotImportSummary,
+    SnapshotItem,
+} from "./snapshot.contracts"
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u
+
+/** Rows written per statement. */
+const CHUNK = 200
+
+/** The most rows of one table a workspace is read with (a CRM workspace holds hundreds); more is refused, never cut silently. */
+const STORED_ROWS_MAX = 50_000
+
+/** How one entity of format @1 lands in its table. */
+interface EntityPlan {
+    /** The table's entity. */
+    readonly target: EntityTarget<ObjectLiteral>
+    /** The natural key of an item (fields joined by U+001F, as the format sorts them). */
+    readonly itemKey: (item: SnapshotItem) => string
+    /** The same natural key of a stored row. */
+    readonly rowKey: (row: ObjectLiteral) => string
+    /** The conflict columns of the upsert; null: rows are only inserted when absent (no source hash to compare). */
+    readonly conflict: ReadonlyArray<string> | null
+    /** The row of one item. */
+    readonly rowOf: (item: SnapshotItem, stamp: rows.SnapshotStamp, refs: rows.SnapshotRefs) => ObjectLiteral
+}
+
+/** The natural key of a value by its fields, joined by U+001F. */
+const keyOf = (value: Readonly<Record<string, unknown>>, fields: ReadonlyArray<string>): string =>
+    fields.map((field) => String(value[field])).join("\u001f")
+
+/** The key functions of a natural key whose item fields and row columns are named alike. */
+const sameKeys = (...fields: Array<string>): Pick<EntityPlan, "itemKey" | "rowKey"> => ({
+    itemKey: (item) => keyOf(item, fields),
+    rowKey: (row) => keyOf(row, fields),
+})
+
+/** The provenance key of an import issue: its source place, field and reason. */
+const issueKeys: Pick<EntityPlan, "itemKey" | "rowKey"> = {
+    itemKey: (item) => {
+        const origin = item["origin"]
+        const place = isRecord(origin) ? origin : {}
+        return keyOf({ ...place, field: item["field"], reason: item["reason"] }, [
+            "file",
+            "sheet",
+            "row",
+            "field",
+            "reason",
+        ])
+    },
+    rowKey: (row) => keyOf(row, ["sourceFile", "sourceSheet", "sourceRow", "field", "reason"]),
+}
+
+/** The plan of every entity of format @1, by entity name. */
+const PLANS: ReadonlyMap<string, EntityPlan> = new Map<string, EntityPlan>([
+    [
+        "customers",
+        { target: CustomerEntity, ...sameKeys("code"), conflict: ["workspaceId", "code"], rowOf: rows.customerRowOf },
+    ],
+    [
+        "websites",
+        { target: WebsiteEntity, ...sameKeys("domain"), conflict: ["workspaceId", "domain"], rowOf: rows.websiteRowOf },
+    ],
+    [
+        "providers",
+        {
+            target: ProviderAccountEntity,
+            itemKey: (item) => String(item["key"]),
+            rowKey: (row) => String(row["provider"]),
+            conflict: null,
+            rowOf: (item, stamp) => rows.providerRowOf(item, stamp.workspaceId),
+        },
+    ],
+    [
+        "services",
+        { target: ServiceEntity, ...sameKeys("code"), conflict: ["workspaceId", "code"], rowOf: rows.serviceRowOf },
+    ],
+    [
+        "projects",
+        { target: ProjectEntity, ...sameKeys("code"), conflict: ["workspaceId", "code"], rowOf: rows.projectRowOf },
+    ],
+    [
+        "contracts",
+        {
+            target: ContractEntity,
+            ...sameKeys("contractNo"),
+            conflict: ["workspaceId", "contractNo"],
+            rowOf: rows.contractRowOf,
+        },
+    ],
+    [
+        "documents",
+        { target: DocumentEntity, ...sameKeys("path"), conflict: ["workspaceId", "path"], rowOf: rows.documentRowOf },
+    ],
+    [
+        "invoices",
+        {
+            target: InvoiceEntity,
+            ...sameKeys("invoiceNo"),
+            conflict: ["workspaceId", "invoiceNo"],
+            rowOf: rows.invoiceRowOf,
+        },
+    ],
+    [
+        "receivables",
+        {
+            target: ReceivableEntity,
+            ...sameKeys("projectCode"),
+            conflict: ["workspaceId", "projectCode"],
+            rowOf: rows.receivableRowOf,
+        },
+    ],
+    [
+        "balances",
+        {
+            target: LedgerBalanceEntity,
+            ...sameKeys("account", "partyCode"),
+            conflict: ["workspaceId", "account", "partyCode"],
+            rowOf: rows.balanceRowOf,
+        },
+    ],
+    [
+        "contacts",
+        {
+            target: ContactEntity,
+            ...sameKeys("name", "phone", "email"),
+            conflict: null,
+            rowOf: (item, stamp, refs) => rows.contactRowOf(item, stamp.workspaceId, refs),
+        },
+    ],
+    ["issues", { target: ImportIssueEntity, ...issueKeys, conflict: null, rowOf: rows.issueRowOf }],
+])
+
+/** One entity of a checked snapshot. */
+interface SnapshotPart {
+    readonly entity: string
+    readonly plan: EntityPlan
+    readonly items: ReadonlyArray<SnapshotItem>
+}
+
+/** A checked snapshot: its source label and its parts in import order. */
+interface Snapshot {
+    readonly source: string
+    readonly parts: ReadonlyArray<SnapshotPart>
+}
+
+/** The plan of an entity the format lists (every listed entity has one). */
+const planOf = (entity: string): EntityPlan => {
+    const plan = PLANS.get(entity)
+    if (plan === undefined) throw new CrmError({ code: CrmErrorCode.ImportManifestInvalid })
+    return plan
+}
+
+@Injectable()
+/**
+ * The first load and every later refresh of a workspace's CRM from the sealed data repository `nivo-web-lite-data`, format @1:
+ * structured JSON to rows, nothing else (no source file is parsed, no word decides a meaning). The snapshot is checked whole
+ * before anything is written (manifest, each file's sha256, schema id, count, every field's kind), then bound to the workspace
+ * given and upserted by natural key in one transaction: an item whose content hash is unchanged is not written, and an item
+ * absent from the snapshot is never deleted. Dry (the default) counts what would change. Logs carry counts only.
+ */
+export class CrmImportService {
+    constructor(
+        @InjectPrimaryEntityManager() private readonly entityManager: EntityManager,
+        @InjectClock() private readonly clock: Clock,
+        @InjectLogger() private readonly logger: Logger,
+        private readonly files: SnapshotFilesClient,
+    ) {}
+
+    /** Checks the snapshot under `from` and imports it into `workspaceId`, or, dry, counts what an import would change. */
+    async import(input: SnapshotImportInput): Promise<SnapshotImportSummary> {
+        const workspaceId = input.workspaceId.toLowerCase()
+        if (!UUID.test(workspaceId)) throw new CrmError({ code: CrmErrorCode.ImportWorkspaceInvalid })
+        const snapshot = await this.snapshotOf(input.from)
+        const summary =
+            input.execute === true
+                ? await this.entityManager.transaction((tx) => this.written(tx, workspaceId, snapshot))
+                : {
+                      executed: false,
+                      entities: await eachInOrder(snapshot.parts, (part) =>
+                          this.counted(this.entityManager, workspaceId, part),
+                      ),
+                  }
+        this.logger.info(input.execute === true ? CrmImportLogEvent.Imported : CrmImportLogEvent.Checked, {
+            entities: summary.entities.map((count) => ({ ...count })),
+        })
+        return summary
+    }
+
+    /** The checked snapshot: every listed file read, digested, parsed and its items checked, in the format's import order. */
+    private async snapshotOf(from: string): Promise<Snapshot> {
+        const manifestText = await this.files.read(from, "manifest.json", "manifest")
+        const manifest = snapshotJsonOf(manifestText, CrmErrorCode.ImportManifestInvalid, "manifest")
+        const entries = snapshotEntriesOf(manifest)
+        const ordered = [...SNAPSHOT_ENTITIES.keys()].flatMap((entity) =>
+            entries.filter((entry) => entry.entity === entity),
+        )
+        const parts = await eachInOrder(ordered, async (entry) => {
+            const text = await this.files.read(from, entry.path, entry.entity)
+            if (sha256Hex(text) !== entry.sha256) {
+                throw new CrmError({ code: CrmErrorCode.ImportFileInvalid, params: { entity: entry.entity } })
+            }
+            const file = snapshotJsonOf(text, CrmErrorCode.ImportFileInvalid, entry.entity)
+            return {
+                entity: entry.entity,
+                plan: planOf(entry.entity),
+                items: snapshotItemsOf(entry.entity, file, entry),
+            }
+        })
+        const source = isRecord(manifest) && typeof manifest["source"] === "string" ? manifest["source"] : ""
+        return { source, parts }
+    }
+
+    /** The stored rows of a part's table in the workspace, by natural key, with their source hash ("" when the table has none). */
+    private async storedOf(
+        manager: EntityManager,
+        workspaceId: string,
+        plan: EntityPlan,
+    ): Promise<Map<string, string>> {
+        const stored = await manager.find(plan.target, { where: { workspaceId }, take: STORED_ROWS_MAX + 1 })
+        if (stored.length > STORED_ROWS_MAX)
+            throw new CrmError({ code: CrmErrorCode.ImportFileInvalid, params: { entity: "stored" } })
+        return new Map(
+            stored.map((row) => [plan.rowKey(row), typeof row["sourceHash"] === "string" ? row["sourceHash"] : ""]),
+        )
+    }
+
+    /** The counts of one part against what the workspace stores. */
+    private async counted(
+        manager: EntityManager,
+        workspaceId: string,
+        part: SnapshotPart,
+    ): Promise<SnapshotEntityCount> {
+        const stored = await this.storedOf(manager, workspaceId, part.plan)
+        const hashed = part.plan.conflict !== null
+        const states = part.items.map((item) => {
+            const previous = stored.get(part.plan.itemKey(item))
+            if (previous === undefined) return "inserted"
+            return hashed && previous !== sha256Hex(canonicalJson(item)) ? "updated" : "unchanged"
+        })
+        const count = (state: string): number => states.filter((candidate) => candidate === state).length
+        return {
+            entity: part.entity,
+            items: part.items.length,
+            inserted: count("inserted"),
+            updated: count("updated"),
+            unchanged: count("unchanged"),
+        }
+    }
+
+    /** The ids by natural key the later entities reference. */
+    private async refsOf(tx: EntityManager, workspaceId: string): Promise<rows.SnapshotRefs> {
+        const [customers, websites, projects] = await Promise.all([
+            tx.find(CustomerEntity, { where: { workspaceId }, take: STORED_ROWS_MAX }),
+            tx.find(WebsiteEntity, { where: { workspaceId }, take: STORED_ROWS_MAX }),
+            tx.find(ProjectEntity, { where: { workspaceId }, take: STORED_ROWS_MAX }),
+        ])
+        return {
+            customers: new Map(customers.map((row) => [row.code, row.id])),
+            websites: new Map(websites.map((row) => [row.domain, row.id])),
+            projects: new Map(projects.map((row) => [row.code, { id: row.id, customerId: row.customerId }])),
+        }
+    }
+
+    /** Writes every part in order inside one transaction, recording the run and its counts. */
+    private async written(tx: EntityManager, workspaceId: string, snapshot: Snapshot): Promise<SnapshotImportSummary> {
+        const run = await tx.insert(ImportRunEntity, {
+            workspaceId,
+            sourceLabel: snapshot.source,
+            startedAt: this.clock.now(),
+            finishedAt: null,
+            counts: {},
+        })
+        const runId = String(run.identifiers[0]?.["id"] ?? "")
+        const entities = await eachInOrder(snapshot.parts, (part) => this.writtenPart(tx, workspaceId, runId, part))
+        await tx.update(
+            ImportRunEntity,
+            { id: runId, workspaceId },
+            { finishedAt: this.clock.now(), counts: { entities } },
+        )
+        return { executed: true, entities }
+    }
+
+    /** Writes the new and changed items of one part: upserted by natural key, or inserted when the table keeps no hash. */
+    private async writtenPart(
+        tx: EntityManager,
+        workspaceId: string,
+        runId: string,
+        part: SnapshotPart,
+    ): Promise<SnapshotEntityCount> {
+        const count = await this.counted(tx, workspaceId, part)
+        const stored = await this.storedOf(tx, workspaceId, part.plan)
+        const refs = await this.refsOf(tx, workspaceId)
+        const changed = part.items.filter((item) => {
+            const previous = stored.get(part.plan.itemKey(item))
+            return (
+                previous === undefined || (part.plan.conflict !== null && previous !== sha256Hex(canonicalJson(item)))
+            )
+        })
+        const toWrite = changed.map((item) =>
+            part.plan.rowOf(item, { workspaceId, runId, hash: sha256Hex(canonicalJson(item)) }, refs),
+        )
+        const chunks = Array.from({ length: Math.ceil(toWrite.length / CHUNK) }, (_, index) =>
+            toWrite.slice(index * CHUNK, (index + 1) * CHUNK),
+        )
+        const conflict = part.plan.conflict
+        await eachInOrder(chunks, (chunk) =>
+            conflict === null ? tx.insert(part.plan.target, chunk) : tx.upsert(part.plan.target, chunk, [...conflict]),
+        )
+        return count
+    }
+}

@@ -55,3 +55,17 @@ logged); only the sha256 of the secret is stored in `public.crm_service_credenti
 scopes every query of the call to that credential's workspace. `cli credential revoke --id <uuid>` revokes one; it is refused from
 then on. The unit specs prove the scope over all 29 operations: each service spec runs its operations for the credentials of two
 workspaces and checks that every statement names only the caller's workspace (`src/tests/fixtures/builders/workspace-scope.builder.ts`).
+
+## CRM first load: the sealed data repository, format @1
+
+The first load of a workspace's CRM (and every later refresh) comes from the sealed data repository `nivo-web-lite-data`,
+format `nivo-web-lite-data@1` (its `FORMAT.md`), and from nothing else: no source spreadsheet is parsed here and no word list
+decides a meaning. The owner decrypts a snapshot to a plaintext directory (`tools/restore.mjs` of that repository, or an in-memory
+`sops --decrypt`), then runs `cli import snapshot --from <dir> --workspace <uuid>`: dry by default, it checks the whole snapshot
+(the manifest of format @1, each file's sha256, schema id and count, every item's fields and closed value sets) and logs the
+counts per entity of what would be inserted, updated and left unchanged. `--execute` writes in one transaction: every row is bound
+to the workspace given (the format carries no id and no workspace), references resolve by natural key (customer code, domain,
+project code), an item whose content hash is unchanged is not written again, and an item absent from the snapshot is never
+deleted. A required reference to a customer the snapshot does not hold refuses the whole import. The specs use synthetic @1
+fixtures only; the data repository's content is never read by them. The holding importer of the source folder stays parked
+outside the project: its status word map is not brought in.
