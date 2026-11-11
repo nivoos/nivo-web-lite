@@ -16,15 +16,15 @@ lacks the age identity of an existing dev member is refused with the owner step 
 migrations run as the environment's own owner role and the api connects as the `app_be` role with its own password, so no role is shared with
 another environment.
 
-| Command | Operation |
-| --- | --- |
-| prepare | `starci app stack prepare --env dev --execute`: checks the machine, opens the custody, runs the setup commands and builds the images. |
-| doctor | `starci app stack doctor --env dev`: read-only table of host prerequisites with the owner-run install step per OS, custody, compose render and ports. |
-| up | `starci app stack up --env dev --execute`: prepare, then the services, the database role, migrations with a receipt, the seed levels `.starcistacks/seeds/` then `.starcistacks/dev/seeds/`, each entry once per content hash, the processes and readiness; prints the origins. |
-| status | `starci app stack status --env dev`: desired against running, the migration receipt and every readiness probe. |
-| logs | `starci app stack logs --env dev --service api` (a process or a compose service, bounded and redacted). |
-| down | `starci app stack down --env dev --execute`: ends the processes and stops the compose project; volumes and sealed values stay. |
-| verification | `starci app stack verify --env dev`: the declared liveness and readiness probes after a real start, then `npm run lint` from the app root. |
+| Command      | Operation                                                                                                                                                                                                                                                                       |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| prepare      | `starci app stack prepare --env dev --execute`: checks the machine, opens the custody, runs the setup commands and builds the images.                                                                                                                                           |
+| doctor       | `starci app stack doctor --env dev`: read-only table of host prerequisites with the owner-run install step per OS, custody, compose render and ports.                                                                                                                           |
+| up           | `starci app stack up --env dev --execute`: prepare, then the services, the database role, migrations with a receipt, the seed levels `.starcistacks/seeds/` then `.starcistacks/dev/seeds/`, each entry once per content hash, the processes and readiness; prints the origins. |
+| status       | `starci app stack status --env dev`: desired against running, the migration receipt and every readiness probe.                                                                                                                                                                  |
+| logs         | `starci app stack logs --env dev --service api` (a process or a compose service, bounded and redacted).                                                                                                                                                                         |
+| down         | `starci app stack down --env dev --execute`: ends the processes and stops the compose project; volumes and sealed values stay.                                                                                                                                                  |
+| verification | `starci app stack verify --env dev`: the declared liveness and readiness probes after a real start, then `npm run lint` from the app root.                                                                                                                                      |
 
 **Mail.** The confirmation and reset mails of the sign-in go to the `mail` service on its SMTP port (`MAIL_HOST`, `MAIL_PORT`, `MAIL_SECURITY: none`: a plain channel that only the loopback sink accepts) and nothing leaves the machine. Open the web UI at the `mail` origin `up` prints (`http://localhost:8025` by default), sign up in the web app and follow the link from the message there. A deployed environment names a real SMTP server and `MAIL_SECURITY: starttls` or `tls`.
 

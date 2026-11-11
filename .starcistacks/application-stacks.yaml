@@ -3,7 +3,7 @@
 # All-zero application digests are illustrative and must be replaced by verified release digests.
 schema: starci/application-stacks@1
 # This project has no front end (fe): sides are declared in hfs.json.
-sides: {be: true, fe: false, packages: true}
+sides: { be: true, fe: false, packages: true }
 # To render README badges, declare ci.github: {repository: owner/repo, defaultBranch: main}.
 # A GitHub package.json repository URL also enables the managed block.
 sources:
@@ -17,7 +17,7 @@ components:
     role: service
     image: "nivo-web-lite/api:v0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     compose: infra/swarm/stack.yaml
-    purpose: The application's REST API, its own Google and password sign-in and its storage integration.
+    purpose: The application's REST API, the NIVO Web CRM (29 operations NIVO's OpenAPI provider calls with the CRM service key), its own Google and password sign-in and its storage integration.
     required: true
   db:
     role: service
@@ -41,8 +41,8 @@ environments:
     runtime: docker-compose
     composeFiles: [infra/compose/compose.yaml]
     components:
-      db: {port: 54322}
-      api: {port: 3001}
+      db: { port: 54322 }
+      api: { port: 3106 }
     runbook: README.md
     # Dev custody is generated once, dev-only, by the owner-armed `starci app secret init --env dev --execute`, which also declares each key here.
     secrets: []
@@ -50,36 +50,36 @@ environments:
     # the environment's own database role, migrations, native api and web processes, readiness, origins.
     local:
       # The project base port: web = base, api = base+1, an AI gateway base+2, further native processes from base+3; the compose ports below are exempt (R389, PROJECT-STACKS-10).
-      basePort: 4800
+      basePort: 3105
       ports:
         db: 54322
-        api: 4801
+        api: 3106
         mail: 1025
         mailui: 8025
       services:
-        - {name: db, wait: healthy}
-        - {name: mail, wait: healthy}
+        - { name: db, wait: healthy }
+        - { name: mail, wait: healthy }
       database:
         service: db
         port: db
         urlEnv: PRIMARY_DB_URL
         appRole: app_be
-        password: {member: db, key: DEV_DB_OWNER_PASSWORD}
-        adminPassword: {member: db, key: POSTGRES_PASSWORD}
-        appPassword: {member: db, key: DEV_DB_APP_PASSWORD}
+        password: { member: db, key: DEV_DB_OWNER_PASSWORD }
+        adminPassword: { member: db, key: POSTGRES_PASSWORD }
+        appPassword: { member: db, key: DEV_DB_APP_PASSWORD }
       grants:
-        - {name: db, keys: [POSTGRES_PASSWORD]}
+        - { name: db, keys: [POSTGRES_PASSWORD] }
       custody:
-        - {member: db, key: POSTGRES_PASSWORD, kind: password}
-        - {member: db, key: DEV_DB_OWNER_PASSWORD, kind: password}
-        - {member: db, key: DEV_DB_APP_PASSWORD, kind: password}
-        - {member: auth, key: AUTH_JWT_PRIVATE_KEY, kind: ed25519-pem}
-        - {member: google, key: GOOGLE_CLIENT_SECRET, kind: hex}
-        - {member: storage, key: STORAGE_ACCESS_KEY_ID, kind: hex, bytes: 12}
-        - {member: storage, key: STORAGE_SECRET_ACCESS_KEY, kind: hex}
+        - { member: db, key: POSTGRES_PASSWORD, kind: password }
+        - { member: db, key: DEV_DB_OWNER_PASSWORD, kind: password }
+        - { member: db, key: DEV_DB_APP_PASSWORD, kind: password }
+        - { member: auth, key: AUTH_JWT_PRIVATE_KEY, kind: ed25519-pem }
+        - { member: google, key: GOOGLE_CLIENT_SECRET, kind: hex }
+        - { member: storage, key: STORAGE_ACCESS_KEY_ID, kind: hex, bytes: 12 }
+        - { member: storage, key: STORAGE_SECRET_ACCESS_KEY, kind: hex }
       setup:
-        - {name: install, argv: [npm, ci], heavy: install, skipIfExists: node_modules}
-        - {name: codegen, argv: [npm, run, codegen, --silent], heavy: build}
+        - { name: install, argv: [npm, ci], heavy: install, skipIfExists: node_modules }
+        - { name: codegen, argv: [npm, run, codegen, --silent], heavy: build }
       processes:
         - name: api
           argv: [npx, ts-node-dev, --respawn, -r, tsconfig-paths/register, apps/api/src/main.ts]
@@ -104,24 +104,24 @@ environments:
             STORAGE_ENDPOINT: "http://127.0.0.1:9000"
             STORAGE_REGION: us-east-1
             STORAGE_BUCKET: nivo-web-lite-dev
-          health: {url: "http://localhost:${port.api}/health/live"}
+          health: { url: "http://localhost:${port.api}/health/live" }
       ready:
-        - {name: api-live, url: "http://localhost:${port.api}/health/live"}
-        - {name: api-ready, url: "http://localhost:${port.api}/health/ready"}
+        - { name: api-live, url: "http://localhost:${port.api}/health/live" }
+        - { name: api-ready, url: "http://localhost:${port.api}/health/ready" }
       verify:
-        - {name: api-live, url: "http://localhost:${port.api}/health/live"}
-        - {name: api-ready, url: "http://localhost:${port.api}/health/ready"}
+        - { name: api-live, url: "http://localhost:${port.api}/health/live" }
+        - { name: api-ready, url: "http://localhost:${port.api}/health/ready" }
       origins:
-        - {name: api, url: "http://localhost:${port.api}"}
-        - {name: mail, url: "http://localhost:${port.mailui}"}
+        - { name: api, url: "http://localhost:${port.api}" }
+        - { name: mail, url: "http://localhost:${port.mailui}" }
   production:
     status: supported
     runtime: docker-swarm
     composeFiles: [infra/swarm/stack.yaml]
     components:
-      api: {replicas: 1, port: 3001}
-      db: {replicas: 1, port: 5432}
-      ingress: {replicas: 1, port: 443, httpPort: 80}
+      api: { replicas: 1, port: 3106 }
+      db: { replicas: 1, port: 5432 }
+      ingress: { replicas: 1, port: 443, httpPort: 80 }
     runbook: README.md
     ingress:
       component: ingress
@@ -239,16 +239,27 @@ k8s:
   reason: Lite production uses Docker Swarm with its own PostgreSQL service; Kubernetes belongs to a future full-edition deployment.
 ci:
   secrets:
-    - {name: SONAR_TOKEN, scope: repository, purpose: Sonar analysis token provisioned for this app}
-    - {name: SOPS_AGE_KEY, scope: environment, environment: production, purpose: Decrypt app members during deployment, optional: true}
+    - { name: SONAR_TOKEN, scope: repository, purpose: Sonar analysis token provisioned for this app }
+    - {
+        name: SOPS_AGE_KEY,
+        scope: environment,
+        environment: production,
+        purpose: Decrypt app members during deployment,
+        optional: true,
+      }
   vars:
-    - {name: SONAR_HOST_URL, scope: repository, value: "https://sonar.nivo-web-lite.example.invalid", purpose: Documentation endpoint to replace with this app's public Sonar host}
+    - {
+        name: SONAR_HOST_URL,
+        scope: repository,
+        value: "https://sonar.nivo-web-lite.example.invalid",
+        purpose: Documentation endpoint to replace with this app's public Sonar host,
+      }
 services:
   sonar:
     provider: sonarqube
     mode: local
     qualityGate: starci-quality-lite
-    host: {local: http://127.0.0.1:9000, public: "https://sonar.nivo-web-lite.example.invalid"}
+    host: { local: http://127.0.0.1:9000, public: "https://sonar.nivo-web-lite.example.invalid" }
     stack:
       owner: host
       root: .claude/ext/sonar
@@ -259,9 +270,16 @@ services:
       - id: analysis
         project: "nivo-web-lite"
         key: SONAR_TOKEN
-        custody: {repository: "nivo-web-lite", path: .starcistacks/dev/secrets/sonar.enc.yaml}
-    projects: [{repository: "nivo-web-lite", key: "nivo-web-lite"}]
-    ci: {wiring: required, workflow: .github/workflows/ci.yml, token: SONAR_TOKEN, hostVar: SONAR_HOST_URL, secrets: [{name: SONAR_TOKEN, credential: analysis}]}
+        custody: { repository: "nivo-web-lite", path: .starcistacks/dev/secrets/sonar.enc.yaml }
+    projects: [{ repository: "nivo-web-lite", key: "nivo-web-lite" }]
+    ci:
+      {
+        wiring: required,
+        workflow: .github/workflows/ci.yml,
+        token: SONAR_TOKEN,
+        hostVar: SONAR_HOST_URL,
+        secrets: [{ name: SONAR_TOKEN, credential: analysis }],
+      }
     ownerAction:
       needed: Declare this app's connection profile and project credential with its actual sealed member/key and project reference, seal it through starci app secret, bind ci.secrets to that credential, then set the CI execution copy with starci app ci secret set SONAR_TOKEN --from-custody --execute and sync SONAR_HOST_URL.
       reason: A fresh app declares its quality service without fabricating credentials or a successful analysis.
@@ -273,16 +291,16 @@ services:
     target: 100
     components: auto
     required: true
-    ci: {wiring: required, workflow: .github/workflows/ci.yml}
+    ci: { wiring: required, workflow: .github/workflows/ci.yml }
     ownerAction: none
   dependabot:
     provider: github
     mode: hosted
     purpose: Keep application dependencies and workflow actions current.
     ecosystems: [npm, docker, github-actions]
-    schedule: {interval: weekly}
-    groups: {minorPatch: grouped, major: per-package}
-    ignore: ['@starci/*']
+    schedule: { interval: weekly }
+    groups: { minorPatch: grouped, major: per-package }
+    ignore: ["@starci/*"]
     security: immediate
     ownerAction: none
   audit:
@@ -297,8 +315,8 @@ services:
     provider: ghcr
     mode: hosted
     purpose: Publish this app's deployment images with the workflow GitHub token.
-    host: {public: https://ghcr.io}
+    host: { public: https://ghcr.io }
     auth: github-token
-    projects: [{repository: "nivo-web-lite", key: "nivo-web-lite"}]
-    ci: {wiring: required}
+    projects: [{ repository: "nivo-web-lite", key: "nivo-web-lite" }]
+    ci: { wiring: required }
     ownerAction: none

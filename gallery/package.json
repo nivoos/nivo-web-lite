@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Screenshot gallery of every page of nivo-web-lite (before and after each UI fix round), rendered with Vite.",
   "scripts": {
-    "dev": "vite --port 4850 --strictPort",
+    "dev": "vite --port 3155 --strictPort",
     "build": "vite build"
   },
   "devDependencies": {
