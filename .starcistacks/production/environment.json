@@ -1,0 +1,6 @@
+{
+  "environment": "production",
+  "provider": "postgres",
+  "project": "nivo-web-lite",
+  "runtime": "docker-swarm"
+}
