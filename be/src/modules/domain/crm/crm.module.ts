@@ -32,7 +32,7 @@ export class CrmModule extends ConfigurableModuleClass {
         return {
             ...base,
             providers: [...(base.providers ?? []), ...SERVICES, OperatorOutputClient, SnapshotFilesClient],
-            exports: SERVICES,
+            exports: [...SERVICES, OperatorOutputClient],
         }
     }
 }
