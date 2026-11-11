@@ -42,7 +42,7 @@ environments:
     composeFiles: [infra/compose/compose.yaml]
     components:
       db: { port: 54322 }
-      api: { port: 3106 }
+      api: { port: 3201 }
     runbook: README.md
     # Dev custody is generated once, dev-only, by the owner-armed `starci app secret init --env dev --execute`, which also declares each key here.
     secrets: []
@@ -50,10 +50,10 @@ environments:
     # the environment's own database role, migrations, native api and web processes, readiness, origins.
     local:
       # The project base port: web = base, api = base+1, an AI gateway base+2, further native processes from base+3; the compose ports below are exempt (R389, PROJECT-STACKS-10).
-      basePort: 3105
+      basePort: 3200
       ports:
         db: 54322
-        api: 3106
+        api: 3201
         mail: 1025
         mailui: 8025
       services:
@@ -119,7 +119,7 @@ environments:
     runtime: docker-swarm
     composeFiles: [infra/swarm/stack.yaml]
     components:
-      api: { replicas: 1, port: 3106 }
+      api: { replicas: 1, port: 3201 }
       db: { replicas: 1, port: 5432 }
       ingress: { replicas: 1, port: 443, httpPort: 80 }
     runbook: README.md
