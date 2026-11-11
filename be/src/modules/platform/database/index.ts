@@ -1,5 +1,6 @@
 export { DatabaseModule } from "./database.module"
 export { callDbFunction } from "./database.client"
+export { PRIMARY_CONNECTION } from "./primary.connection"
 export {
     DATABASE_PROBE,
     InjectDatabaseProbe,
@@ -7,6 +8,8 @@ export {
     PRIMARY_ENTITY_MANAGER,
 } from "./primary.decorators"
 export { DatabaseProbeService } from "./database-probe.service"
+export { MigrationRunnerService } from "./migration-runner.service"
+export { DEFAULT_SEED_ENV, SeedRunnerService } from "./seed-runner.service"
 export type { DatabaseConnectionOptions } from "./database.options"
 export { PRIMARY_DATA_SOURCE } from "./database.port"
 export { DATABASE_ERROR_KINDS } from "./errors/database.error"

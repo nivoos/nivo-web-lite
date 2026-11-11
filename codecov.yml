@@ -40,11 +40,13 @@ component_management:
     - component_id: api
       name: api
       paths:
+        - "be/src/modules/domain/crm/**"
         - "be/src/modules/domain/identity/**"
         - "be/src/modules/domain/liveness/**"
         - "be/src/modules/integrations/mail/**"
         - "be/src/modules/integrations/object-storage/**"
         - "be/src/modules/integrations/passport/**"
+        - "be/src/modules/integrations/renewal-provider/**"
     - component_id: platform
       name: platform
       paths:
