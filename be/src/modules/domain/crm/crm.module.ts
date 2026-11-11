@@ -5,6 +5,7 @@ import { CrmCredentialService } from "./crm-credential.service"
 import { CrmImportService } from "./crm-import.service"
 import { CustomerBookService } from "./customer-book.service"
 import { OperatorOutputClient } from "./operator-output.client"
+import { SnapshotExportService } from "./snapshot-export.service"
 import { SnapshotFilesClient } from "./snapshot-files.client"
 import { InvoiceDraftsService } from "./invoice-drafts.service"
 import { RenewalsService } from "./renewals.service"
@@ -31,7 +32,13 @@ export class CrmModule extends ConfigurableModuleClass {
         const base = super.register(options)
         return {
             ...base,
-            providers: [...(base.providers ?? []), ...SERVICES, OperatorOutputClient, SnapshotFilesClient],
+            providers: [
+                ...(base.providers ?? []),
+                ...SERVICES,
+                OperatorOutputClient,
+                SnapshotFilesClient,
+                SnapshotExportService,
+            ],
             exports: [...SERVICES, OperatorOutputClient],
         }
     }

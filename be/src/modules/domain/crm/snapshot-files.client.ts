@@ -1,5 +1,5 @@
-import { readFile, readdir } from "node:fs/promises"
-import { join, relative, sep } from "node:path"
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises"
+import { dirname, join, relative, sep } from "node:path"
 import { Injectable } from "@nestjs/common"
 import { isRecord } from "@modules/platform/primitives"
 import { CrmError, CrmErrorCode } from "./errors/crm.error"
@@ -32,5 +32,11 @@ export class SnapshotFilesClient {
         return entries
             .filter((entry) => entry.isFile())
             .map((entry) => relative(root, join(entry.parentPath, entry.name)).split(sep).join("/"))
+    }
+
+    /** Writes `text` to `path` under `root`, creating its folder. */
+    async write(root: string, path: string, text: string): Promise<void> {
+        await mkdir(dirname(join(root, path)), { recursive: true })
+        await writeFile(join(root, path), text, "utf8")
     }
 }

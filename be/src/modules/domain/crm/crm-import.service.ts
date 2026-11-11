@@ -29,12 +29,15 @@ import {
     WebsiteEntity,
 } from "./persistence/entities"
 import { SNAPSHOT_ENTITIES, snapshotEntriesOf, snapshotItemsOf, snapshotJsonOf } from "./snapshot-format.policy"
+import { SnapshotExportService } from "./snapshot-export.service"
 import { SnapshotFilesClient } from "./snapshot-files.client"
 import * as rows from "./snapshot-rows.mapper"
 import type {
     DocumentUploadInput,
     DocumentUploadSummary,
     SnapshotEntityCount,
+    SnapshotExportInput,
+    SnapshotExportSummary,
     SnapshotImportInput,
     SnapshotImportSummary,
     SnapshotItem,
@@ -213,7 +216,17 @@ export class CrmImportService {
         private readonly files: SnapshotFilesClient,
         @InjectObjectStorage() private readonly storage: ObjectStorage,
         @InjectObjectStorageBucket() private readonly bucket: string,
+        private readonly exporter: SnapshotExportService,
     ) {}
+
+    /** Writes the workspace's snapshot in format @1 under `out` (the CRM's backup of record); answers the counts. */
+    exportSnapshot(input: SnapshotExportInput): Promise<SnapshotExportSummary> {
+        const workspaceId = input.workspaceId.toLowerCase()
+        if (!UUID.test(workspaceId)) {
+            return Promise.reject(new CrmError({ code: CrmErrorCode.ImportWorkspaceInvalid }))
+        }
+        return this.exporter.export({ out: input.out, workspaceId })
+    }
 
     /** Checks the snapshot under `from` and imports it into `workspaceId`, or, dry, counts what an import would change. */
     async import(input: SnapshotImportInput): Promise<SnapshotImportSummary> {

@@ -9,6 +9,7 @@ import { WS, documentRow } from "@tests/fixtures/builders/crm.builder"
 import { CrmImportService } from "./crm-import.service"
 import { CrmError, CrmErrorCode } from "./errors/crm.error"
 import { CustomerEntity, DocumentEntity, ImportRunEntity, ServiceEntity } from "./persistence/entities"
+import { SnapshotExportService } from "./snapshot-export.service"
 import { SnapshotFilesClient } from "./snapshot-files.client"
 
 const NOW = "2026-11-12T03:00:00.000Z"
@@ -219,6 +220,7 @@ const build = async (em: MockEntityManager, stored: Map<string, string>) => {
     })
     const logger = mock<Logger>()
     const storage = mock<ObjectStorage>()
+    const exporter = mock<SnapshotExportService>()
     const moduleRef = await Test.createTestingModule({
         providers: [
             CrmImportService,
@@ -228,9 +230,10 @@ const build = async (em: MockEntityManager, stored: Map<string, string>) => {
             { provide: SnapshotFilesClient, useValue: files },
             { provide: OBJECT_STORAGE, useValue: storage },
             { provide: OBJECT_STORAGE_BUCKET, useValue: "crm-originals" },
+            { provide: SnapshotExportService, useValue: exporter },
         ],
     }).compile()
-    return { importer: moduleRef.get(CrmImportService), logger, transaction, files, storage }
+    return { importer: moduleRef.get(CrmImportService), logger, transaction, files, storage, exporter }
 }
 
 const counts = (inserted: number, updated: number, unchanged: number) => ({ inserted, updated, unchanged })
@@ -449,5 +452,20 @@ describe("CrmImportService.uploadDocuments", () => {
         await expect(importer.uploadDocuments({ from: "originals", workspaceId: "acme" })).rejects.toEqual(
             expect.objectContaining({ code: CrmErrorCode.ImportWorkspaceInvalid }),
         )
+    })
+})
+
+describe("CrmImportService.exportSnapshot", () => {
+    it("hands a uuid workspace (lower case) to the format @1 exporter and refuses anything else", async () => {
+        const { importer, exporter } = await build(mockEntityManager(), new Map())
+        exporter.export.mockResolvedValue({ entities: [] })
+
+        await expect(importer.exportSnapshot({ out: "repo", workspaceId: WS.toUpperCase() })).resolves.toEqual({
+            entities: [],
+        })
+        await expect(importer.exportSnapshot({ out: "repo", workspaceId: "acme" })).rejects.toEqual(
+            expect.objectContaining({ code: CrmErrorCode.ImportWorkspaceInvalid }),
+        )
+        expect(exporter.export.mock.calls).toEqual([[{ out: "repo", workspaceId: WS }]])
     })
 })

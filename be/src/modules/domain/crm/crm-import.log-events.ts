@@ -4,6 +4,8 @@ export enum CrmImportLogEvent {
     Checked = "crm.import.checked",
     /** A snapshot was imported into a workspace (`entities`). */
     Imported = "crm.import.imported",
+    /** A workspace was exported in format @1 (`entities` with their item counts). */
+    Exported = "crm.import.exported",
     /** Document originals were checked or uploaded (counts: `indexed`, `uploaded`, `alreadyStored`, `missing`, `mismatched`, `refused`, `unindexed`). */
     DocumentsUploaded = "crm.import.documents_uploaded",
 }

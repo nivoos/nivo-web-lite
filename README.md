@@ -33,6 +33,12 @@ Work records live in `.starciwork/`; `.starciwork/workspace.yaml` supplies the p
 
 ## CRM backup
 
+The backup of record is the data repository (owner 2026-11-12: backup = push to it): `cli backup snapshot --out <dir> --workspace <uuid>`
+writes one workspace in the repository's own format `nivo-web-lite-data@1`, exactly as `cli import snapshot` reads it (one
+canonical file per entity, items by natural key, natural keys only, money the source has not as null, a file whose items did not
+change keeps its earlier `exportedAt`), and the owner seals and pushes it with the repository's tools. A spec proves the round trip
+(synthetic @1, imported, exported again, identical). The table-shaped backup below stays the fast local restore.
+
 `cli backup export --out <dir>` writes the table-shaped backup (format `nivo-web-lite-data@2`): `tables/<table>.json` per CRM
 table (every column, ids, workspace ids and the database-set timestamps included, rows ordered by id, canonical JSON) and
 a manifest (counts and the sha256 of each file, no row). A table whose rows did not change keeps its earlier `exportedAt`,

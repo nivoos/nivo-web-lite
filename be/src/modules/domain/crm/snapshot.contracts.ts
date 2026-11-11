@@ -94,3 +94,17 @@ export interface DocumentUploadSummary {
     /** Files under the folder the index does not list: refused, never uploaded. */
     readonly unindexed: number
 }
+
+/** What one export of a workspace in format @1 needs. */
+export interface SnapshotExportInput {
+    /** The directory the snapshot is written to (the data repository's plaintext working copy). */
+    readonly out: string
+    /** The enterprise workspace exported. */
+    readonly workspaceId: string
+}
+
+/** What one export wrote: the item count per entity, never a value. */
+export interface SnapshotExportSummary {
+    /** The counts per entity, in the format's order. */
+    readonly entities: ReadonlyArray<{ readonly entity: string; readonly items: number }>
+}
