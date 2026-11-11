@@ -47,4 +47,8 @@ export class InvoiceEntity extends UuidAbstractEntity {
     /** The import run that last wrote the row. */
     @Column({ name: "last_import_run_id", type: "uuid", nullable: true })
     lastImportRunId!: string | null
+
+    /** The customer code the source wrote for the invoice, kept even when no customer matches it (a soft reference). */
+    @Column({ name: "customer_code", type: "text", nullable: true })
+    customerCode!: string | null
 }

@@ -12,12 +12,12 @@ export class PayableResponse implements PayableView {
     readonly partyName!: string | null
 
     /** Closing credit (owed by the enterprise). Whole VND. */
-    @ApiProperty({ type: "integer", format: "int64" })
-    readonly closingCreditVnd!: number
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly closingCreditVnd!: number | null
 
     /** Closing debit. Whole VND. */
-    @ApiProperty({ type: "integer", format: "int64" })
-    readonly closingDebitVnd!: number
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly closingDebitVnd!: number | null
 
     /** Supplier invoices noted. */
     @ApiProperty({ type: "integer", minimum: 0, maximum: 100000 })

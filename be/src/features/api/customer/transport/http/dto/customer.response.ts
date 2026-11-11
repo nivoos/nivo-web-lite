@@ -302,28 +302,28 @@ export class DocumentPageResponse {
 /** The TK131 balance (NOT a debt to collect). */
 export class LedgerResponse {
     /** Opening debit. Whole VND. */
-    @ApiProperty({ type: "integer", format: "int64" })
-    readonly openingDebitVnd!: number
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly openingDebitVnd!: number | null
 
     /** Opening credit. Whole VND. */
-    @ApiProperty({ type: "integer", format: "int64" })
-    readonly openingCreditVnd!: number
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly openingCreditVnd!: number | null
 
     /** Period debit. Whole VND. */
-    @ApiProperty({ type: "integer", format: "int64" })
-    readonly debitVnd!: number
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly debitVnd!: number | null
 
     /** Period credit. Whole VND. */
-    @ApiProperty({ type: "integer", format: "int64" })
-    readonly creditVnd!: number
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly creditVnd!: number | null
 
     /** Closing debit. Whole VND. */
-    @ApiProperty({ type: "integer", format: "int64" })
-    readonly closingDebitVnd!: number
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly closingDebitVnd!: number | null
 
     /** Closing credit. Whole VND. */
-    @ApiProperty({ type: "integer", format: "int64" })
-    readonly closingCreditVnd!: number
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly closingCreditVnd!: number | null
 }
 
 /** An open real receivable of the customer. */
@@ -341,16 +341,16 @@ export class OpenReceivableResponse implements ReceivableView {
     readonly contractRef!: string | null
 
     /** Total. Whole VND. */
-    @ApiProperty({ type: "integer", format: "int64" })
-    readonly totalVnd!: number
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly totalVnd!: number | null
 
     /** Collected. Whole VND. */
-    @ApiProperty({ type: "integer", format: "int64" })
-    readonly collectedVnd!: number
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly collectedVnd!: number | null
 
     /** Remaining. Whole VND. */
-    @ApiProperty({ type: "integer", format: "int64" })
-    readonly remainingVnd!: number
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly remainingVnd!: number | null
 
     /** Due on. */
     @ApiProperty({ type: String, format: "date", nullable: true })

@@ -16,16 +16,16 @@ export class ReceivableResponse implements ReceivableView {
     readonly contractRef!: string | null
 
     /** Total. Whole VND. */
-    @ApiProperty({ type: "integer", format: "int64" })
-    readonly totalVnd!: number
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly totalVnd!: number | null
 
     /** Collected. Whole VND. */
-    @ApiProperty({ type: "integer", format: "int64" })
-    readonly collectedVnd!: number
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly collectedVnd!: number | null
 
     /** Remaining. Whole VND. */
-    @ApiProperty({ type: "integer", format: "int64" })
-    readonly remainingVnd!: number
+    @ApiProperty({ type: "integer", format: "int64", nullable: true })
+    readonly remainingVnd!: number | null
 
     /** Due on. */
     @ApiProperty({ type: String, format: "date", nullable: true })

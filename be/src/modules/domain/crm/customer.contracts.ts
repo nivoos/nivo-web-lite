@@ -105,17 +105,17 @@ export interface DocumentView {
 /** The TK131 balance of a customer (NOT a debt to collect). */
 export interface LedgerView {
     /** Opening debit. */
-    readonly openingDebitVnd: number
+    readonly openingDebitVnd: number | null
     /** Opening credit. */
-    readonly openingCreditVnd: number
+    readonly openingCreditVnd: number | null
     /** Period debit. */
-    readonly debitVnd: number
+    readonly debitVnd: number | null
     /** Period credit. */
-    readonly creditVnd: number
+    readonly creditVnd: number | null
     /** Closing debit. */
-    readonly closingDebitVnd: number
+    readonly closingDebitVnd: number | null
     /** Closing credit. */
-    readonly closingCreditVnd: number
+    readonly closingCreditVnd: number | null
 }
 
 /** A real collection: a project's receivable. */
@@ -127,11 +127,11 @@ export interface ReceivableView {
     /** The contract reference as written. */
     readonly contractRef: string | null
     /** Total, whole VND. */
-    readonly totalVnd: number
+    readonly totalVnd: number | null
     /** Collected, whole VND. */
-    readonly collectedVnd: number
+    readonly collectedVnd: number | null
     /** Remaining, whole VND. */
-    readonly remainingVnd: number
+    readonly remainingVnd: number | null
     /** Due on, when the books say. */
     readonly dueOn: string | null
     /** The project's state as written. */

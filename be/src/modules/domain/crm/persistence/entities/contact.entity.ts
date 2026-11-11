@@ -32,4 +32,20 @@ export class ContactEntity extends UuidAbstractEntity {
     /** zalo, email or phone. */
     @Column({ name: "preferred_channel", type: "text", nullable: true })
     preferredChannel!: ContactChannel | null
+
+    /** The contact's role at the customer, as the source wrote it. */
+    @Column({ name: "role", type: "text", nullable: true })
+    role!: string | null
+
+    /** The source file of an imported contact; null for one a person or a flow added. */
+    @Column({ name: "source_file", type: "text", nullable: true })
+    sourceFile!: string | null
+
+    /** The source sheet of an imported contact. */
+    @Column({ name: "source_sheet", type: "text", nullable: true })
+    sourceSheet!: string | null
+
+    /** The source row of an imported contact. */
+    @Column({ name: "source_row", type: "integer", nullable: true })
+    sourceRow!: number | null
 }

@@ -19,4 +19,8 @@ export class ProviderAccountEntity extends UuidAbstractEntity {
     /** dry_run (the default) or live; only the owner flips it. */
     @Column({ name: "mode", type: "text" })
     mode!: string
+
+    /** The plugin the data repository names for the provider; null for an account the CRM made itself. */
+    @Column({ name: "plugin", type: "text", nullable: true })
+    plugin!: string | null
 }

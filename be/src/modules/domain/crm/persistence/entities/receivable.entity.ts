@@ -25,16 +25,16 @@ export class ReceivableEntity extends UuidAbstractEntity {
     contractRef!: string | null
 
     /** The total incl. VAT, VND. */
-    @Column({ name: "total_vnd", type: "bigint", transformer: bigintNumberTransformer })
-    totalVnd!: number
+    @Column({ name: "total_vnd", type: "bigint", nullable: true, transformer: bigintNumberTransformer })
+    totalVnd!: number | null
 
     /** Collected, VND. */
-    @Column({ name: "collected_vnd", type: "bigint", transformer: bigintNumberTransformer })
-    collectedVnd!: number
+    @Column({ name: "collected_vnd", type: "bigint", nullable: true, transformer: bigintNumberTransformer })
+    collectedVnd!: number | null
 
     /** Remaining, VND. */
-    @Column({ name: "remaining_vnd", type: "bigint", transformer: bigintNumberTransformer })
-    remainingVnd!: number
+    @Column({ name: "remaining_vnd", type: "bigint", nullable: true, transformer: bigintNumberTransformer })
+    remainingVnd!: number | null
 
     /** When the remainder is due; not in the source today. */
     @Column({ name: "due_on", type: "date", nullable: true })

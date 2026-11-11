@@ -25,28 +25,28 @@ export class LedgerBalanceEntity extends UuidAbstractEntity {
     customerId!: string | null
 
     /** Opening debit, VND. */
-    @Column({ name: "opening_debit_vnd", type: "bigint", transformer: bigintNumberTransformer })
-    openingDebitVnd!: number
+    @Column({ name: "opening_debit_vnd", type: "bigint", nullable: true, transformer: bigintNumberTransformer })
+    openingDebitVnd!: number | null
 
     /** Opening credit, VND. */
-    @Column({ name: "opening_credit_vnd", type: "bigint", transformer: bigintNumberTransformer })
-    openingCreditVnd!: number
+    @Column({ name: "opening_credit_vnd", type: "bigint", nullable: true, transformer: bigintNumberTransformer })
+    openingCreditVnd!: number | null
 
     /** Debit over the period, VND. */
-    @Column({ name: "debit_vnd", type: "bigint", transformer: bigintNumberTransformer })
-    debitVnd!: number
+    @Column({ name: "debit_vnd", type: "bigint", nullable: true, transformer: bigintNumberTransformer })
+    debitVnd!: number | null
 
     /** Credit over the period, VND. */
-    @Column({ name: "credit_vnd", type: "bigint", transformer: bigintNumberTransformer })
-    creditVnd!: number
+    @Column({ name: "credit_vnd", type: "bigint", nullable: true, transformer: bigintNumberTransformer })
+    creditVnd!: number | null
 
     /** Closing debit, VND. */
-    @Column({ name: "closing_debit_vnd", type: "bigint", transformer: bigintNumberTransformer })
-    closingDebitVnd!: number
+    @Column({ name: "closing_debit_vnd", type: "bigint", nullable: true, transformer: bigintNumberTransformer })
+    closingDebitVnd!: number | null
 
     /** Closing credit, VND. */
-    @Column({ name: "closing_credit_vnd", type: "bigint", transformer: bigintNumberTransformer })
-    closingCreditVnd!: number
+    @Column({ name: "closing_credit_vnd", type: "bigint", nullable: true, transformer: bigintNumberTransformer })
+    closingCreditVnd!: number | null
 
     /** The ledger's note. */
     @Column({ name: "note", type: "text", nullable: true })

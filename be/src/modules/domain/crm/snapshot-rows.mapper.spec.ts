@@ -79,7 +79,7 @@ describe("snapshot rows mapper: references", () => {
         ]).toEqual([
             expect.objectContaining({ customerId: "c-1", websiteId: null, provider: null, sourceRow: 3 }),
             expect.objectContaining({ customerId: null, autoRenew: false }),
-            expect.objectContaining({ projectId: null, customerId: null, totalVnd: 0 }),
+            expect.objectContaining({ projectId: null, customerId: null, totalVnd: null }),
         ])
     })
 

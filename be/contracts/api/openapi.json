@@ -928,26 +928,32 @@
         "properties": {
           "closingCreditVnd": {
             "format": "int64",
+            "nullable": true,
             "type": "integer"
           },
           "closingDebitVnd": {
             "format": "int64",
+            "nullable": true,
             "type": "integer"
           },
           "creditVnd": {
             "format": "int64",
+            "nullable": true,
             "type": "integer"
           },
           "debitVnd": {
             "format": "int64",
+            "nullable": true,
             "type": "integer"
           },
           "openingCreditVnd": {
             "format": "int64",
+            "nullable": true,
             "type": "integer"
           },
           "openingDebitVnd": {
             "format": "int64",
+            "nullable": true,
             "type": "integer"
           }
         },
@@ -1055,6 +1061,7 @@
         "properties": {
           "collectedVnd": {
             "format": "int64",
+            "nullable": true,
             "type": "integer"
           },
           "contractRef": {
@@ -1098,10 +1105,12 @@
           },
           "remainingVnd": {
             "format": "int64",
+            "nullable": true,
             "type": "integer"
           },
           "totalVnd": {
             "format": "int64",
+            "nullable": true,
             "type": "integer"
           }
         },
@@ -1191,10 +1200,12 @@
         "properties": {
           "closingCreditVnd": {
             "format": "int64",
+            "nullable": true,
             "type": "integer"
           },
           "closingDebitVnd": {
             "format": "int64",
+            "nullable": true,
             "type": "integer"
           },
           "lastNoteInvoiceNo": {
@@ -1365,6 +1376,7 @@
         "properties": {
           "collectedVnd": {
             "format": "int64",
+            "nullable": true,
             "type": "integer"
           },
           "contractRef": {
@@ -1408,10 +1420,12 @@
           },
           "remainingVnd": {
             "format": "int64",
+            "nullable": true,
             "type": "integer"
           },
           "totalVnd": {
             "format": "int64",
+            "nullable": true,
             "type": "integer"
           }
         },

@@ -292,7 +292,7 @@ export class CustomerBookService {
             customerCode: customer.code,
             ledger131: ledger === null ? null : toLedgerView(ledger),
             openReceivables,
-            openRemainingVnd: openReceivables.reduce((sum, row) => sum + row.remainingVnd, 0),
+            openRemainingVnd: openReceivables.reduce((sum, row) => sum + (row.remainingVnd ?? 0), 0),
         }
     }
 

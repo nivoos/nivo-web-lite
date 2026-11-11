@@ -68,9 +68,9 @@ export interface PayableView {
     /** The party name as written. */
     readonly partyName: string | null
     /** Closing credit (what NIVO Web owes), whole VND. */
-    readonly closingCreditVnd: number
+    readonly closingCreditVnd: number | null
     /** Closing debit, whole VND. */
-    readonly closingDebitVnd: number
+    readonly closingDebitVnd: number | null
     /** How many supplier invoices were noted. */
     readonly noteCount: number
     /** The invoice number of the last note. */

@@ -65,17 +65,22 @@ const amountOf = (item: SnapshotItem, field: string): number | null => {
     return isRecord(value) && typeof value["amount"] === "number" ? value["amount"] : null
 }
 
-/** The provenance columns of a sourced item (`origin { file, sheet, row }`). */
-const provenanceOf = (item: SnapshotItem, stamp: SnapshotStamp) => {
+/** The source place of an item (`origin { file, sheet, row }`). */
+const placeOf = (item: SnapshotItem) => {
     const origin = item["origin"]
     return {
         sourceFile: isRecord(origin) ? String(origin["file"]) : "",
         sourceSheet: isRecord(origin) ? String(origin["sheet"]) : "",
         sourceRow: isRecord(origin) && typeof origin["row"] === "number" ? origin["row"] : 0,
-        sourceHash: stamp.hash,
-        lastImportRunId: stamp.runId,
     }
 }
+
+/** The provenance columns of a sourced item (`origin { file, sheet, row }`). */
+const provenanceOf = (item: SnapshotItem, stamp: SnapshotStamp) => ({
+    ...placeOf(item),
+    sourceHash: stamp.hash,
+    lastImportRunId: stamp.runId,
+})
 
 /** The id of a required reference, or CRM_IMPORT_REFERENCE_UNKNOWN naming the entity and the field. */
 const required = (map: ReadonlyMap<string, string>, key: string, entity: string, field: string): string => {
@@ -117,6 +122,7 @@ export const providerRowOf = (item: SnapshotItem, workspaceId: string): Partial<
     provider: text(item, "key"),
     label: text(item, "key"),
     mode: text(item, "mode"),
+    plugin: text(item, "plugin"),
 })
 
 /** A service row; the empty provider of the format is no provider. */
@@ -203,13 +209,14 @@ export const invoiceRowOf = (item: SnapshotItem, stamp: SnapshotStamp, refs: Sna
     workspaceId: stamp.workspaceId,
     invoiceNo: text(item, "invoiceNo"),
     customerId: soft(refs.customers, textOrNull(item, "customerCode")),
+    customerCode: textOrNull(item, "customerCode"),
     issuedOn: textOrNull(item, "issuedOn"),
     amountVnd: amountOf(item, "amount"),
     documentPath: textOrNull(item, "documentPath"),
     ...provenanceOf(item, stamp),
 })
 
-/** A receivable row; its project (and through it the customer) is a soft reference. A missing amount is zero owed. */
+/** A receivable row; its project (and through it the customer) is a soft reference; a missing amount stays null. */
 export const receivableRowOf = (
     item: SnapshotItem,
     stamp: SnapshotStamp,
@@ -222,9 +229,9 @@ export const receivableRowOf = (
         projectId: project?.id ?? null,
         customerId: project?.customerId ?? null,
         contractRef: textOrNull(item, "contractRef"),
-        totalVnd: amountOf(item, "total") ?? 0,
-        collectedVnd: amountOf(item, "collected") ?? 0,
-        remainingVnd: amountOf(item, "remaining") ?? 0,
+        totalVnd: amountOf(item, "total"),
+        collectedVnd: amountOf(item, "collected"),
+        remainingVnd: amountOf(item, "remaining"),
         dueOn: null,
         invoicedNote: textOrNull(item, "invoicedNote"),
         projectState: textOrNull(item, "projectState"),
@@ -233,19 +240,19 @@ export const receivableRowOf = (
     }
 }
 
-/** A TK131 / TK331 balance row; the party code is the books' own code, linked to no customer. A missing amount is zero. */
+/** A TK131 / TK331 balance row; the party code is the books' own code, linked to no customer; a missing amount stays null. */
 export const balanceRowOf = (item: SnapshotItem, stamp: SnapshotStamp): Partial<LedgerBalanceEntity> => ({
     workspaceId: stamp.workspaceId,
     account: text(item, "account"),
     partyCode: text(item, "partyCode"),
     partyName: textOrNull(item, "partyName"),
     customerId: null,
-    openingDebitVnd: amountOf(item, "openingDebit") ?? 0,
-    openingCreditVnd: amountOf(item, "openingCredit") ?? 0,
-    debitVnd: amountOf(item, "debit") ?? 0,
-    creditVnd: amountOf(item, "credit") ?? 0,
-    closingDebitVnd: amountOf(item, "closingDebit") ?? 0,
-    closingCreditVnd: amountOf(item, "closingCredit") ?? 0,
+    openingDebitVnd: amountOf(item, "openingDebit"),
+    openingCreditVnd: amountOf(item, "openingCredit"),
+    debitVnd: amountOf(item, "debit"),
+    creditVnd: amountOf(item, "credit"),
+    closingDebitVnd: amountOf(item, "closingDebit"),
+    closingCreditVnd: amountOf(item, "closingCredit"),
     note: textOrNull(item, "note"),
     ...provenanceOf(item, stamp),
 })
@@ -259,6 +266,8 @@ export const contactRowOf = (item: SnapshotItem, workspaceId: string, refs: Snap
     email: textOrNull(item, "email"),
     zaloId: null,
     preferredChannel: null,
+    role: textOrNull(item, "role"),
+    ...placeOf(item),
 })
 
 /** An import issue row (a rejected or warned source row, with its cells as the source wrote them). */
