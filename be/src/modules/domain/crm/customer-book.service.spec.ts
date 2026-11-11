@@ -1,5 +1,12 @@
 import { Test } from "@nestjs/testing"
-import { type MockEntityManager, fakeIds, fakeTransaction, mock, mockEntityManager } from "@starci/jest-preset"
+import {
+    type MockEntityManager,
+    fakeIds,
+    fakeTransaction,
+    mock,
+    mockEntityManager,
+    queueQueryBuilders,
+} from "@starci/jest-preset"
 import { OBJECT_STORAGE, OBJECT_STORAGE_BUCKET, type ObjectStorage } from "@modules/integrations/object-storage"
 import { IDS } from "@modules/platform/ids"
 import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
@@ -358,5 +365,36 @@ describe("CustomerBookService.documentLink", () => {
         await expect(
             (await build(unstored)).book.documentLink({ workspaceId: WS, code: "SYN-001", path: "a/hd.pdf" }),
         ).rejects.toEqual(expect.objectContaining({ code: CrmErrorCode.DocumentNotStored }))
+    })
+})
+
+describe("CustomerBookService.countsByState", () => {
+    it("counts services, renewals and tickets per stored state and the VAT invoices of the workspace", async () => {
+        const em = mockEntityManager({ count: [InvoiceEntity, 7] })
+        const [services, renewals, tickets] = queueQueryBuilders(em, [
+            {
+                getRawMany: [
+                    { state: "active", count: "3" },
+                    { state: "expired", count: "1" },
+                ],
+            },
+            { getRawMany: [{ state: "paid", count: "2" }] },
+            { getRawMany: [] },
+        ])
+
+        await expect((await build(em)).book.countsByState(WS)).resolves.toEqual({
+            services: [
+                { state: "active", count: 3 },
+                { state: "expired", count: 1 },
+            ],
+            renewals: [{ state: "paid", count: 2 }],
+            tickets: [],
+            invoices: 7,
+        })
+        expect([services, renewals, tickets].map((fake) => fake?.callsOf("where")[0]?.[1])).toEqual([
+            { workspaceId: WS },
+            { workspaceId: WS },
+            { workspaceId: WS },
+        ])
     })
 })

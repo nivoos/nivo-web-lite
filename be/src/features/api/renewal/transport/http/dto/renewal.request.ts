@@ -15,6 +15,9 @@ import {
 } from "class-validator"
 import { PageRequest } from "@modules/platform/openapi"
 
+/** An open renewal state, as `renewal.open.list` filters by it. */
+type OpenRenewalState = "awaiting_payment" | "paid" | "pending_person"
+
 /** The customer said yes: the service and the term. */
 export class CreateQuoteRequest {
     /** The service code. */
@@ -42,6 +45,12 @@ export class ListOpenRenewalsRequest extends PageRequest {
     @MaxLength(80)
     @MinLength(1)
     readonly customerCode: string | null = null
+
+    /** Only the open requests in this state; absent: every open state. */
+    @ApiProperty({ type: String, enum: ["awaiting_payment", "paid", "pending_person"], required: false })
+    @IsOptional()
+    @IsIn(["awaiting_payment", "paid", "pending_person"])
+    readonly state: OpenRenewalState | null = null
 }
 
 /** The bank row that proves the payment (no amount: the bank row is the proof). */

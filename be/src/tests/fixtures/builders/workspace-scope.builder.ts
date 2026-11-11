@@ -28,6 +28,7 @@ export const CUSTOMER_OPERATIONS: ReadonlyArray<ScopedOperation<CustomerBookServ
     ["customer.contract.list", (s, ws) => s.listContracts({ workspaceId: ws, code: "SYN-001", page: PAGE })],
     ["customer.invoice.list", (s, ws) => s.listInvoices({ workspaceId: ws, code: "SYN-001", page: PAGE })],
     ["customer.document.list", (s, ws) => s.listDocuments({ workspaceId: ws, code: "SYN-001", page: PAGE })],
+    ["summary.count.get", (s, ws) => s.countsByState(ws)],
     ["customer.document.link.get", (s, ws) => s.documentLink({ workspaceId: ws, code: "SYN-001", path: "a/hd.pdf" })],
     [
         "customer.contact.update",
@@ -98,7 +99,7 @@ export const RENEWAL_OPERATIONS: ReadonlyArray<ScopedOperation<RenewalsService>>
         (s, ws) => s.quote({ workspaceId: ws, requestKey: "q-1", serviceCode: "SYN-HOST", termMonths: 12 }),
     ],
     ["renewal.get", (s, ws) => s.get({ workspaceId: ws, id: SOME_ID })],
-    ["renewal.open.list", (s, ws) => s.listOpen({ workspaceId: ws, customerCode: null, page: PAGE })],
+    ["renewal.open.list", (s, ws) => s.listOpen({ workspaceId: ws, customerCode: null, state: "paid", page: PAGE })],
     ["renewal.payment.record", (s, ws) => s.recordPayment({ workspaceId: ws, id: SOME_ID, transactionRef: "t" })],
     [
         "service.renewal.create",
@@ -154,9 +155,20 @@ export const TICKET_OPERATIONS: ReadonlyArray<ScopedOperation<TicketsService>> =
 export const INVOICE_DRAFT_OPERATIONS: ReadonlyArray<ScopedOperation<InvoiceDraftsService>> = [
     ["invoice.draft.create", (s, ws) => s.create({ workspaceId: ws, renewalId: SOME_ID })],
     ["invoice.draft.get", (s, ws) => s.get({ workspaceId: ws, id: SOME_ID })],
+    [
+        "invoice.list",
+        (s, ws) =>
+            s.listInvoices({
+                workspaceId: ws,
+                customerCode: "SYN-001",
+                issuedFrom: "2026-01-01",
+                issuedTo: null,
+                page: PAGE,
+            }),
+    ],
 ]
 
-/** Every operationId of the tables above: the 30 REST operations of the CRM. */
+/** Every operationId of the tables above: the 32 REST operations of the CRM. */
 export const CRM_OPERATION_IDS: ReadonlyArray<string> = [
     ...CUSTOMER_OPERATIONS,
     ...SERVICE_OPERATIONS,

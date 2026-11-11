@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common"
 import { And, type EntityManager, type FindOptionsWhere, ILike, In, MoreThan } from "typeorm"
 import { type Ids, InjectIds } from "@modules/platform/ids"
-import { InjectPrimaryEntityManager } from "@modules/platform/database"
+import { InjectPrimaryEntityManager, returnedRows, rowShape } from "@modules/platform/database"
 import { type Page, decodeCursor, pageOf, pageSizeOf } from "@modules/platform/pagination"
 import { CollectionsService } from "./collections.service"
 import {
@@ -24,7 +24,9 @@ import {
     InvoiceEntity,
     LedgerBalanceEntity,
     ReceivableEntity,
+    RenewalRequestEntity,
     ServiceEntity,
+    TicketEntity,
     WebsiteEntity,
 } from "./persistence/entities"
 import type {
@@ -41,6 +43,8 @@ import type {
     DocumentLinkView,
     DocumentView,
     InvoiceView,
+    StateCount,
+    StateCounts,
 } from "./customer.contracts"
 import type { ServiceView } from "./service.contracts"
 import {
@@ -102,6 +106,9 @@ const documentsOf =
             order: { path: "ASC" },
             take,
         })
+
+/** A grouped count row as the database answers it (COUNT is bigint, so text). */
+const isStateRow = rowShape({ state: "string", count: "string" })
 
 /** The keyset names of the customer lists. */
 const LISTS = {
@@ -275,6 +282,17 @@ export class CustomerBookService {
         return { url: link.url, expiresAt: link.expiresAt }
     }
 
+    /** The per-state counts of the workspace (services, renewals, tickets) and its number of VAT invoices. */
+    async countsByState(workspaceId: string): Promise<StateCounts> {
+        const [services, renewals, tickets, invoices] = await Promise.all([
+            this.stateCountsOf(ServiceEntity, "status", workspaceId),
+            this.stateCountsOf(RenewalRequestEntity, "state", workspaceId),
+            this.stateCountsOf(TicketEntity, "status", workspaceId),
+            this.entityManager.count(InvoiceEntity, { where: { workspaceId } }),
+        ])
+        return { services, renewals, tickets, invoices }
+    }
+
     /** The TK131 balance and the open receivables of a customer, side by side (facts only, never summed together). */
     async balance(key: CustomerKey): Promise<BalanceView> {
         const customer = await this.customerOf(key)
@@ -332,6 +350,23 @@ export class CustomerBookService {
             await manager.insert(ContactEntity, row)
             return { customerCode: customer.code, created: true, contact: toContactView(row) }
         })
+    }
+
+    /** The rows of one table of the workspace grouped by one state column, by state. */
+    private async stateCountsOf(
+        target: typeof ServiceEntity | typeof RenewalRequestEntity | typeof TicketEntity,
+        column: "status" | "state",
+        workspaceId: string,
+    ): Promise<Array<StateCount>> {
+        const raw: unknown = await this.entityManager
+            .createQueryBuilder(target, "row")
+            .select(`row.${column}`, "state")
+            .addSelect("COUNT(*)", "count")
+            .where("row.workspace_id = :workspaceId", { workspaceId })
+            .groupBy(`row.${column}`)
+            .orderBy(`row.${column}`, "ASC")
+            .getRawMany()
+        return returnedRows(raw, isStateRow).map((row) => ({ state: row.state, count: Number(row.count) }))
     }
 
     /** One page of what belongs to one customer: the head, the rows read by `find`, the page in key order. */

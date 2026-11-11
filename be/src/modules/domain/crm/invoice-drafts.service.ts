@@ -1,15 +1,27 @@
 import { Injectable } from "@nestjs/common"
-import type { EntityManager } from "typeorm"
+import { type EntityManager, type FindOptionsWhere, LessThanOrEqual, MoreThan, MoreThanOrEqual, And } from "typeorm"
 import { type Ids, InjectIds } from "@modules/platform/ids"
 import { InjectMessageCatalog, type MessageCatalog } from "@modules/platform/i18n"
 import { InjectPrimaryEntityManager } from "@modules/platform/database"
+import { type Page, decodeCursor, pageOf, pageSizeOf } from "@modules/platform/pagination"
+import { toInvoiceView } from "./crm.mapper"
+import type { InvoiceListInput, WorkspaceInvoiceView } from "./customer.contracts"
 import { CrmError, CrmErrorCode } from "./errors/crm.error"
-import { CustomerEntity, InvoiceDraftEntity, RenewalRequestEntity, ServiceEntity } from "./persistence/entities"
+import {
+    CustomerEntity,
+    InvoiceDraftEntity,
+    InvoiceEntity,
+    RenewalRequestEntity,
+    ServiceEntity,
+} from "./persistence/entities"
 import { PLACEHOLDER_VAT_PERCENT } from "./price.policy"
 import type { InvoiceDraftCreateInput, InvoiceDraftKey, InvoiceDraftView } from "./renewal.contracts"
 
 /** The states of a renewal an invoice can be drafted for: the customer has paid. */
 const INVOICEABLE: ReadonlySet<string> = new Set(["paid", "pending_person", "renewed"])
+
+/** The keyset name of the workspace-wide invoice list. */
+const INVOICE_LIST = "invoice.list"
 
 @Injectable()
 /** Invoice drafts: lines and amounts computed by the CRM from a paid renewal (data only; issuing is a later e-invoice provider). */
@@ -19,6 +31,29 @@ export class InvoiceDraftsService {
         @InjectIds() private readonly ids: Ids,
         @InjectMessageCatalog() private readonly catalog: MessageCatalog,
     ) {}
+
+    /** The VAT invoices of the workspace by invoice number, optionally of one customer code and an issue period. */
+    async listInvoices(input: InvoiceListInput): Promise<Page<WorkspaceInvoiceView>> {
+        const limit = pageSizeOf(input.page.limit)
+        const after = decodeCursor(INVOICE_LIST, input.page.cursor, 1)?.[0]
+        const issued = [
+            ...(input.issuedFrom === null ? [] : [MoreThanOrEqual(input.issuedFrom)]),
+            ...(input.issuedTo === null ? [] : [LessThanOrEqual(input.issuedTo)]),
+        ]
+        const where: FindOptionsWhere<InvoiceEntity> = {
+            workspaceId: input.workspaceId,
+            ...(input.customerCode === null ? {} : { customerCode: input.customerCode }),
+            ...(issued.length === 0 ? {} : { issuedOn: And(...issued) }),
+            ...(after === undefined ? {} : { invoiceNo: MoreThan(after) }),
+        }
+        const rows = await this.entityManager.find(InvoiceEntity, {
+            where,
+            order: { invoiceNo: "ASC" },
+            take: limit + 1,
+        })
+        const items = rows.slice(0, limit).map((row) => ({ ...toInvoiceView(row), customerCode: row.customerCode }))
+        return pageOf(INVOICE_LIST, rows, limit, (row) => [row.invoiceNo], items)
+    }
 
     /** Drafts the invoice of a paid renewal; one draft per renewal, so a repeat answers the same draft. */
     create(input: InvoiceDraftCreateInput): Promise<InvoiceDraftView> {

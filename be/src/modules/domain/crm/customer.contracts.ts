@@ -213,3 +213,43 @@ export interface DocumentLinkView {
     /** When the address stops working (ISO 8601 UTC). */
     readonly expiresAt: string
 }
+
+/** The workspace-wide list of VAT invoices: optional customer and issue period, by invoice number. */
+export interface InvoiceListInput {
+    /** The workspace. */
+    readonly workspaceId: string
+    /** Only the invoices whose source names this customer code. */
+    readonly customerCode: string | null
+    /** Only the invoices issued on or after this day (YYYY-MM-DD). */
+    readonly issuedFrom: string | null
+    /** Only the invoices issued on or before this day (YYYY-MM-DD). */
+    readonly issuedTo: string | null
+    /** The page. */
+    readonly page: PageInput
+}
+
+/** A VAT invoice of the workspace, with the customer code its source wrote. */
+export interface WorkspaceInvoiceView extends InvoiceView {
+    /** The customer code the source wrote (null when it wrote none). */
+    readonly customerCode: string | null
+}
+
+/** How many rows of one table are in one state. */
+export interface StateCount {
+    /** The state (service status, renewal state, ticket status) as stored. */
+    readonly state: string
+    /** The number of rows in it. */
+    readonly count: number
+}
+
+/** The per-state counts of a workspace for the workbench. VAT invoices carry no state in the books: they are counted whole. */
+export interface StateCounts {
+    /** Services by status. */
+    readonly services: ReadonlyArray<StateCount>
+    /** Renewal requests by state. */
+    readonly renewals: ReadonlyArray<StateCount>
+    /** Tickets by status. */
+    readonly tickets: ReadonlyArray<StateCount>
+    /** VAT invoices. */
+    readonly invoices: number
+}

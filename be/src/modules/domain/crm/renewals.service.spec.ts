@@ -1,4 +1,5 @@
 import { Test } from "@nestjs/testing"
+import { In } from "typeorm"
 import {
     FakeClock,
     type MockEntityManager,
@@ -16,6 +17,7 @@ import { CLOCK } from "@modules/platform/clock"
 import { IDS } from "@modules/platform/ids"
 import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
 import { decodeCursor } from "@modules/platform/pagination"
+import { isRecord } from "@modules/platform/primitives"
 import { WS, customerRow, renewalRow, serviceRow, uuid } from "@tests/fixtures/builders/crm.builder"
 import { RENEWAL_OPERATIONS, NO_STRAYS, straysOf } from "@tests/fixtures/builders/workspace-scope.builder"
 import { CrmErrorCode } from "./errors/crm.error"
@@ -223,23 +225,26 @@ describe("RenewalsService get and listOpen", () => {
             ],
         })
         const { renewals } = await build(em)
-        const page = await renewals.listOpen({
-            workspaceId: WS,
-            customerCode: "SYN-001",
-            page: { limit: 20, cursor: null },
-        })
+        const open = { customerCode: "SYN-001", state: "awaiting_payment", page: { limit: 20, cursor: null } } as const
+        const page = await renewals.listOpen({ workspaceId: WS, ...open })
         expect(page).toEqual({
             items: [expect.objectContaining({ id: uuid(51), serviceCode: "SYN-HOST", customerCode: "SYN-001" })],
             nextCursor: null,
         })
+        const options: unknown = em.find.mock.calls[1]?.[1]
+        const where: unknown = isRecord(options) ? options["where"] : undefined
+        expect(isRecord(where) ? where["state"] : undefined).toEqual(In(["awaiting_payment"]))
     })
-})
 
-describe("RenewalsService get and listOpen", () => {
     it("refuses an unknown customer filter", async () => {
         const { renewals } = await build(mockEntityManager({ findOne: [CustomerEntity, null] }))
         await expect(
-            renewals.listOpen({ workspaceId: WS, customerCode: "NOPE", page: { limit: 20, cursor: null } }),
+            renewals.listOpen({
+                workspaceId: WS,
+                customerCode: "NOPE",
+                state: null,
+                page: { limit: 20, cursor: null },
+            }),
         ).rejects.toEqual(refused(CrmErrorCode.CustomerNotFound))
     })
 })

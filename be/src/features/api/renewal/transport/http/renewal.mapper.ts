@@ -29,6 +29,7 @@ export const toQuoteRequest = (workspaceId: string, requestKey: string, body: Cr
 export const toListOpenRequest = (workspaceId: string, query: ListOpenRenewalsRequest): RenewalOpenListInput => ({
     workspaceId,
     customerCode: query.customerCode,
+    state: query.state,
     page: toPageInput(query),
 })
 

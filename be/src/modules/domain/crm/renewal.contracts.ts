@@ -98,6 +98,8 @@ export interface RenewalOpenListInput {
     readonly workspaceId: string
     /** Only this customer's requests. */
     readonly customerCode: string | null
+    /** Only the open requests in this state; null: every open state. */
+    readonly state: RenewalState | null
     /** The page. */
     readonly page: PageInput
 }

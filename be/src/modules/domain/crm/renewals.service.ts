@@ -163,7 +163,7 @@ export class RenewalsService {
         const rows = await this.entityManager.find(RenewalRequestEntity, {
             where: {
                 workspaceId: input.workspaceId,
-                state: In([...OPEN_RENEWAL_STATES]),
+                state: In(OPEN_RENEWAL_STATES.filter((state) => input.state === null || state === input.state)),
                 ...serviceFilter,
                 ...(after === undefined ? {} : { id: MoreThan(after) }),
             },
