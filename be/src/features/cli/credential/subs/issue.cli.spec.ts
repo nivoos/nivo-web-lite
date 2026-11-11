@@ -1,14 +1,14 @@
 import { Test } from "@nestjs/testing"
 import { mock } from "@starci/jest-preset"
-import { CrmCredentialsService } from "@modules/domain/crm"
+import { CrmCredentialService } from "@modules/domain/crm"
 import { CredentialIssueCli } from "./issue.cli"
 
 describe("CredentialIssueCli", () => {
     it("hands --workspace and --label to the credentials service once and answers nothing itself", async () => {
-        const credentials = mock<CrmCredentialsService>()
+        const credentials = mock<CrmCredentialService>()
         credentials.issue.mockResolvedValue("credential-1")
         const moduleRef = await Test.createTestingModule({
-            providers: [CredentialIssueCli, { provide: CrmCredentialsService, useValue: credentials }],
+            providers: [CredentialIssueCli, { provide: CrmCredentialService, useValue: credentials }],
         }).compile()
         const command = moduleRef.get(CredentialIssueCli)
 

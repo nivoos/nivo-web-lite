@@ -1,5 +1,5 @@
 import { CommandRunner, Option, SubCommand } from "nest-commander"
-import { CrmCredentialsService } from "@modules/domain/crm"
+import { CrmCredentialService } from "@modules/domain/crm"
 
 /** The options of `cli credential issue`. */
 export interface CredentialIssueOptions {
@@ -15,7 +15,7 @@ export interface CredentialIssueOptions {
 })
 /** `cli credential issue --workspace <uuid> --label <text>`: delegates to the credentials service, which shows the bearer once. */
 export class CredentialIssueCli extends CommandRunner {
-    constructor(private readonly credentials: CrmCredentialsService) {
+    constructor(private readonly credentials: CrmCredentialService) {
         super()
     }
 

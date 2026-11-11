@@ -2,7 +2,6 @@ import { Module, type DynamicModule } from "@nestjs/common"
 import { CollectionsService } from "./collections.service"
 import { ConfigurableModuleClass, OPTIONS_TYPE } from "./crm.module-definition"
 import { CrmCredentialService } from "./crm-credential.service"
-import { CrmCredentialsService } from "./crm-credentials.service"
 import { CustomerBookService } from "./customer-book.service"
 import { OperatorOutputClient } from "./operator-output.client"
 import { InvoiceDraftsService } from "./invoice-drafts.service"
@@ -19,7 +18,6 @@ const SERVICES = [
     TicketsService,
     InvoiceDraftsService,
     CrmCredentialService,
-    CrmCredentialsService,
 ]
 
 @Module({})

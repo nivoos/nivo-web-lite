@@ -1,5 +1,5 @@
 import { CommandRunner, Option, SubCommand } from "nest-commander"
-import { CrmCredentialsService } from "@modules/domain/crm"
+import { CrmCredentialService } from "@modules/domain/crm"
 
 /** The options of `cli credential revoke`. */
 export interface CredentialRevokeOptions {
@@ -10,7 +10,7 @@ export interface CredentialRevokeOptions {
 @SubCommand({ name: "revoke", description: "Revoke a CRM service credential; it is refused from then on" })
 /** `cli credential revoke --id <uuid>`: delegates to the credentials service. */
 export class CredentialRevokeCli extends CommandRunner {
-    constructor(private readonly credentials: CrmCredentialsService) {
+    constructor(private readonly credentials: CrmCredentialService) {
         super()
     }
 
