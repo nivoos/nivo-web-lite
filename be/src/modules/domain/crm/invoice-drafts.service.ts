@@ -11,6 +11,7 @@ import {
     CustomerEntity,
     InvoiceDraftEntity,
     InvoiceEntity,
+    PurchaseEntity,
     RenewalRequestEntity,
     ServiceEntity,
 } from "./persistence/entities"
@@ -19,6 +20,9 @@ import type { InvoiceDraftCreateInput, InvoiceDraftKey, InvoiceDraftView } from 
 
 /** The states of a renewal an invoice can be drafted for: the customer has paid. */
 const INVOICEABLE: ReadonlySet<string> = new Set(["paid", "pending_person", "renewed"])
+
+/** The states of a purchase an invoice can be drafted for: the customer has paid. */
+const INVOICEABLE_PURCHASES: ReadonlySet<string> = new Set(["paid", "pending_person", "delivered"])
 
 /** The keyset name of the workspace-wide invoice list. */
 const INVOICE_LIST = "invoice.list"
@@ -57,47 +61,29 @@ export class InvoiceDraftsService {
 
     /** Drafts the invoice of a paid renewal; one draft per renewal, so a repeat answers the same draft. */
     create(input: InvoiceDraftCreateInput): Promise<InvoiceDraftView> {
+        const { workspaceId, renewalId, purchaseId } = input
+        if (renewalId !== null && purchaseId === null) {
+            return this.drafted({ workspaceId, renewalId }, (manager) =>
+                this.renewalDraftOf(manager, workspaceId, renewalId),
+            )
+        }
+        if (purchaseId !== null && renewalId === null) {
+            return this.drafted({ workspaceId, purchaseId }, (manager) =>
+                this.purchaseDraftOf(manager, workspaceId, purchaseId),
+            )
+        }
+        return Promise.reject(new CrmError({ code: CrmErrorCode.InvoiceDraftSubjectInvalid }))
+    }
+
+    /** The stored draft of a subject, else the one `draftOf` makes, inserted; one transaction. */
+    private drafted(
+        subject: FindOptionsWhere<InvoiceDraftEntity>,
+        draftOf: (manager: EntityManager) => Promise<InvoiceDraftEntity>,
+    ): Promise<InvoiceDraftView> {
         return this.entityManager.transaction(async (manager) => {
-            const stored = await manager.findOne(InvoiceDraftEntity, {
-                where: { workspaceId: input.workspaceId, renewalId: input.renewalId },
-            })
+            const stored = await manager.findOne(InvoiceDraftEntity, { where: subject })
             if (stored !== null) return this.viewOf(manager, stored)
-            const renewal = await manager.findOne(RenewalRequestEntity, {
-                where: { workspaceId: input.workspaceId, id: input.renewalId },
-            })
-            if (renewal === null) throw new CrmError({ code: CrmErrorCode.RenewalNotFound })
-            if (
-                !INVOICEABLE.has(renewal.state) ||
-                renewal.netVnd === null ||
-                renewal.vatVnd === null ||
-                renewal.totalVnd === null
-            ) {
-                throw new CrmError({ code: CrmErrorCode.RenewalStateRefused, params: { state: renewal.state } })
-            }
-            const service = await manager.findOne(ServiceEntity, {
-                where: { workspaceId: input.workspaceId, id: renewal.serviceId },
-            })
-            if (service === null) throw new CrmError({ code: CrmErrorCode.ServiceNotFound })
-            const row = manager.create(InvoiceDraftEntity, {
-                id: this.ids.next(),
-                workspaceId: input.workspaceId,
-                renewalId: renewal.id,
-                customerId: service.customerId,
-                lines: [
-                    {
-                        description: this.lineOf(service.serviceClass, service.code, renewal.termMonths),
-                        quantity: 1,
-                        unitPriceVnd: renewal.netVnd,
-                        amountVnd: renewal.netVnd,
-                    },
-                ],
-                netVnd: renewal.netVnd,
-                vatRatePercent: PLACEHOLDER_VAT_PERCENT,
-                vatVnd: renewal.vatVnd,
-                totalVnd: renewal.totalVnd,
-                state: "draft",
-                priceSource: renewal.priceSource,
-            })
+            const row = await draftOf(manager)
             await manager.insert(InvoiceDraftEntity, row)
             return this.viewOf(manager, row)
         })
@@ -112,7 +98,87 @@ export class InvoiceDraftsService {
         return this.viewOf(this.entityManager, draft)
     }
 
-    /** The invoice line of a renewal, in Vietnamese (a VAT invoice's language), from the messages catalog. */
+    /** The draft of a paid renewal: one line, the renewal's own amounts. */
+    private async renewalDraftOf(
+        manager: EntityManager,
+        workspaceId: string,
+        renewalId: string,
+    ): Promise<InvoiceDraftEntity> {
+        const renewal = await manager.findOne(RenewalRequestEntity, { where: { workspaceId, id: renewalId } })
+        if (renewal === null) throw new CrmError({ code: CrmErrorCode.RenewalNotFound })
+        if (
+            !INVOICEABLE.has(renewal.state) ||
+            renewal.netVnd === null ||
+            renewal.vatVnd === null ||
+            renewal.totalVnd === null
+        ) {
+            throw new CrmError({ code: CrmErrorCode.RenewalStateRefused, params: { state: renewal.state } })
+        }
+        const service = await manager.findOne(ServiceEntity, { where: { workspaceId, id: renewal.serviceId } })
+        if (service === null) throw new CrmError({ code: CrmErrorCode.ServiceNotFound })
+        return manager.create(InvoiceDraftEntity, {
+            id: this.ids.next(),
+            workspaceId,
+            renewalId: renewal.id,
+            purchaseId: null,
+            customerId: service.customerId,
+            lines: [
+                {
+                    description: this.lineOf(service.serviceClass, service.code, renewal.termMonths),
+                    quantity: 1,
+                    unitPriceVnd: renewal.netVnd,
+                    amountVnd: renewal.netVnd,
+                },
+            ],
+            netVnd: renewal.netVnd,
+            vatRatePercent: PLACEHOLDER_VAT_PERCENT,
+            vatVnd: renewal.vatVnd,
+            totalVnd: renewal.totalVnd,
+            state: "draft",
+            priceSource: renewal.priceSource,
+        })
+    }
+
+    /** The draft of a paid purchase: the lines and amounts of its accepted quote. */
+    private async purchaseDraftOf(
+        manager: EntityManager,
+        workspaceId: string,
+        purchaseId: string,
+    ): Promise<InvoiceDraftEntity> {
+        const purchase = await manager.findOne(PurchaseEntity, { where: { workspaceId, id: purchaseId } })
+        if (purchase === null) throw new CrmError({ code: CrmErrorCode.PurchaseNotFound })
+        const { lines, netVnd, vatVnd, totalVnd, customerId } = purchase
+        if (
+            !INVOICEABLE_PURCHASES.has(purchase.state) ||
+            customerId === null ||
+            lines === null ||
+            netVnd === null ||
+            vatVnd === null ||
+            totalVnd === null
+        ) {
+            throw new CrmError({ code: CrmErrorCode.PurchaseStateRefused, params: { state: purchase.state } })
+        }
+        return manager.create(InvoiceDraftEntity, {
+            id: this.ids.next(),
+            workspaceId,
+            renewalId: null,
+            purchaseId: purchase.id,
+            customerId,
+            lines: lines.map((line) => ({
+                description: line.name,
+                quantity: line.quantity,
+                unitPriceVnd: line.unitPriceVnd,
+                amountVnd: line.amountVnd,
+            })),
+            netVnd,
+            vatRatePercent: purchase.vatRatePercent ?? PLACEHOLDER_VAT_PERCENT,
+            vatVnd,
+            totalVnd,
+            state: "draft",
+            priceSource: purchase.priceSource ?? "placeholder",
+        })
+    }
+
     private lineOf(serviceClass: string, serviceCode: string, termMonths: number): string {
         const label = this.catalog.get(`crm.service-class.${serviceClass}`, {}, "vi")
         return this.catalog.get(
@@ -129,6 +195,7 @@ export class InvoiceDraftsService {
         return {
             id: draft.id,
             renewalId: draft.renewalId,
+            purchaseId: draft.purchaseId,
             customerCode: customer?.code ?? "",
             lines: draft.lines,
             netVnd: draft.netVnd,

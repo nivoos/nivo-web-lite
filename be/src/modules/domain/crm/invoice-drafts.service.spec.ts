@@ -3,7 +3,9 @@ import { type MockEntityManager, fakeIds, fakeTransaction, mock, mockEntityManag
 import { IDS } from "@modules/platform/ids"
 import { MESSAGE_CATALOG, type MessageCatalog } from "@modules/platform/i18n"
 import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
+import { isRecord } from "@modules/platform/primitives"
 import { WS, customerRow, invoiceDraftRow, renewalRow, serviceRow, uuid } from "@tests/fixtures/builders/crm.builder"
+import { paidPurchaseRow, purchaseRow, unpricedPaidPurchaseRow } from "@tests/fixtures/builders/purchase.builder"
 import { INVOICE_DRAFT_OPERATIONS, NO_STRAYS, straysOf } from "@tests/fixtures/builders/workspace-scope.builder"
 import { CrmErrorCode } from "./errors/crm.error"
 import { InvoiceDraftsService } from "./invoice-drafts.service"
@@ -11,6 +13,7 @@ import {
     CustomerEntity,
     InvoiceDraftEntity,
     InvoiceEntity,
+    PurchaseEntity,
     RenewalRequestEntity,
     ServiceEntity,
 } from "./persistence/entities"
@@ -32,7 +35,7 @@ const build = async (em: MockEntityManager) => {
     return moduleRef.get(InvoiceDraftsService)
 }
 
-const INPUT = { workspaceId: WS, renewalId: uuid(51) }
+const INPUT = { workspaceId: WS, renewalId: uuid(51), purchaseId: null }
 
 describe("InvoiceDraftsService", () => {
     it("drafts a paid renewal's invoice with the renewal's own amounts", async () => {
@@ -48,6 +51,7 @@ describe("InvoiceDraftsService", () => {
         await expect((await build(em)).create(INPUT)).resolves.toEqual({
             id: uuid(1),
             renewalId: uuid(51),
+            purchaseId: null,
             customerCode: "SYN-001",
             lines: [
                 {
@@ -66,7 +70,9 @@ describe("InvoiceDraftsService", () => {
             priceSource: "placeholder",
         })
     })
+})
 
+describe("InvoiceDraftsService: replays and refusals", () => {
     it("answers the existing draft of the renewal", async () => {
         const em = mockEntityManager({
             findOne: [
@@ -191,5 +197,94 @@ describe("InvoiceDraftsService.listInvoices", () => {
             true,
         ])
         expect(first.items.map((item) => item.customerCode)).toEqual(["SYN-001"])
+    })
+})
+
+describe("InvoiceDraftsService: a purchase", () => {
+    it("drafts a paid purchase from its quote's lines and amounts", async () => {
+        const paid = paidPurchaseRow()
+        const em = mockEntityManager({
+            findOne: [
+                [InvoiceDraftEntity, null],
+                [PurchaseEntity, paid],
+                [CustomerEntity, customerRow()],
+            ],
+            insert: [InvoiceDraftEntity, {}],
+        })
+        const draft = await (await build(em)).create({ workspaceId: WS, renewalId: null, purchaseId: paid.id })
+        expect([draft.purchaseId, draft.renewalId, draft.lines.length, draft.totalVnd, draft.customerCode]).toEqual([
+            paid.id,
+            null,
+            2,
+            11_000_000,
+            "SYN-001",
+        ])
+    })
+})
+
+describe("InvoiceDraftsService: a purchase, refusals and defaults", () => {
+    it("refuses an unpaid, unknown or unpriced purchase and a request naming neither or both", async () => {
+        const em = mockEntityManager({
+            findOne: [
+                [InvoiceDraftEntity, null],
+                [PurchaseEntity, purchaseRow()],
+                [InvoiceDraftEntity, null],
+                [PurchaseEntity, null],
+                [InvoiceDraftEntity, null],
+                [PurchaseEntity, paidPurchaseRow({ totalVnd: null })],
+            ],
+        })
+        const drafts = await build(em)
+        const purchase = { workspaceId: WS, renewalId: null, purchaseId: uuid(121) }
+        const codes = await Promise.all(
+            [purchase, purchase, purchase].map((input) =>
+                drafts.create(input).then(
+                    () => null,
+                    (error: unknown) => (isRecord(error) ? error["code"] : null),
+                ),
+            ),
+        )
+        expect(codes).toEqual([
+            CrmErrorCode.PurchaseStateRefused,
+            CrmErrorCode.PurchaseNotFound,
+            CrmErrorCode.PurchaseStateRefused,
+        ])
+        const both = { workspaceId: WS, renewalId: uuid(51), purchaseId: uuid(121) }
+        await expect(drafts.create(both)).rejects.toEqual(
+            expect.objectContaining({ code: CrmErrorCode.InvoiceDraftSubjectInvalid }),
+        )
+        await expect(drafts.create({ ...both, renewalId: null, purchaseId: null })).rejects.toEqual(
+            expect.objectContaining({ code: CrmErrorCode.InvoiceDraftSubjectInvalid }),
+        )
+    })
+
+    it("refuses a renewal whose service is gone", async () => {
+        const em = mockEntityManager({
+            findOne: [
+                [InvoiceDraftEntity, null],
+                [RenewalRequestEntity, renewalRow({ state: "paid", transactionRef: "BANK-9" })],
+                [ServiceEntity, null],
+            ],
+        })
+        await expect((await build(em)).create(INPUT)).rejects.toEqual(
+            expect.objectContaining({ code: CrmErrorCode.ServiceNotFound }),
+        )
+    })
+
+    it("drafts with the placeholder VAT and source when the quote kept none", async () => {
+        const delivered = unpricedPaidPurchaseRow()
+        const em = mockEntityManager({
+            findOne: [
+                [InvoiceDraftEntity, null],
+                [PurchaseEntity, delivered],
+                [CustomerEntity, null],
+            ],
+            insert: [InvoiceDraftEntity, {}],
+        })
+        await expect(
+            (await build(em)).create({ workspaceId: WS, renewalId: null, purchaseId: delivered.id }),
+        ).resolves.toEqual(
+            expect.objectContaining({ vatRatePercent: 10, priceSource: "placeholder", customerCode: "" }),
+        )
     })
 })

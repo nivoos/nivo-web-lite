@@ -27,7 +27,7 @@ export class InvoiceController {
     @CrmOperation({
         id: "invoice.draft.create",
         summary:
-            "Draft the VAT invoice of a paid renewal; amounts computed by the CRM (issues nothing; one draft per renewal).",
+            "Draft the VAT invoice of a paid renewal or a paid purchase; amounts computed by the CRM (issues nothing; one draft each).",
         response: InvoiceDraftResponse,
         effect: "write",
         nivoEffect: "none",

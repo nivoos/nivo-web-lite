@@ -153,7 +153,7 @@ export const TICKET_OPERATIONS: ReadonlyArray<ScopedOperation<TicketsService>> =
 
 /** The invoice draft operations. */
 export const INVOICE_DRAFT_OPERATIONS: ReadonlyArray<ScopedOperation<InvoiceDraftsService>> = [
-    ["invoice.draft.create", (s, ws) => s.create({ workspaceId: ws, renewalId: SOME_ID })],
+    ["invoice.draft.create", (s, ws) => s.create({ workspaceId: ws, renewalId: SOME_ID, purchaseId: null })],
     ["invoice.draft.get", (s, ws) => s.get({ workspaceId: ws, id: SOME_ID })],
     [
         "invoice.list",

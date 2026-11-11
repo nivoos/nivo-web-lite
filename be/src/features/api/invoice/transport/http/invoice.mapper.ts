@@ -7,6 +7,7 @@ import type { CreateInvoiceDraftRequest, InvoiceDraftPathRequest, ListInvoicesRe
 export const toCreateRequest = (workspaceId: string, body: CreateInvoiceDraftRequest): InvoiceDraftCreateInput => ({
     workspaceId,
     renewalId: body.renewalId,
+    purchaseId: body.purchaseId,
 })
 
 /** The request of `invoice.draft.get`. */

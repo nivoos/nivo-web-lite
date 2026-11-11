@@ -118,3 +118,11 @@ export const quotedPurchaseRow: (overrides?: Partial<PurchaseEntity>) => Purchas
 /** A page cursor of `list` after the keys `keys`, in the form the pagination capability reads. */
 export const cursorOf = (list: string, keys: ReadonlyArray<string>): string =>
     Buffer.from(JSON.stringify({ l: list, k: keys }), "utf8").toString("base64url")
+
+/** A synthetic quoted purchase of customer uuid(1), paid (an invoice can be drafted for it). */
+export const paidPurchaseRow = (overrides: Partial<PurchaseEntity> = {}): PurchaseEntity =>
+    quotedPurchaseRow({ state: "paid", customerId: uuid(1), ...overrides })
+
+/** A synthetic paid purchase whose quote kept no VAT rate and no price source (a draft takes the placeholder ones). */
+export const unpricedPaidPurchaseRow = (): PurchaseEntity =>
+    paidPurchaseRow({ vatRatePercent: null, priceSource: null })

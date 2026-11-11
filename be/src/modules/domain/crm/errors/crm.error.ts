@@ -78,6 +78,8 @@ export enum CrmErrorCode {
     CustomerExists = "CRM_CUSTOMER_EXISTS",
     /** The bank row already proved another renewal or purchase (`transactionRef` param). */
     TransactionRefUsed = "CRM_TRANSACTION_REF_USED",
+    /** An invoice draft names neither or both of a renewal and a purchase. */
+    InvoiceDraftSubjectInvalid = "CRM_INVOICE_DRAFT_SUBJECT_INVALID",
 }
 
 /** How each CRM code travels. */
@@ -120,6 +122,7 @@ export const CRM_ERROR_KINDS: Record<CrmErrorCode, ErrorKind> = {
     [CrmErrorCode.QuoteExpired]: "conflict",
     [CrmErrorCode.CustomerExists]: "conflict",
     [CrmErrorCode.TransactionRefUsed]: "conflict",
+    [CrmErrorCode.InvoiceDraftSubjectInvalid]: "invalid",
 }
 
 /** The one error class of the CRM capability. */

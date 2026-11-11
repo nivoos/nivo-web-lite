@@ -46,6 +46,8 @@ export const CRM_MESSAGES: MessageBundle = {
         "errors.CRM_QUOTE_EXPIRED": "Báo giá đã hết hạn ngày {{validUntil}}.",
         "errors.CRM_CUSTOMER_EXISTS": "Đã có khách hàng {{customerCode}} với mã số thuế, điện thoại hoặc thư này.",
         "errors.CRM_TRANSACTION_REF_USED": "Giao dịch ngân hàng {{transactionRef}} đã được ghi cho yêu cầu khác.",
+        "errors.CRM_INVOICE_DRAFT_SUBJECT_INVALID":
+            "Hóa đơn nháp cần đúng một trong hai: yêu cầu gia hạn hoặc yêu cầu mua.",
     },
     en: {
         "crm.invoice-draft.renewal-line": "Renewal of {{serviceClass}} {{serviceCode}}, {{termMonths}} months",
@@ -92,5 +94,6 @@ export const CRM_MESSAGES: MessageBundle = {
         "errors.CRM_QUOTE_EXPIRED": "The quote expired on {{validUntil}}.",
         "errors.CRM_CUSTOMER_EXISTS": "Customer {{customerCode}} already has this tax id, phone or mail.",
         "errors.CRM_TRANSACTION_REF_USED": "The bank row {{transactionRef}} already proved another request.",
+        "errors.CRM_INVOICE_DRAFT_SUBJECT_INVALID": "An invoice draft names exactly one of a renewal and a purchase.",
     },
 }

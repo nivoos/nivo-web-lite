@@ -26,9 +26,13 @@ export class InvoiceDraftResponse implements InvoiceDraftView {
     @ApiProperty({ type: String, format: "uuid" })
     readonly id!: string
 
-    /** The renewal. */
-    @ApiProperty({ type: String, format: "uuid" })
-    readonly renewalId!: string
+    /** The renewal it drafts, or null for a purchase. */
+    @ApiProperty({ type: String, format: "uuid", nullable: true })
+    readonly renewalId!: string | null
+
+    /** The purchase it drafts, or null for a renewal. */
+    @ApiProperty({ type: String, format: "uuid", nullable: true })
+    readonly purchaseId!: string | null
 
     /** The customer. */
     @ApiProperty({ type: String, maxLength: 80 })

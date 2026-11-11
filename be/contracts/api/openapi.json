@@ -296,14 +296,17 @@
       },
       "CreateInvoiceDraftRequest": {
         "properties": {
+          "purchaseId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
           "renewalId": {
             "format": "uuid",
+            "nullable": true,
             "type": "string"
           }
         },
-        "required": [
-          "renewalId"
-        ],
         "type": "object"
       },
       "CreatePurchaseQuoteRequest": {
@@ -1035,8 +1038,14 @@
             ],
             "type": "string"
           },
+          "purchaseId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
           "renewalId": {
             "format": "uuid",
+            "nullable": true,
             "type": "string"
           },
           "state": {
@@ -1062,6 +1071,7 @@
         "required": [
           "id",
           "renewalId",
+          "purchaseId",
           "customerCode",
           "lines",
           "netVnd",
@@ -4248,7 +4258,7 @@
             "serviceKey": []
           }
         ],
-        "summary": "Draft the VAT invoice of a paid renewal; amounts computed by the CRM (issues nothing; one draft per renewal).",
+        "summary": "Draft the VAT invoice of a paid renewal or a paid purchase; amounts computed by the CRM (issues nothing; one draft each).",
         "tags": [
           "invoice"
         ],

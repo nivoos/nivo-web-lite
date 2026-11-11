@@ -2,13 +2,21 @@ import { ApiProperty } from "@nestjs/swagger"
 import { IsOptional, IsString, IsUUID, Matches, MaxLength, MinLength } from "class-validator"
 import { PageRequest } from "@modules/platform/openapi"
 
-/** The paid renewal to draft the invoice of. */
+/** The paid renewal OR the paid purchase to draft the invoice of (exactly one). */
 export class CreateInvoiceDraftRequest {
     /** The renewal request (paid, pending_person or renewed). */
-    @ApiProperty({ type: String, format: "uuid" })
+    @ApiProperty({ type: String, format: "uuid", required: false, nullable: true })
+    @IsOptional()
     @IsUUID()
     @MaxLength(36)
-    readonly renewalId!: string
+    readonly renewalId: string | null = null
+
+    /** The purchase (paid, pending_person or delivered). */
+    @ApiProperty({ type: String, format: "uuid", required: false, nullable: true })
+    @IsOptional()
+    @IsUUID()
+    @MaxLength(36)
+    readonly purchaseId: string | null = null
 }
 
 /** The path of an invoice draft door. */

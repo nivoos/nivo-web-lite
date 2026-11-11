@@ -15,15 +15,19 @@ export interface InvoiceDraftLineValue {
 }
 
 @Entity({ name: "crm_invoice_drafts" })
-/** The invoice draft of one renewal (data only). Mapped from db/migrations 0005; id, created_at and updated_at come from UuidAbstractEntity. */
+/** The invoice draft of one renewal or one purchase (data only). Mapped from db/migrations 0005; id, created_at and updated_at come from UuidAbstractEntity. */
 export class InvoiceDraftEntity extends UuidAbstractEntity {
     /** The enterprise workspace the row belongs to (every CRM row is keyed by it). */
     @Column({ name: "workspace_id", type: "uuid" })
     workspaceId!: string
 
-    /** The renewal request. */
-    @Column({ name: "renewal_id", type: "uuid" })
-    renewalId!: string
+    /** The renewal request it drafts, or null for a purchase. */
+    @Column({ name: "renewal_id", type: "uuid", nullable: true })
+    renewalId!: string | null
+
+    /** The purchase it drafts, or null for a renewal. */
+    @Column({ name: "purchase_id", type: "uuid", nullable: true })
+    purchaseId!: string | null
 
     /** The customer. */
     @Column({ name: "customer_id", type: "uuid" })

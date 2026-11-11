@@ -193,8 +193,10 @@ export interface InvoiceDraftLineView {
 export interface InvoiceDraftView {
     /** The id. */
     readonly id: string
-    /** The renewal. */
-    readonly renewalId: string
+    /** The renewal it drafts, or null for a purchase. */
+    readonly renewalId: string | null
+    /** The purchase it drafts, or null for a renewal. */
+    readonly purchaseId: string | null
     /** The customer. */
     readonly customerCode: string
     /** The lines. */
@@ -213,12 +215,14 @@ export interface InvoiceDraftView {
     readonly priceSource: PriceSource
 }
 
-/** Creates the draft of a renewal. */
+/** Creates the draft of a renewal OR of a purchase (exactly one is named). */
 export interface InvoiceDraftCreateInput {
     /** The workspace. */
     readonly workspaceId: string
-    /** The renewal. */
-    readonly renewalId: string
+    /** The paid renewal, or null. */
+    readonly renewalId: string | null
+    /** The paid purchase, or null. */
+    readonly purchaseId: string | null
 }
 
 /** Names one draft. */
