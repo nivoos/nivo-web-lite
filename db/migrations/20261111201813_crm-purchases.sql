@@ -110,7 +110,3 @@ CREATE OR REPLACE FUNCTION public.crm_backup_tables()
   ]) with ordinality as listed(t, position) order by position;
 $$;
 
--- A service an accepted purchase opens is `pending`: ordered, not yet active (a person activates it at delivery).
-ALTER TABLE public.crm_services
-    DROP CONSTRAINT crm_services_status_check,
-    ADD CONSTRAINT crm_services_status_check CHECK ((status = ANY (ARRAY['active'::text, 'expiring'::text, 'expired'::text, 'suspended'::text, 'cancelled'::text, 'trial'::text, 'internal'::text, 'private_hosting'::text, 'not_found'::text, 'expiry_unknown'::text, 'unknown'::text, 'pending'::text])));
