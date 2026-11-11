@@ -8,4 +8,13 @@ export const OPENAPI: Omit<OpenAPIObject, "paths"> = new DocumentBuilder()
     .setTitle("nivo-web-lite")
     .setVersion("1.0.0")
     .addBearerAuth()
+    .addBearerAuth(
+        {
+            type: "http",
+            scheme: "bearer",
+            bearerFormat: "opaque",
+            description: "The CRM service key: the sealed secret NAMED CRM_SERVICE_KEY, never in this document.",
+        },
+        "serviceKey",
+    )
     .build()

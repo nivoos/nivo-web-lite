@@ -1,5 +1,8 @@
 import type { DynamicModule } from "@nestjs/common"
+import { CRM_ERROR_KINDS, CRM_MESSAGES } from "@modules/domain/crm"
 import { IDENTITY_ERROR_KINDS, IDENTITY_MESSAGES } from "@modules/domain/identity"
+import { RENEWAL_PROVIDER_ERROR_KINDS, RENEWAL_PROVIDER_MESSAGES } from "@modules/integrations/renewal-provider"
+import { PAGINATION_ERROR_KINDS, PAGINATION_MESSAGES } from "@modules/platform/pagination"
 import { PASSPORT_ERROR_KINDS } from "@modules/integrations/passport"
 import { ClockModule } from "@modules/platform/clock"
 import { CONFIG_ERROR_KINDS } from "@modules/platform/config"
@@ -28,7 +31,15 @@ export const platformModules = (options: ApiOptions): Array<DynamicModule> => [
     HttpModule.register({ isGlobal: true, ...options.http }),
     I18nModule.register({
         isGlobal: true,
-        bundles: [HTTP_MESSAGES, ERRORS_MESSAGES, HTTP_SECURITY_MESSAGES, IDENTITY_MESSAGES],
+        bundles: [
+            HTTP_MESSAGES,
+            ERRORS_MESSAGES,
+            HTTP_SECURITY_MESSAGES,
+            IDENTITY_MESSAGES,
+            CRM_MESSAGES,
+            PAGINATION_MESSAGES,
+            RENEWAL_PROVIDER_MESSAGES,
+        ],
     }),
     ErrorsModule.register({
         isGlobal: true,
@@ -39,6 +50,9 @@ export const platformModules = (options: ApiOptions): Array<DynamicModule> => [
             HTTP_SECURITY_ERROR_KINDS,
             IDENTITY_ERROR_KINDS,
             PASSPORT_ERROR_KINDS,
+            CRM_ERROR_KINDS,
+            PAGINATION_ERROR_KINDS,
+            RENEWAL_PROVIDER_ERROR_KINDS,
         ],
     }),
     CqrsModule.register({ isGlobal: true }),

@@ -23,7 +23,7 @@ export class AppModule {
             imports: [
                 ...platformModules(options),
                 ...integrationModules(options),
-                ...domainModules(passport.verify),
+                ...domainModules(options, passport.verify),
                 ...systemModules(),
                 ...apiModules(),
                 ...webhooksModules(),
