@@ -60,6 +60,7 @@ export class ServiceController {
             "Record a renewal reminder sent about a service, or the customer's answer (writes crm_service_reminders; sends nothing).",
         response: ReminderResponse,
         effect: "write",
+        nivoEffect: "none",
         idempotencyKey: true,
         status: 201,
     })

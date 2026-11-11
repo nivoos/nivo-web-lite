@@ -30,6 +30,8 @@ export class TicketController {
         summary: "Open a support ticket from a conversation or a mail (writes crm_tickets; sends nothing).",
         response: TicketResponse,
         effect: "write",
+        customerAudience: { parameter: null },
+        nivoEffect: "none",
         idempotencyKey: true,
         status: 201,
     })
@@ -74,6 +76,7 @@ export class TicketController {
         summary: "Add a note to a ticket and/or move its status (a closed ticket only reopens).",
         response: TicketResponse,
         effect: "write",
+        nivoEffect: "none",
         idempotencyKey: true,
     })
     update(

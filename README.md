@@ -69,3 +69,28 @@ project code), an item whose content hash is unchanged is not written again, and
 deleted. A required reference to a customer the snapshot does not hold refuses the whole import. The specs use synthetic @1
 fixtures only; the data repository's content is never read by them. The holding importer of the source folder stays parked
 outside the project: its status word map is not brought in.
+
+## CRM REST contract for NIVO
+
+`be/contracts/api/openapi.json` (written by `starci app emit`) is the contract NIVO's OpenAPI provider pins. 29 operations,
+singular ids (a NIVO tool id is `crm.` + operationId), each with a summary and no description (user copy goes through the
+catalog). Every operation answers the harness `ErrorResponse` as `default`, is secured by the `serviceKey` bearer (a service
+credential of one workspace, above) and carries `x-crm-effect` (`read` | `write`). Every write declares `x-nivo-effect`:
+`service.renewal.create` is `money` (it asks the provider to renew, only once the request is paid), `renewal.outcome.record` is
+`irreversible` (a person's confirmation moves the service end date), the other ten writes are `none`. NIVO runs a write marked
+other than `none` only after a person was asked. A customer-facing run (a conversation) may call only an operation marked
+`x-nivo-customer-audience: true`: `customer.get`, `customer.balance.get`, `customer.service.list`, `customer.invoice.list`,
+`customer.contract.list` and `customer.document.list`, each naming `x-nivo-customer-parameter: "code"` (NIVO fills the customer
+code from the conversation's trusted link, never from the model), and `ticket.create` (no customer parameter). `customer.find` and
+every other operation stay internal. The provider plugin that answers for iNET and Tino in dev is named `fixture` (it never calls
+out); AZ goes to a person (`manual`).
+
+## The CRM database
+
+The CRM's data lives in this project's OWN PostgreSQL: the `db` component of `.starcistacks/application-stacks.yaml` (its own
+container, volume `db-data`, schema `public`, tables `public.crm_*` with forced row-level security for `app_be`), separate from
+the NIVO platform's database. The harness names the one connection of a lite project `primary` (`hfs.json`
+`sides.be.connections`), so its URL secret is `PRIMARY_DB_URL` (production custody `primary-db-url`, read as
+`PRIMARY_DB_URL_FILE`); the name is the harness's, the database is the CRM's. A second database (another CRM, or a legacy CRM to
+read from) is not a second connection here: lite refuses `starci app add connection`. The lawful ways are a second lite project
+per CRM, the full edition (several connections, `starci app add connection <name> --owner <app>`), or a harness change.

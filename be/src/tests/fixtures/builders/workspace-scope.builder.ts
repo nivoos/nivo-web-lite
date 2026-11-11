@@ -29,7 +29,7 @@ export const CUSTOMER_OPERATIONS: ReadonlyArray<ScopedOperation<CustomerBookServ
     ["customer.invoice.list", (s, ws) => s.listInvoices({ workspaceId: ws, code: "SYN-001", page: PAGE })],
     ["customer.document.list", (s, ws) => s.listDocuments({ workspaceId: ws, code: "SYN-001", page: PAGE })],
     [
-        "customer.contact.link",
+        "customer.contact.update",
         (s, ws) => s.linkContact({ workspaceId: ws, code: "SYN-001", channel: "zalo", address: "z-1", name: null }),
     ],
 ]
@@ -100,7 +100,7 @@ export const RENEWAL_OPERATIONS: ReadonlyArray<ScopedOperation<RenewalsService>>
     ["renewal.open.list", (s, ws) => s.listOpen({ workspaceId: ws, customerCode: null, page: PAGE })],
     ["renewal.payment.record", (s, ws) => s.recordPayment({ workspaceId: ws, id: SOME_ID, transactionRef: "t" })],
     [
-        "renewal.execute",
+        "service.renewal.create",
         (s, ws) =>
             s.execute({
                 workspaceId: ws,

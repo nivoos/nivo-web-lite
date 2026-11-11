@@ -48,6 +48,7 @@ export class RenewalController {
             "Open a renewal request awaiting payment on the customer's yes; the CRM computes total and transfer code (charges nothing).",
         response: RenewalResponse,
         effect: "write",
+        nivoEffect: "none",
         idempotencyKey: true,
         status: 201,
     })
@@ -96,6 +97,7 @@ export class RenewalController {
             "Mark a renewal request paid by the bank transaction that proves it, never an amount (moves no money).",
         response: RenewalResponse,
         effect: "write",
+        nivoEffect: "none",
     })
     recordPayment(
         @CrmWorkspace() workspaceId: string,
@@ -115,8 +117,8 @@ export class RenewalController {
             "Renew a service at its provider for a PAID request (COSTS MONEY once a live plugin exists; dryRun defaults to true).",
         response: RenewalResponse,
         effect: "write",
+        nivoEffect: "money",
         idempotencyKey: true,
-        money: true,
     })
     execute(
         @CrmWorkspace() workspaceId: string,
@@ -136,6 +138,7 @@ export class RenewalController {
         summary: "A person confirms the provider outcome: renewed (moves the service's end date) or failed.",
         response: RenewalResponse,
         effect: "write",
+        nivoEffect: "irreversible",
     })
     recordOutcome(
         @CrmWorkspace() workspaceId: string,

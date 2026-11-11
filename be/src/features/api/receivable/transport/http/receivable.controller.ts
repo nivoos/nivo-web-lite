@@ -51,6 +51,7 @@ export class ReceivableController {
         summary: "Record a payment notice sent about a receivable (writes crm_receivable_notices; sends nothing).",
         response: NoticeResponse,
         effect: "write",
+        nivoEffect: "none",
         idempotencyKey: true,
         status: 201,
     })
@@ -73,6 +74,7 @@ export class ReceivableController {
             "Record that a bank transaction paid a receivable, by the bank row's id, never an amount (idempotent by transaction).",
         response: ReceivablePaymentResponse,
         effect: "write",
+        nivoEffect: "none",
     })
     recordPayment(
         @CrmWorkspace() workspaceId: string,

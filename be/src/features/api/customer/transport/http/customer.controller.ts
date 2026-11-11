@@ -64,6 +64,7 @@ export class CustomerController {
         summary: "Get one customer with its website domains and linked contacts.",
         response: CustomerResponse,
         effect: "read",
+        customerAudience: { parameter: "code" },
     })
     get(@CrmWorkspace() workspaceId: string, @Param() path: CustomerPathRequest): Promise<CustomerResponse> {
         return this.queryBus.execute(new GetCustomerQuery({ request: toGetRequest(workspaceId, path) }))
@@ -76,6 +77,7 @@ export class CustomerController {
         summary: "List a customer's recurring services (hosting, domain, SSL).",
         response: CustomerServicePageResponse,
         effect: "read",
+        customerAudience: { parameter: "code" },
     })
     listServices(
         @CrmWorkspace() workspaceId: string,
@@ -94,6 +96,7 @@ export class CustomerController {
         summary: "List a customer's contracts from the contract register.",
         response: ContractPageResponse,
         effect: "read",
+        customerAudience: { parameter: "code" },
     })
     listContracts(
         @CrmWorkspace() workspaceId: string,
@@ -112,6 +115,7 @@ export class CustomerController {
         summary: "List the VAT invoices issued to a customer.",
         response: InvoicePageResponse,
         effect: "read",
+        customerAudience: { parameter: "code" },
     })
     listInvoices(
         @CrmWorkspace() workspaceId: string,
@@ -130,6 +134,7 @@ export class CustomerController {
         summary: "List a customer's document references (paths, never content).",
         response: DocumentPageResponse,
         effect: "read",
+        customerAudience: { parameter: "code" },
     })
     listDocuments(
         @CrmWorkspace() workspaceId: string,
@@ -149,6 +154,7 @@ export class CustomerController {
             "Get a customer's TK131 balance and open project receivables, side by side (a TK131 balance is not a debt).",
         response: BalanceResponse,
         effect: "read",
+        customerAudience: { parameter: "code" },
     })
     balance(@CrmWorkspace() workspaceId: string, @Param() path: CustomerPathRequest): Promise<BalanceResponse> {
         return this.queryBus.execute(new GetCustomerBalanceQuery({ request: toBalanceRequest(workspaceId, path) }))
@@ -161,6 +167,7 @@ export class CustomerController {
         summary: "Link a Zalo id, e-mail or phone to a customer (writes crm_contacts; free; idempotent by address).",
         response: ContactLinkResponse,
         effect: "write",
+        nivoEffect: "none",
     })
     linkContact(
         @CrmWorkspace() workspaceId: string,

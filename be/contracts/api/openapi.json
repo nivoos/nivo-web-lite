@@ -2673,8 +2673,7 @@
         "tags": [
           "customer"
         ],
-        "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-crm-effect": "read"
       }
     },
     "/v1/customers/{code}": {
@@ -2724,7 +2723,8 @@
           "customer"
         ],
         "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-nivo-customer-audience": true,
+        "x-nivo-customer-parameter": "code"
       }
     },
     "/v1/customers/{code}/balance": {
@@ -2774,7 +2774,8 @@
           "customer"
         ],
         "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-nivo-customer-audience": true,
+        "x-nivo-customer-parameter": "code"
       }
     },
     "/v1/customers/{code}/contacts": {
@@ -2834,7 +2835,7 @@
           "customer"
         ],
         "x-crm-effect": "write",
-        "x-crm-money": false
+        "x-nivo-effect": "none"
       }
     },
     "/v1/customers/{code}/contracts": {
@@ -2903,7 +2904,8 @@
           "customer"
         ],
         "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-nivo-customer-audience": true,
+        "x-nivo-customer-parameter": "code"
       }
     },
     "/v1/customers/{code}/documents": {
@@ -2972,7 +2974,8 @@
           "customer"
         ],
         "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-nivo-customer-audience": true,
+        "x-nivo-customer-parameter": "code"
       }
     },
     "/v1/customers/{code}/invoices": {
@@ -3041,7 +3044,8 @@
           "customer"
         ],
         "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-nivo-customer-audience": true,
+        "x-nivo-customer-parameter": "code"
       }
     },
     "/v1/customers/{code}/services": {
@@ -3110,7 +3114,8 @@
           "customer"
         ],
         "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-nivo-customer-audience": true,
+        "x-nivo-customer-parameter": "code"
       }
     },
     "/v1/invoice-drafts": {
@@ -3159,7 +3164,7 @@
           "invoice"
         ],
         "x-crm-effect": "write",
-        "x-crm-money": false
+        "x-nivo-effect": "none"
       }
     },
     "/v1/invoice-drafts/{id}": {
@@ -3207,8 +3212,7 @@
         "tags": [
           "invoice"
         ],
-        "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-crm-effect": "read"
       }
     },
     "/v1/payables": {
@@ -3266,8 +3270,7 @@
         "tags": [
           "payable"
         ],
-        "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-crm-effect": "read"
       }
     },
     "/v1/payables/{partyCode}/notes": {
@@ -3336,7 +3339,7 @@
           "payable"
         ],
         "x-crm-effect": "write",
-        "x-crm-money": false
+        "x-nivo-effect": "none"
       }
     },
     "/v1/prices": {
@@ -3394,8 +3397,7 @@
         "tags": [
           "price"
         ],
-        "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-crm-effect": "read"
       }
     },
     "/v1/receivables/overdue": {
@@ -3462,8 +3464,7 @@
         "tags": [
           "receivable"
         ],
-        "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-crm-effect": "read"
       }
     },
     "/v1/receivables/{code}/notices": {
@@ -3532,7 +3533,7 @@
           "receivable"
         ],
         "x-crm-effect": "write",
-        "x-crm-money": false
+        "x-nivo-effect": "none"
       }
     },
     "/v1/receivables/{code}/payments": {
@@ -3592,7 +3593,7 @@
           "receivable"
         ],
         "x-crm-effect": "write",
-        "x-crm-money": false
+        "x-nivo-effect": "none"
       }
     },
     "/v1/renewals": {
@@ -3651,7 +3652,7 @@
           "renewal"
         ],
         "x-crm-effect": "write",
-        "x-crm-money": false
+        "x-nivo-effect": "none"
       }
     },
     "/v1/renewals/open": {
@@ -3719,8 +3720,7 @@
         "tags": [
           "renewal"
         ],
-        "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-crm-effect": "read"
       }
     },
     "/v1/renewals/{id}": {
@@ -3768,8 +3768,7 @@
         "tags": [
           "renewal"
         ],
-        "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-crm-effect": "read"
       }
     },
     "/v1/renewals/{id}/outcome": {
@@ -3828,7 +3827,7 @@
           "renewal"
         ],
         "x-crm-effect": "write",
-        "x-crm-money": false
+        "x-nivo-effect": "irreversible"
       }
     },
     "/v1/renewals/{id}/payments": {
@@ -3887,7 +3886,7 @@
           "renewal"
         ],
         "x-crm-effect": "write",
-        "x-crm-money": false
+        "x-nivo-effect": "none"
       }
     },
     "/v1/services/expiring": {
@@ -3976,8 +3975,7 @@
         "tags": [
           "service"
         ],
-        "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-crm-effect": "read"
       }
     },
     "/v1/services/{code}/reminders": {
@@ -4046,7 +4044,7 @@
           "service"
         ],
         "x-crm-effect": "write",
-        "x-crm-money": false
+        "x-nivo-effect": "none"
       }
     },
     "/v1/services/{code}/renewals": {
@@ -4115,7 +4113,7 @@
           "renewal"
         ],
         "x-crm-effect": "write",
-        "x-crm-money": true
+        "x-nivo-effect": "money"
       }
     },
     "/v1/services/{code}/status": {
@@ -4164,8 +4162,7 @@
         "tags": [
           "service"
         ],
-        "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-crm-effect": "read"
       }
     },
     "/v1/tickets": {
@@ -4249,8 +4246,7 @@
         "tags": [
           "ticket"
         ],
-        "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-crm-effect": "read"
       },
       "post": {
         "operationId": "ticket.create",
@@ -4307,7 +4303,8 @@
           "ticket"
         ],
         "x-crm-effect": "write",
-        "x-crm-money": false
+        "x-nivo-customer-audience": true,
+        "x-nivo-effect": "none"
       }
     },
     "/v1/tickets/{id}": {
@@ -4355,8 +4352,7 @@
         "tags": [
           "ticket"
         ],
-        "x-crm-effect": "read",
-        "x-crm-money": false
+        "x-crm-effect": "read"
       },
       "patch": {
         "operationId": "ticket.update",
@@ -4422,7 +4418,7 @@
           "ticket"
         ],
         "x-crm-effect": "write",
-        "x-crm-money": false
+        "x-nivo-effect": "none"
       }
     }
   },

@@ -29,6 +29,7 @@ export class InvoiceController {
             "Draft the VAT invoice of a paid renewal; amounts computed by the CRM (issues nothing; one draft per renewal).",
         response: InvoiceDraftResponse,
         effect: "write",
+        nivoEffect: "none",
     })
     create(
         @CrmWorkspace() workspaceId: string,

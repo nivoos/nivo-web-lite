@@ -41,6 +41,7 @@ export class PayableController {
             "Note a supplier invoice against a TK331 party (writes crm_payable_notes; the amount stays in the e-invoice).",
         response: PayableNoteResponse,
         effect: "write",
+        nivoEffect: "none",
         idempotencyKey: true,
         status: 201,
     })
