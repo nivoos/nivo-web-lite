@@ -48,6 +48,7 @@ export class RenewalController {
             "Open a renewal request awaiting payment on the customer's yes; the CRM computes total and transfer code (charges nothing).",
         response: RenewalResponse,
         effect: "write",
+        customerAudience: { parameter: null },
         nivoEffect: "none",
         idempotencyKey: true,
         status: 201,
@@ -69,6 +70,7 @@ export class RenewalController {
         summary: "List the open renewal requests (awaiting payment, paid, waiting for a person).",
         response: RenewalPageResponse,
         effect: "read",
+        customerAudience: { parameter: "customerCode" },
     })
     listOpen(
         @CrmWorkspace() workspaceId: string,

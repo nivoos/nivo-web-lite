@@ -52,6 +52,7 @@ export class TicketController {
         summary: "List tickets newest first, optionally of one customer or one status.",
         response: TicketPageResponse,
         effect: "read",
+        customerAudience: { parameter: "customerCode" },
     })
     list(@CrmWorkspace() workspaceId: string, @Query() query: ListTicketsRequest): Promise<TicketPageResponse> {
         return this.queryBus.execute(new ListTicketsQuery({ request: toListRequest(workspaceId, query) }))
@@ -76,6 +77,7 @@ export class TicketController {
         summary: "Add a note to a ticket and/or move its status (a closed ticket only reopens).",
         response: TicketResponse,
         effect: "write",
+        customerAudience: { parameter: null },
         nivoEffect: "none",
         idempotencyKey: true,
     })

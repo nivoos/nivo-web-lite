@@ -47,6 +47,7 @@ export class ServiceController {
             "Get a service's state from its provider plugin (manual: a person checks; fixture: the CRM's own row, nothing called).",
         response: ServiceStatusResponse,
         effect: "read",
+        customerAudience: { parameter: null },
     })
     status(@CrmWorkspace() workspaceId: string, @Param() path: ServicePathRequest): Promise<ServiceStatusResponse> {
         return this.queryBus.execute(new GetServiceStatusQuery({ request: toStatusRequest(workspaceId, path) }))
@@ -60,6 +61,7 @@ export class ServiceController {
             "Record a renewal reminder sent about a service, or the customer's answer (writes crm_service_reminders; sends nothing).",
         response: ReminderResponse,
         effect: "write",
+        customerAudience: { parameter: null },
         nivoEffect: "none",
         idempotencyKey: true,
         status: 201,

@@ -24,6 +24,7 @@ export class PriceController {
             "List the renewal price table per service class and term (PLACEHOLDER until the owner's price sheet is loaded).",
         response: PricePageResponse,
         effect: "read",
+        customerAudience: { parameter: null },
     })
     list(@CrmWorkspace() workspaceId: string, @Query() query: PageRequest): Promise<PricePageResponse> {
         return this.queryBus.execute(new ListPricesQuery({ request: toListRequest(workspaceId, query) }))
