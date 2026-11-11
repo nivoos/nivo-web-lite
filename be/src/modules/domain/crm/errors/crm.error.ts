@@ -50,6 +50,10 @@ export enum CrmErrorCode {
     CredentialLabelInvalid = "CRM_CREDENTIAL_LABEL_INVALID",
     /** No live service credential has this id. */
     CredentialNotFound = "CRM_CREDENTIAL_NOT_FOUND",
+    /** The customer has no document with this path. */
+    DocumentNotFound = "CRM_DOCUMENT_NOT_FOUND",
+    /** The document's original is not uploaded to the storage yet. */
+    DocumentNotStored = "CRM_DOCUMENT_NOT_STORED",
     /** The workspace an import binds a snapshot to is no uuid. */
     ImportWorkspaceInvalid = "CRM_IMPORT_WORKSPACE_INVALID",
     /** A snapshot has no `manifest.json` of format `nivo-web-lite-data@1`, or it names an entity the format does not have. */
@@ -88,6 +92,8 @@ export const CRM_ERROR_KINDS: Record<CrmErrorCode, ErrorKind> = {
     [CrmErrorCode.CredentialWorkspaceInvalid]: "invalid",
     [CrmErrorCode.CredentialLabelInvalid]: "invalid",
     [CrmErrorCode.CredentialNotFound]: "not-found",
+    [CrmErrorCode.DocumentNotFound]: "not-found",
+    [CrmErrorCode.DocumentNotStored]: "conflict",
     [CrmErrorCode.ImportWorkspaceInvalid]: "invalid",
     [CrmErrorCode.ImportManifestInvalid]: "invalid",
     [CrmErrorCode.ImportFileInvalid]: "invalid",

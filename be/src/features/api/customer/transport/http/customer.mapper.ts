@@ -1,7 +1,13 @@
 import { toPageInput } from "@modules/platform/pagination"
 import type { ContactLinkInput, CustomerFindInput, CustomerKey, CustomerListInput } from "@modules/domain/crm"
 import type { PageRequest } from "@modules/platform/openapi"
-import type { CustomerPathRequest, FindCustomerRequest, LinkContactRequest } from "./dto/customer.request"
+import type { DocumentLinkInput } from "../../application/get-customer-document-link.query"
+import type {
+    CustomerPathRequest,
+    DocumentLinkRequest,
+    FindCustomerRequest,
+    LinkContactRequest,
+} from "./dto/customer.request"
 
 /** The request of `customer.find`. */
 export const toFindRequest = (workspaceId: string, query: FindCustomerRequest): CustomerFindInput => ({
@@ -56,3 +62,10 @@ export const toLinkContactRequest = (
     path: CustomerPathRequest,
     body: LinkContactRequest,
 ): ContactLinkInput => ({ workspaceId, code: path.code, channel: body.channel, address: body.address, name: body.name })
+
+/** The request of `customer.document.link.get`. */
+export const toDocumentLinkRequest = (
+    workspaceId: string,
+    path: CustomerPathRequest,
+    query: DocumentLinkRequest,
+): DocumentLinkInput => ({ workspaceId, code: path.code, path: query.path })

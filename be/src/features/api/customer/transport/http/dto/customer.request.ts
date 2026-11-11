@@ -44,3 +44,13 @@ export class CustomerPathRequest {
     @MinLength(1)
     readonly code!: string
 }
+
+/** The query of `customer.document.link.get`: which of the customer's documents. */
+export class DocumentLinkRequest {
+    /** The document's path, as `customer.document.list` lists it. */
+    @ApiProperty({ type: String, maxLength: 1000, minLength: 1 })
+    @IsString()
+    @MaxLength(1000)
+    @MinLength(1)
+    readonly path!: string
+}

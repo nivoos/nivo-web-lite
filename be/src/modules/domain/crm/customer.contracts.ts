@@ -199,3 +199,17 @@ export interface ContactLinkResult {
     /** The contact. */
     readonly contact: ContactView
 }
+
+/** Which stored original of a customer's document a short-lived download link is asked for. */
+export interface DocumentLinkInput extends CustomerKey {
+    /** The document's path, as the documents index lists it. */
+    readonly path: string
+}
+
+/** A short-lived download link of a stored original: the address works until `expiresAt`, then never again. */
+export interface DocumentLinkView {
+    /** The presigned GET address of the private object. */
+    readonly url: string
+    /** When the address stops working (ISO 8601 UTC). */
+    readonly expiresAt: string
+}

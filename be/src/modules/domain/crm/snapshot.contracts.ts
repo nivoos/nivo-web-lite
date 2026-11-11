@@ -64,3 +64,33 @@ export interface SnapshotImportSummary {
     /** The counts per entity, in import order. */
     readonly entities: ReadonlyArray<SnapshotEntityCount>
 }
+
+/** What one upload of document originals does: the folder they are under, the workspace whose documents index lists them. */
+export interface DocumentUploadInput {
+    /** The folder of the originals; each is found by the relative path the documents index records. */
+    readonly from: string
+    /** The enterprise workspace whose documents are uploaded. */
+    readonly workspaceId: string
+    /** True uploads; absent or false only checks and counts. */
+    readonly execute?: boolean | undefined
+}
+
+/** What one upload did (or, dry, would do): counts only, never a name or a path. */
+export interface DocumentUploadSummary {
+    /** Whether anything was uploaded. */
+    readonly executed: boolean
+    /** Documents the workspace's index lists. */
+    readonly indexed: number
+    /** Originals uploaded now (dry: that would be). */
+    readonly uploaded: number
+    /** Documents already stored. */
+    readonly alreadyStored: number
+    /** Indexed documents with no file under the folder. */
+    readonly missing: number
+    /** Files whose size or sha256 is not what the index records: refused, never uploaded. */
+    readonly mismatched: number
+    /** Indexed documents refused without reading: no recorded sha256, or a path that leaves the folder. */
+    readonly refused: number
+    /** Files under the folder the index does not list: refused, never uploaded. */
+    readonly unindexed: number
+}

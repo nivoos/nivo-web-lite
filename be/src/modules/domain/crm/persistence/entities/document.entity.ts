@@ -36,6 +36,18 @@ export class DocumentEntity extends UuidAbstractEntity {
     @Column({ name: "size_bytes", type: "bigint", transformer: bigintNumberTransformer })
     sizeBytes!: number
 
+    /** The sha256 of the file (hex), as the documents index records it; null for a row the index did not hash. */
+    @Column({ name: "sha256", type: "text", nullable: true })
+    sha256!: string | null
+
+    /** The object key of the original in the app's private storage, `<workspaceId>/documents/<sha256>`; null until uploaded. */
+    @Column({ name: "storage_key", type: "text", nullable: true })
+    storageKey!: string | null
+
+    /** When the original was stored; null until uploaded. */
+    @Column({ name: "stored_at", type: "timestamptz", nullable: true })
+    storedAt!: Date | null
+
     /** The source file, relative to the imported folder. */
     @Column({ name: "source_file", type: "text" })
     sourceFile!: string

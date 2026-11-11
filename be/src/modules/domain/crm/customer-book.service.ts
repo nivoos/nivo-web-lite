@@ -14,6 +14,7 @@ import {
     toLedgerView,
     toServiceView,
 } from "./crm.mapper"
+import { DOCUMENT_LINK_SECONDS } from "./document-storage.policy"
 import { CrmError, CrmErrorCode } from "./errors/crm.error"
 import {
     ContactEntity,
@@ -36,10 +37,17 @@ import type {
     CustomerListInput,
     CustomerSummaryView,
     CustomerView,
+    DocumentLinkInput,
+    DocumentLinkView,
     DocumentView,
     InvoiceView,
 } from "./customer.contracts"
 import type { ServiceView } from "./service.contracts"
+import {
+    InjectObjectStorage,
+    InjectObjectStorageBucket,
+    type ObjectStorage,
+} from "@modules/integrations/object-storage"
 
 /** The head of a list of what belongs to one customer. */
 interface CustomerListHead {
@@ -117,6 +125,8 @@ export class CustomerBookService {
         @InjectPrimaryEntityManager() private readonly entityManager: EntityManager,
         @InjectIds() private readonly ids: Ids,
         private readonly collections: CollectionsService,
+        @InjectObjectStorage() private readonly storage: ObjectStorage,
+        @InjectObjectStorageBucket() private readonly bucket: string,
     ) {}
 
     /** One customer with its domains and contacts. */
@@ -245,6 +255,24 @@ export class CustomerBookService {
             toDocumentView,
             documentsOf(this.entityManager),
         )
+    }
+
+    /**
+     * A short-lived download link of the stored original of one of the customer's documents: the document must belong to that
+     * customer (in the calling workspace) and be uploaded; the link names the file and works for DOCUMENT_LINK_SECONDS.
+     */
+    async documentLink(input: DocumentLinkInput): Promise<DocumentLinkView> {
+        const customer = await this.customerOf(input)
+        const document = await this.entityManager.findOne(DocumentEntity, {
+            where: { workspaceId: input.workspaceId, customerId: customer.id, path: input.path },
+        })
+        if (document === null) throw new CrmError({ code: CrmErrorCode.DocumentNotFound })
+        if (document.storageKey === null) throw new CrmError({ code: CrmErrorCode.DocumentNotStored })
+        const link = await this.storage.presignGet(this.bucket, document.storageKey, {
+            expiresIn: DOCUMENT_LINK_SECONDS,
+            downloadName: document.fileName,
+        })
+        return { url: link.url, expiresAt: link.expiresAt }
     }
 
     /** The TK131 balance and the open receivables of a customer, side by side (facts only, never summed together). */

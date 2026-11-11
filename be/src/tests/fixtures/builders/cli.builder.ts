@@ -1,5 +1,6 @@
 import { Secret } from "@modules/platform/config"
 import { PRIMARY_DATA_SOURCE } from "@modules/platform/database"
+import { OBJECT_STORAGE } from "@modules/integrations/object-storage"
 
 /** What a wiring proof hands the compiled root: public options and the infrastructure doubles. */
 export interface WiringProof {
@@ -19,6 +20,17 @@ export const buildWiringProof = (): WiringProof => ({
             },
         ],
         renewalProvider: { plugins: { inet: "fixture" } },
+        objectStorage: {
+            endpoint: "https://storage.fixture.example",
+            region: "us-east-1",
+            bucket: "fixture",
+            accessKeyId: new Secret("fixture-only"),
+            secretAccessKey: new Secret("fixture-only"),
+            defaultExpiresIn: 300,
+        },
     },
-    overrides: [{ token: PRIMARY_DATA_SOURCE, value: { manager: {} } }],
+    overrides: [
+        { token: PRIMARY_DATA_SOURCE, value: { manager: {} } },
+        { token: OBJECT_STORAGE, value: {} },
+    ],
 })

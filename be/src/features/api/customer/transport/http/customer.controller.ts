@@ -11,9 +11,15 @@ import { ListCustomerServicesQuery } from "../../application/list-customer-servi
 import { ListCustomerContractsQuery } from "../../application/list-customer-contracts.query"
 import { ListCustomerInvoicesQuery } from "../../application/list-customer-invoices.query"
 import { ListCustomerDocumentsQuery } from "../../application/list-customer-documents.query"
+import { GetCustomerDocumentLinkQuery } from "../../application/get-customer-document-link.query"
 import { GetCustomerBalanceQuery } from "../../application/get-customer-balance.query"
 import { LinkContactCommand } from "../../application/link-contact.command"
-import { CustomerPathRequest, FindCustomerRequest, LinkContactRequest } from "./dto/customer.request"
+import {
+    CustomerPathRequest,
+    DocumentLinkRequest,
+    FindCustomerRequest,
+    LinkContactRequest,
+} from "./dto/customer.request"
 import {
     BalanceResponse,
     ContactLinkResponse,
@@ -21,11 +27,13 @@ import {
     CustomerPageResponse,
     CustomerResponse,
     CustomerServicePageResponse,
+    DocumentLinkResponse,
     DocumentPageResponse,
     InvoicePageResponse,
 } from "./dto/customer.response"
 import {
     toBalanceRequest,
+    toDocumentLinkRequest,
     toFindRequest,
     toGetRequest,
     toLinkContactRequest,
@@ -176,6 +184,25 @@ export class CustomerController {
     ): Promise<ContactLinkResponse> {
         return this.commandBus.execute(
             new LinkContactCommand({ request: toLinkContactRequest(workspaceId, path, body) }),
+        )
+    }
+
+    /** `customer.document.link.get`: A short-lived download link of a stored original of the customer's document. */
+    @Get("v1/customers/:code/documents/link")
+    @CrmOperation({
+        id: "customer.document.link.get",
+        summary: "Get a short-lived download link of the stored original of one of the customer's documents.",
+        response: DocumentLinkResponse,
+        effect: "read",
+        customerAudience: { parameter: "code" },
+    })
+    documentLink(
+        @CrmWorkspace() workspaceId: string,
+        @Param() path: CustomerPathRequest,
+        @Query() query: DocumentLinkRequest,
+    ): Promise<DocumentLinkResponse> {
+        return this.queryBus.execute(
+            new GetCustomerDocumentLinkQuery({ request: toDocumentLinkRequest(workspaceId, path, query) }),
         )
     }
 }

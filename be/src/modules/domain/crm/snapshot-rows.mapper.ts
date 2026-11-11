@@ -194,6 +194,7 @@ export const documentRowOf = (
     contractNo: textOrNull(item, "contractNo"),
     fileName: text(item, "fileName"),
     sizeBytes: Number(item["sizeBytes"]),
+    sha256: text(item, "sha256"),
     ...provenanceOf({ origin: { file: text(item, "path"), sheet: "", row: 0 } }, stamp),
 })
 

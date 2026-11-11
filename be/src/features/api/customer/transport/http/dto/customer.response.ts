@@ -406,3 +406,14 @@ export class ContactLinkResponse implements ContactLinkResult {
     @ApiProperty({ type: ContactResponse })
     readonly contact!: ContactResponse
 }
+
+/** A short-lived download link of a stored original. */
+export class DocumentLinkResponse {
+    /** The presigned GET address of the private object; it works until `expiresAt`, then never again. */
+    @ApiProperty({ type: String, maxLength: 4000 })
+    readonly url!: string
+
+    /** When the address stops working (ISO 8601 UTC). */
+    @ApiProperty({ type: String, format: "date-time" })
+    readonly expiresAt!: string
+}

@@ -1,10 +1,17 @@
+import { createHash } from "node:crypto"
 import { Injectable } from "@nestjs/common"
 import type { EntityManager, EntityTarget, ObjectLiteral } from "typeorm"
 import { type Clock, InjectClock } from "@modules/platform/clock"
 import { InjectPrimaryEntityManager } from "@modules/platform/database"
 import { InjectLogger, type Logger } from "@modules/platform/logging"
 import { canonicalJson, eachInOrder, isRecord, sha256Hex } from "@modules/platform/primitives"
+import {
+    InjectObjectStorage,
+    InjectObjectStorageBucket,
+    type ObjectStorage,
+} from "@modules/integrations/object-storage"
 import { CrmImportLogEvent } from "./crm-import.log-events"
+import { documentKeyOf, insideFolderOf } from "./document-storage.policy"
 import { CrmError, CrmErrorCode } from "./errors/crm.error"
 import {
     ContactEntity,
@@ -25,6 +32,8 @@ import { SNAPSHOT_ENTITIES, snapshotEntriesOf, snapshotItemsOf, snapshotJsonOf }
 import { SnapshotFilesClient } from "./snapshot-files.client"
 import * as rows from "./snapshot-rows.mapper"
 import type {
+    DocumentUploadInput,
+    DocumentUploadSummary,
     SnapshotEntityCount,
     SnapshotImportInput,
     SnapshotImportSummary,
@@ -38,6 +47,15 @@ const CHUNK = 200
 
 /** The most rows of one table a workspace is read with (a CRM workspace holds hundreds); more is refused, never cut silently. */
 const STORED_ROWS_MAX = 50_000
+
+/** The content type every original is stored with; the download link names the file. */
+const ORIGINAL_CONTENT_TYPE = "application/octet-stream"
+
+/** What happened to one indexed document in an upload. */
+type UploadOutcome = "uploaded" | "alreadyStored" | "missing" | "mismatched" | "refused"
+
+/** The hex sha256 of a file's bytes. */
+const sha256OfBytes = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex")
 
 /** How one entity of format @1 lands in its table. */
 interface EntityPlan {
@@ -193,6 +211,8 @@ export class CrmImportService {
         @InjectClock() private readonly clock: Clock,
         @InjectLogger() private readonly logger: Logger,
         private readonly files: SnapshotFilesClient,
+        @InjectObjectStorage() private readonly storage: ObjectStorage,
+        @InjectObjectStorageBucket() private readonly bucket: string,
     ) {}
 
     /** Checks the snapshot under `from` and imports it into `workspaceId`, or, dry, counts what an import would change. */
@@ -213,6 +233,65 @@ export class CrmImportService {
             entities: summary.entities.map((count) => ({ ...count })),
         })
         return summary
+    }
+
+    /**
+     * Uploads the originals of the workspace's indexed documents from `from` to the private storage, content-addressed at
+     * `<workspaceId>/documents/<sha256>`: each file is found by its recorded relative path and its size and sha256 are verified
+     * BEFORE upload; a file the index does not list, a mismatched file and a path leaving the folder are refused. Dry unless
+     * `execute`. Logs and answers counts only.
+     */
+    async uploadDocuments(input: DocumentUploadInput): Promise<DocumentUploadSummary> {
+        const workspaceId = input.workspaceId.toLowerCase()
+        if (!UUID.test(workspaceId)) throw new CrmError({ code: CrmErrorCode.ImportWorkspaceInvalid })
+        const documents = await this.entityManager.find(DocumentEntity, {
+            where: { workspaceId },
+            take: STORED_ROWS_MAX,
+        })
+        const indexed = new Set(documents.flatMap((document) => insideFolderOf(document.path) ?? []))
+        const unindexed = (await this.files.filesUnder(input.from)).filter((file) => !indexed.has(file)).length
+        const outcomes = await eachInOrder(documents, (document) =>
+            this.uploaded(input.from, workspaceId, document, input.execute === true),
+        )
+        const count = (outcome: UploadOutcome): number => outcomes.filter((candidate) => candidate === outcome).length
+        const summary: DocumentUploadSummary = {
+            executed: input.execute === true,
+            indexed: documents.length,
+            uploaded: count("uploaded"),
+            alreadyStored: count("alreadyStored"),
+            missing: count("missing"),
+            mismatched: count("mismatched"),
+            refused: count("refused"),
+            unindexed,
+        }
+        this.logger.info(CrmImportLogEvent.DocumentsUploaded, { ...summary })
+        return summary
+    }
+
+    /** What happens to one indexed document: verified against its file, then (when executing) stored and recorded. */
+    private async uploaded(
+        from: string,
+        workspaceId: string,
+        document: DocumentEntity,
+        execute: boolean,
+    ): Promise<UploadOutcome> {
+        const path = insideFolderOf(document.path)
+        if (document.sha256 === null || path === null) return "refused"
+        if (document.storageKey !== null) return "alreadyStored"
+        const bytes = await this.files.bytesOf(from, path)
+        if (bytes === null) return "missing"
+        if (bytes.byteLength !== document.sizeBytes || sha256OfBytes(bytes) !== document.sha256) return "mismatched"
+        if (!execute) return "uploaded"
+        const key = documentKeyOf(workspaceId, document.sha256)
+        if ((await this.storage.head(this.bucket, key)) === null) {
+            await this.storage.put(this.bucket, key, bytes, ORIGINAL_CONTENT_TYPE)
+        }
+        await this.entityManager.update(
+            DocumentEntity,
+            { id: document.id, workspaceId },
+            { storageKey: key, storedAt: this.clock.now() },
+        )
+        return "uploaded"
     }
 
     /** The checked snapshot: every listed file read, digested, parsed and its items checked, in the format's import order. */

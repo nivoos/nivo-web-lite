@@ -1,5 +1,6 @@
 import { Test } from "@nestjs/testing"
 import { type MockEntityManager, fakeIds, fakeTransaction, mock, mockEntityManager } from "@starci/jest-preset"
+import { OBJECT_STORAGE, OBJECT_STORAGE_BUCKET, type ObjectStorage } from "@modules/integrations/object-storage"
 import { IDS } from "@modules/platform/ids"
 import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
 import { decodeCursor, pageOf } from "@modules/platform/pagination"
@@ -7,6 +8,7 @@ import {
     WS,
     contactRow,
     customerRow,
+    documentRow,
     payableRow,
     receivableRow,
     serviceRow,
@@ -33,15 +35,18 @@ import type { ReceivableView } from "./customer.contracts"
 const build = async (em: MockEntityManager) => {
     fakeTransaction(em)
     const collections = mock<CollectionsService>()
+    const storage = mock<ObjectStorage>()
     const moduleRef = await Test.createTestingModule({
         providers: [
             CustomerBookService,
             { provide: PRIMARY_ENTITY_MANAGER, useValue: em },
             { provide: IDS, useValue: fakeIds() },
             { provide: CollectionsService, useValue: collections },
+            { provide: OBJECT_STORAGE, useValue: storage },
+            { provide: OBJECT_STORAGE_BUCKET, useValue: "crm-originals" },
         ],
     }).compile()
-    return { book: moduleRef.get(CustomerBookService), collections }
+    return { book: moduleRef.get(CustomerBookService), collections, storage }
 }
 
 const PAGE = { limit: 20, cursor: null }
@@ -293,5 +298,65 @@ describe("CustomerBookService linkContact", () => {
 describe("CustomerBookService: one credential, one workspace", () => {
     it.each(CUSTOMER_OPERATIONS)("%s names only the calling credential's workspace", async (id, call) => {
         expect(await straysOf(id, async (em, ws) => call((await build(em)).book, ws))).toEqual(NO_STRAYS)
+    })
+})
+
+/** A stored (or, with null, not yet stored) original of customer SYN-001 (id uuid(1)), indexed at `a/hd.pdf`. */
+const storedDocument = (storageKey: string | null): DocumentEntity =>
+    documentRow({
+        sha256: "b".repeat(64),
+        storageKey,
+        storedAt: storageKey === null ? null : new Date("2026-11-12T03:00:00.000Z"),
+    })
+
+describe("CustomerBookService.documentLink", () => {
+    it("answers a short-lived link to the stored original of the customer's own document, named by its file", async () => {
+        const key = `${WS}/documents/${"b".repeat(64)}`
+        const em = mockEntityManager({
+            findOne: [
+                [CustomerEntity, customerRow()],
+                [DocumentEntity, storedDocument(key)],
+            ],
+        })
+        const { book, storage } = await build(em)
+        storage.presignGet.mockResolvedValue({
+            method: "GET",
+            url: "https://store.example/x",
+            headers: {},
+            expiresIn: 120,
+            expiresAt: "2026-11-12T03:02:00.000Z",
+        })
+
+        await expect(book.documentLink({ workspaceId: WS, code: "SYN-001", path: "a/hd.pdf" })).resolves.toEqual({
+            url: "https://store.example/x",
+            expiresAt: "2026-11-12T03:02:00.000Z",
+        })
+        expect(storage.presignGet.mock.calls).toEqual([
+            ["crm-originals", key, { expiresIn: 120, downloadName: "hd.pdf" }],
+        ])
+        expect(em.findOne.mock.calls[1]?.[1]).toEqual({
+            where: { workspaceId: WS, customerId: uuid(1), path: "a/hd.pdf" },
+        })
+    })
+
+    it("refuses a document the customer does not have and one whose original is not stored yet", async () => {
+        const absent = mockEntityManager({
+            findOne: [
+                [CustomerEntity, customerRow()],
+                [DocumentEntity, null],
+            ],
+        })
+        await expect(
+            (await build(absent)).book.documentLink({ workspaceId: WS, code: "SYN-001", path: "x" }),
+        ).rejects.toEqual(expect.objectContaining({ code: CrmErrorCode.DocumentNotFound }))
+        const unstored = mockEntityManager({
+            findOne: [
+                [CustomerEntity, customerRow()],
+                [DocumentEntity, storedDocument(null)],
+            ],
+        })
+        await expect(
+            (await build(unstored)).book.documentLink({ workspaceId: WS, code: "SYN-001", path: "a/hd.pdf" }),
+        ).rejects.toEqual(expect.objectContaining({ code: CrmErrorCode.DocumentNotStored }))
     })
 })

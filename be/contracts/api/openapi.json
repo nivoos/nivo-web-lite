@@ -530,6 +530,23 @@
         ],
         "type": "object"
       },
+      "DocumentLinkResponse": {
+        "properties": {
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "maxLength": 4000,
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "expiresAt"
+        ],
+        "type": "object"
+      },
       "DocumentPageResponse": {
         "properties": {
           "items": {
@@ -2970,6 +2987,67 @@
           }
         ],
         "summary": "List a customer's document references (paths, never content).",
+        "tags": [
+          "customer"
+        ],
+        "x-crm-effect": "read",
+        "x-nivo-customer-audience": true,
+        "x-nivo-customer-parameter": "code"
+      }
+    },
+    "/v1/customers/{code}/documents/link": {
+      "get": {
+        "operationId": "customer.document.link.get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": true,
+            "schema": {
+              "maxLength": 1000,
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentLinkResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "serviceKey": []
+          }
+        ],
+        "summary": "Get a short-lived download link of the stored original of one of the customer's documents.",
         "tags": [
           "customer"
         ],

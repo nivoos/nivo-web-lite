@@ -31,6 +31,8 @@ export const CRM_MESSAGES: MessageBundle = {
         "errors.CRM_CREDENTIAL_WORKSPACE_INVALID": "Workspace của khoá dịch vụ phải là uuid.",
         "errors.CRM_CREDENTIAL_LABEL_INVALID": "Nhãn của khoá dịch vụ phải dài 1 đến 120 ký tự.",
         "errors.CRM_CREDENTIAL_NOT_FOUND": "Không có khoá dịch vụ còn hiệu lực với id này.",
+        "errors.CRM_DOCUMENT_NOT_FOUND": "Khách hàng không có tài liệu này.",
+        "errors.CRM_DOCUMENT_NOT_STORED": "Bản gốc của tài liệu chưa được tải lên kho.",
         "errors.CRM_IMPORT_WORKSPACE_INVALID": "Workspace nhận ảnh dữ liệu phải là uuid.",
         "errors.CRM_IMPORT_MANIFEST_INVALID": "Ảnh dữ liệu không có manifest.json định dạng nivo-web-lite-data@1.",
         "errors.CRM_IMPORT_FILE_INVALID": "Tệp {{entity}} thiếu, không khớp sha256 trong manifest hoặc sai schema @1.",
@@ -66,6 +68,8 @@ export const CRM_MESSAGES: MessageBundle = {
         "errors.CRM_CREDENTIAL_WORKSPACE_INVALID": "The workspace of a service credential must be a uuid.",
         "errors.CRM_CREDENTIAL_LABEL_INVALID": "A service credential label is 1 to 120 characters.",
         "errors.CRM_CREDENTIAL_NOT_FOUND": "No live service credential has this id.",
+        "errors.CRM_DOCUMENT_NOT_FOUND": "The customer has no document with this path.",
+        "errors.CRM_DOCUMENT_NOT_STORED": "The original of this document is not in the storage yet.",
         "errors.CRM_IMPORT_WORKSPACE_INVALID": "The workspace a snapshot is imported into must be a uuid.",
         "errors.CRM_IMPORT_MANIFEST_INVALID": "The snapshot has no manifest.json of format nivo-web-lite-data@1.",
         "errors.CRM_IMPORT_FILE_INVALID":

@@ -18,6 +18,7 @@ const TicketEntity: (typeof crmEntities)[20] = crmEntities[20]
 const TicketNoteEntity: (typeof crmEntities)[21] = crmEntities[21]
 const InvoiceDraftEntity: (typeof crmEntities)[22] = crmEntities[22]
 const ServiceCredentialEntity: (typeof crmEntities)[23] = crmEntities[23]
+const DocumentEntity: (typeof crmEntities)[13] = crmEntities[13]
 
 /** A row of the Customer table. */
 type CustomerEntity = InstanceType<typeof CustomerEntity>
@@ -49,6 +50,8 @@ type TicketNoteEntity = InstanceType<typeof TicketNoteEntity>
 type InvoiceDraftEntity = InstanceType<typeof InvoiceDraftEntity>
 /** A row of the ServiceCredential table. */
 type ServiceCredentialEntity = InstanceType<typeof ServiceCredentialEntity>
+/** A row of the Document table. */
+type DocumentEntity = InstanceType<typeof DocumentEntity>
 
 /** The synthetic workspace of every CRM spec. */
 export const WS = "6f1c2a9e-0000-4000-8000-00000000a001"
@@ -368,3 +371,23 @@ export const serviceCredentialRow: (overrides?: Partial<ServiceCredentialEntity>
             ...stamps,
         }),
     )
+
+/** A synthetic indexed document of customer uuid(1), not yet stored; its sha256 is that of the bytes of the text `%PDF-synthetic`. */
+export const documentRow: (overrides?: Partial<DocumentEntity>) => DocumentEntity = builder<DocumentEntity>(
+    Object.assign(new DocumentEntity(), {
+        id: uuid(61),
+        workspaceId: WS,
+        path: "a/hd.pdf",
+        customerId: uuid(1),
+        kind: "contract",
+        invoiceNo: null,
+        contractNo: null,
+        fileName: "hd.pdf",
+        sizeBytes: 14,
+        sha256: createHash("sha256").update("%PDF-synthetic", "utf8").digest("hex"),
+        storageKey: null,
+        storedAt: null,
+        ...provenance,
+        ...stamps,
+    }),
+)

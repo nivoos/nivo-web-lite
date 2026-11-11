@@ -1,13 +1,14 @@
 import { Test } from "@nestjs/testing"
 import { FakeClock, type MockEntityManager, fakeTransaction, mock, mockEntityManager } from "@starci/jest-preset"
+import { OBJECT_STORAGE, OBJECT_STORAGE_BUCKET, type ObjectStorage } from "@modules/integrations/object-storage"
 import { CLOCK } from "@modules/platform/clock"
 import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
 import { LOGGER, type Logger } from "@modules/platform/logging"
 import { canonicalJson, isRecord, sha256Hex } from "@modules/platform/primitives"
-import { WS } from "@tests/fixtures/builders/crm.builder"
+import { WS, documentRow } from "@tests/fixtures/builders/crm.builder"
 import { CrmImportService } from "./crm-import.service"
 import { CrmError, CrmErrorCode } from "./errors/crm.error"
-import { CustomerEntity, ImportRunEntity, ServiceEntity } from "./persistence/entities"
+import { CustomerEntity, DocumentEntity, ImportRunEntity, ServiceEntity } from "./persistence/entities"
 import { SnapshotFilesClient } from "./snapshot-files.client"
 
 const NOW = "2026-11-12T03:00:00.000Z"
@@ -217,6 +218,7 @@ const build = async (em: MockEntityManager, stored: Map<string, string>) => {
         return text
     })
     const logger = mock<Logger>()
+    const storage = mock<ObjectStorage>()
     const moduleRef = await Test.createTestingModule({
         providers: [
             CrmImportService,
@@ -224,9 +226,11 @@ const build = async (em: MockEntityManager, stored: Map<string, string>) => {
             { provide: CLOCK, useValue: new FakeClock(NOW) },
             { provide: LOGGER, useValue: logger },
             { provide: SnapshotFilesClient, useValue: files },
+            { provide: OBJECT_STORAGE, useValue: storage },
+            { provide: OBJECT_STORAGE_BUCKET, useValue: "crm-originals" },
         ],
     }).compile()
-    return { importer: moduleRef.get(CrmImportService), logger, transaction }
+    return { importer: moduleRef.get(CrmImportService), logger, transaction, files, storage }
 }
 
 const counts = (inserted: number, updated: number, unchanged: number) => ({ inserted, updated, unchanged })
@@ -358,5 +362,92 @@ describe("CrmImportService: refusals before any write", () => {
             }),
         )
         expect(transaction.rollbacks).toBe(1)
+    })
+})
+
+/** The bytes of a synthetic original, its sha256 and an indexed document row of it at `path` (stored when `storageKey` is set). */
+const ORIGINAL = new TextEncoder().encode("%PDF-synthetic")
+const ORIGINAL_SHA = sha256Hex("%PDF-synthetic")
+/** Where the synthetic original is stored, and the columns a stored document carries. */
+const ORIGINAL_KEY = `${WS}/documents/${ORIGINAL_SHA}`
+const STORED_COLUMNS: Partial<DocumentEntity> = { storageKey: ORIGINAL_KEY, storedAt: new Date(NOW) }
+
+const indexedDocument = (path: string, overrides: Partial<DocumentEntity> = {}): DocumentEntity =>
+    documentRow({ id: `doc-${path}`, path, sizeBytes: ORIGINAL.byteLength, sha256: ORIGINAL_SHA, ...overrides })
+
+/** An upload over five indexed documents (one each: good, stored, missing, mismatched, escaping) and one unindexed file. */
+const uploadSetup = async () => {
+    const em = mockEntityManager()
+    em.find.mockResolvedValue([
+        indexedDocument("a/good.pdf"),
+        indexedDocument("a/stored.pdf", STORED_COLUMNS),
+        indexedDocument("a/missing.pdf"),
+        indexedDocument("a/changed.pdf"),
+        indexedDocument("../outside.pdf"),
+    ])
+    em.update.mockResolvedValue({ affected: 1, generatedMaps: [], raw: [] })
+    const setup = await build(em, new Map())
+    setup.files.filesUnder.mockResolvedValue(["a/good.pdf", "a/changed.pdf", "a/stray.pdf"])
+    setup.files.bytesOf.mockImplementation((_root, path) =>
+        Promise.resolve(path === "a/good.pdf" ? ORIGINAL : path === "a/changed.pdf" ? new Uint8Array([1, 2]) : null),
+    )
+    setup.storage.head.mockResolvedValue(null)
+    setup.storage.put.mockResolvedValue()
+    return { em, ...setup }
+}
+
+describe("CrmImportService.uploadDocuments", () => {
+    it("verifies size and sha256 before upload and, dry, uploads nothing; counts only", async () => {
+        const { importer, storage, logger } = await uploadSetup()
+
+        const summary = await importer.uploadDocuments({ from: "originals", workspaceId: WS })
+
+        expect(summary).toEqual({
+            executed: false,
+            indexed: 5,
+            uploaded: 1,
+            alreadyStored: 1,
+            missing: 1,
+            mismatched: 1,
+            refused: 1,
+            unindexed: 1,
+        })
+        expect([storage.put.mock.calls.length, logger.info.mock.calls[0]?.[0]]).toEqual([
+            0,
+            "crm.import.documents_uploaded",
+        ])
+    })
+
+    it("stores the verified original content-addressed in the workspace prefix and records its key", async () => {
+        const { importer, storage, em } = await uploadSetup()
+
+        await importer.uploadDocuments({ from: "originals", workspaceId: WS, execute: true })
+
+        expect(storage.put.mock.calls).toEqual([["crm-originals", ORIGINAL_KEY, ORIGINAL, "application/octet-stream"]])
+        const [target, criteria, values] = em.update.mock.calls[0] ?? []
+        const where = isRecord(criteria) ? [criteria["id"], criteria["workspaceId"]] : []
+        expect([em.update.mock.calls.length, target, where, values]).toEqual([
+            1,
+            DocumentEntity,
+            ["doc-a/good.pdf", WS],
+            STORED_COLUMNS,
+        ])
+    })
+
+    it("does not upload an object the store already holds, and refuses a workspace that is no uuid", async () => {
+        const { importer, storage } = await uploadSetup()
+        storage.head.mockResolvedValue({
+            size: 14,
+            contentType: "application/octet-stream",
+            lastModified: null,
+            etag: null,
+        })
+
+        await importer.uploadDocuments({ from: "originals", workspaceId: WS, execute: true })
+
+        expect(storage.put).not.toHaveBeenCalled()
+        await expect(importer.uploadDocuments({ from: "originals", workspaceId: "acme" })).rejects.toEqual(
+            expect.objectContaining({ code: CrmErrorCode.ImportWorkspaceInvalid }),
+        )
     })
 })
