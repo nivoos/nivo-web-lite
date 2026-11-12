@@ -79,7 +79,7 @@ outside the project: its status word map is not brought in.
 ## CRM REST contract for NIVO
 
 `be/contracts/api/openapi.json` (written by `starci app emit`) is the contract NIVO's OpenAPI provider pins. 43 operations,
-singular ids (a NIVO tool id is `crm.` + operationId), each with a summary and no description (user copy goes through the
+singular ids (a NIVO tool id is the plugin's namespace `nivo-web.` + operationId), each with a summary and no description (user copy goes through the
 catalog). Every operation answers the harness `ErrorResponse` as `default`, is secured by the `serviceKey` bearer (a service
 credential of one workspace, above) and carries `x-crm-effect` (`read` | `write`). Every write declares `x-nivo-effect`:
 `service.renewal.create` is `money` (it asks the provider to renew, only once the request is paid), `renewal.outcome.record` is

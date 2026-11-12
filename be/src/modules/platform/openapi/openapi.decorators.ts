@@ -30,7 +30,7 @@ export interface CustomerAudience {
 
 /** What every CRM operation declares. */
 interface CrmOperationBase {
-    /** The stable operationId, `<feature>.<action>`, singular; a NIVO tool id is `crm.` + this id. */
+    /** The stable operationId, `<feature>.<action>`, singular; a NIVO tool id is the plugin's namespace `nivo-web.` + this id. */
     readonly id: string
     /** One line: what the operation does and changes, and whether it costs money. */
     readonly summary: string
