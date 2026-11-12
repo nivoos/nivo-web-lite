@@ -75,6 +75,7 @@ const UNQUOTED = {
     note: null,
     confirmedBy: null,
     confirmedAt: null,
+    sourceHash: null,
 } as const
 
 /** The most follow-ups of one purchase read with it. */

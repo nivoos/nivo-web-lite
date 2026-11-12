@@ -69,7 +69,7 @@ interface EntityPlan {
     /** The natural key of an item (fields joined by U+001F, as the format sorts them). */
     readonly itemKey: (item: SnapshotItem) => string
     /** The same natural key of a stored row. */
-    readonly rowKey: (row: ObjectLiteral) => string
+    readonly rowKey: (row: ObjectLiteral, refs: rows.SnapshotRefs) => string
     /** The conflict columns of the upsert; null: rows are only inserted when absent (no source hash to compare). */
     readonly conflict: ReadonlyArray<string> | null
     /** The row of one item. */
@@ -185,7 +185,7 @@ const PLANS: ReadonlyMap<string, EntityPlan> = new Map<string, EntityPlan>([
             target: PurchaseEntity,
             ...sameKeys("code"),
             conflict: ["workspaceId", "code"],
-            rowOf: (item, stamp, refs) => rows.purchaseRowOf(item, stamp.workspaceId, refs),
+            rowOf: (item, stamp, refs) => rows.purchaseRowOf(item, stamp, refs),
         },
     ],
     [
@@ -193,9 +193,13 @@ const PLANS: ReadonlyMap<string, EntityPlan> = new Map<string, EntityPlan>([
         {
             target: PurchaseFollowupEntity,
             itemKey: (item) => keyOf(item, ["purchaseCode", "day"]),
-            rowKey: (row) => keyOf(row, ["purchaseId", "day"]),
+            rowKey: (row, refs) => {
+                const purchaseId = String(row["purchaseId"])
+                const code = String([...refs.purchases].find(([, id]) => id === purchaseId)?.[0])
+                return keyOf({ purchaseCode: code, day: row["day"] }, ["purchaseCode", "day"])
+            },
             conflict: ["workspaceId", "purchaseId", "day"],
-            rowOf: (item, stamp, refs) => rows.followUpRowOf(item, stamp.workspaceId, refs),
+            rowOf: (item, stamp, refs) => rows.followUpRowOf(item, stamp, refs),
         },
     ],
     ["issues", { target: ImportIssueEntity, ...issueKeys, conflict: null, rowOf: rows.issueRowOf }],
@@ -357,12 +361,16 @@ export class CrmImportService {
         manager: EntityManager,
         workspaceId: string,
         plan: EntityPlan,
+        refs: rows.SnapshotRefs,
     ): Promise<Map<string, string>> {
         const stored = await manager.find(plan.target, { where: { workspaceId }, take: STORED_ROWS_MAX + 1 })
         if (stored.length > STORED_ROWS_MAX)
             throw new CrmError({ code: CrmErrorCode.ImportFileInvalid, params: { entity: "stored" } })
         return new Map(
-            stored.map((row) => [plan.rowKey(row), typeof row["sourceHash"] === "string" ? row["sourceHash"] : ""]),
+            stored.map((row) => [
+                plan.rowKey(row, refs),
+                typeof row["sourceHash"] === "string" ? row["sourceHash"] : "",
+            ]),
         )
     }
 
@@ -372,7 +380,7 @@ export class CrmImportService {
         workspaceId: string,
         part: SnapshotPart,
     ): Promise<SnapshotEntityCount> {
-        const stored = await this.storedOf(manager, workspaceId, part.plan)
+        const stored = await this.storedOf(manager, workspaceId, part.plan, await this.refsOf(manager, workspaceId))
         const hashed = part.plan.conflict !== null
         const states = part.items.map((item) => {
             const previous = stored.get(part.plan.itemKey(item))
@@ -432,8 +440,8 @@ export class CrmImportService {
         part: SnapshotPart,
     ): Promise<SnapshotEntityCount> {
         const count = await this.counted(tx, workspaceId, part)
-        const stored = await this.storedOf(tx, workspaceId, part.plan)
         const refs = await this.refsOf(tx, workspaceId)
+        const stored = await this.storedOf(tx, workspaceId, part.plan, refs)
         const changed = part.items.filter((item) => {
             const previous = stored.get(part.plan.itemKey(item))
             return (

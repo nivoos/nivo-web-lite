@@ -358,10 +358,11 @@ const quoteColumnsOf = (item: SnapshotItem): Partial<PurchaseEntity> => {
 /** A purchase row (format @1 extension): the sale as the CRM kept it, its customer a soft reference by code. */
 export const purchaseRowOf = (
     item: SnapshotItem,
-    workspaceId: string,
+    stamp: SnapshotStamp,
     refs: SnapshotRefs,
 ): Partial<PurchaseEntity> => ({
-    workspaceId,
+    workspaceId: stamp.workspaceId,
+    sourceHash: stamp.hash,
     code: text(item, "code"),
     state: oneOf(SNAPSHOT_PURCHASE_STATES, item, "state"),
     channel: oneOf(SNAPSHOT_CHANNELS, item, "channel"),
@@ -388,10 +389,11 @@ export const purchaseRowOf = (
 /** A follow-up row of a purchase of the snapshot. */
 export const followUpRowOf = (
     item: SnapshotItem,
-    workspaceId: string,
+    stamp: SnapshotStamp,
     refs: SnapshotRefs,
 ): Partial<PurchaseFollowupEntity> => ({
-    workspaceId,
+    workspaceId: stamp.workspaceId,
+    sourceHash: stamp.hash,
     purchaseId: required(refs.purchases, text(item, "purchaseCode"), "purchase-followups", "purchaseCode"),
     day: text(item, "day"),
     channel: oneOf(SNAPSHOT_CHANNELS, item, "channel"),

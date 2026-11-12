@@ -28,4 +28,8 @@ export class PurchaseFollowupEntity extends UuidAbstractEntity {
     /** The message id on the channel, if any. */
     @Column({ name: "message_ref", type: "text", nullable: true })
     messageRef!: string | null
+
+    /** The sha256 of the item it was imported from (null for a record the CRM made itself): an unchanged item is not written again. */
+    @Column({ name: "source_hash", type: "text", nullable: true })
+    sourceHash!: string | null
 }

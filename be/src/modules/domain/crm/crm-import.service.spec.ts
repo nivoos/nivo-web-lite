@@ -6,6 +6,7 @@ import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
 import { LOGGER, type Logger } from "@modules/platform/logging"
 import { canonicalJson, isRecord, sha256Hex } from "@modules/platform/primitives"
 import { WS, documentRow } from "@tests/fixtures/builders/crm.builder"
+import { PURCHASE_SNAPSHOT_ITEMS } from "@tests/fixtures/builders/purchase.builder"
 import { CrmImportService } from "./crm-import.service"
 import { CrmError, CrmErrorCode } from "./errors/crm.error"
 import { CustomerEntity, DocumentEntity, ImportRunEntity, ServiceEntity } from "./persistence/entities"
@@ -467,5 +468,25 @@ describe("CrmImportService.exportSnapshot", () => {
             expect.objectContaining({ code: CrmErrorCode.ImportWorkspaceInvalid }),
         )
         expect(exporter.export.mock.calls).toEqual([[{ out: "repo", workspaceId: WS }]])
+    })
+})
+
+describe("CrmImportService: purchases", () => {
+    it("imports purchases and follow-ups once and finds them unchanged on a second import of the same snapshot", async () => {
+        const em = mockEntityManager()
+        tablesBehind(em)
+        const { importer } = await build(em, snapshotOf(PURCHASE_SNAPSHOT_ITEMS))
+        const countsOf = async () => {
+            const summary = await importer.import({ from: "snap", workspaceId: WS, execute: true })
+            return summary.entities.filter((count) => count.entity.startsWith("purchase"))
+        }
+        expect(await countsOf()).toEqual([
+            { entity: "purchases", items: 1, ...counts(1, 0, 0) },
+            { entity: "purchase-followups", items: 1, ...counts(1, 0, 0) },
+        ])
+        expect(await countsOf()).toEqual([
+            { entity: "purchases", items: 1, ...counts(0, 0, 1) },
+            { entity: "purchase-followups", items: 1, ...counts(0, 0, 1) },
+        ])
     })
 })

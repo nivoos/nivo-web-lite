@@ -48,6 +48,7 @@ export const purchaseRow: (overrides?: Partial<PurchaseEntity>) => PurchaseEntit
         note: null,
         confirmedBy: null,
         confirmedAt: null,
+        sourceHash: null,
         ...stamps,
     }),
 )
@@ -63,6 +64,7 @@ export const followUpRow: (overrides?: Partial<PurchaseFollowupEntity>) => Purch
             channel: "zalo",
             outcome: "sent",
             messageRef: null,
+            sourceHash: null,
             ...stamps,
         }),
     )
@@ -126,3 +128,34 @@ export const paidPurchaseRow = (overrides: Partial<PurchaseEntity> = {}): Purcha
 /** A synthetic paid purchase whose quote kept no VAT rate and no price source (a draft takes the placeholder ones). */
 export const unpricedPaidPurchaseRow = (): PurchaseEntity =>
     paidPurchaseRow({ vatRatePercent: null, priceSource: null })
+
+/** A synthetic purchase and its follow-up as items of the data repository's format @1 (no quote, no real record). */
+export const PURCHASE_SNAPSHOT_ITEMS: Readonly<Record<string, ReadonlyArray<object>>> = {
+    purchases: [
+        {
+            code: "MUA-ABCDEFGH",
+            state: "enquiry",
+            channel: "zalo",
+            sourceRef: "conv-9",
+            need: "A site",
+            contactName: null,
+            phone: null,
+            email: null,
+            domain: null,
+            customerCode: "SYN-001",
+            quote: null,
+            paymentCode: null,
+            transactionRef: null,
+            paidAt: null,
+            acceptedAt: null,
+            projectCode: null,
+            contractNo: null,
+            note: null,
+            confirmedBy: null,
+            confirmedAt: null,
+        },
+    ],
+    "purchase-followups": [
+        { purchaseCode: "MUA-ABCDEFGH", day: "2026-11-11", channel: "zalo", outcome: "sent", messageRef: null },
+    ],
+}

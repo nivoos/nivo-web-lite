@@ -121,4 +121,8 @@ export class PurchaseEntity extends UuidAbstractEntity {
     /** When the outcome was confirmed. */
     @Column({ name: "confirmed_at", type: "timestamptz", nullable: true })
     confirmedAt!: Date | null
+
+    /** The sha256 of the item it was imported from (null for a record the CRM made itself): an unchanged item is not written again. */
+    @Column({ name: "source_hash", type: "text", nullable: true })
+    sourceHash!: string | null
 }

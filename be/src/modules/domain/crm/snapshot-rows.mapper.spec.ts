@@ -153,8 +153,8 @@ describe("snapshot rows mapper: purchases", () => {
             net: { amount: 5, currency: "VND" },
             priceSource: "placeholder",
         }
-        const unquoted = subject.purchaseRowOf(purchase, WS, REFS)
-        const quoted = subject.purchaseRowOf({ ...purchase, quote }, WS, REFS)
+        const unquoted = subject.purchaseRowOf(purchase, STAMP, REFS)
+        const quoted = subject.purchaseRowOf({ ...purchase, quote }, STAMP, REFS)
         expect([unquoted.lines, unquoted.priceSource, unquoted.paidAt]).toEqual([
             null,
             null,
@@ -167,7 +167,7 @@ describe("snapshot rows mapper: purchases", () => {
             "placeholder",
             null,
         ])
-        expect(subject.purchaseRowOf({ ...purchase, quote: { lines: "x" } }, WS, REFS).lines).toEqual([])
+        expect(subject.purchaseRowOf({ ...purchase, quote: { lines: "x" } }, STAMP, REFS).lines).toEqual([])
     })
 
     it("refuses a follow-up of a purchase the snapshot does not hold", async () => {
@@ -176,7 +176,7 @@ describe("snapshot rows mapper: purchases", () => {
             Promise.resolve().then(() =>
                 subject.followUpRowOf(
                     { purchaseCode: "MUA-X", day: "2026-11-01", channel: "zalo", outcome: "sent" },
-                    WS,
+                    STAMP,
                     REFS,
                 ),
             ),

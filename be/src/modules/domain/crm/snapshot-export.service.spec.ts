@@ -288,7 +288,7 @@ const tablesOf = (): Map<unknown, Array<Record<string, unknown>>> => {
             ]),
         ),
     }
-    const purchases = of("purchases").map((item) => withId(rows.purchaseRowOf(item, WS, refs)))
+    const purchases = of("purchases").map((item) => withId(rows.purchaseRowOf(item, stamp, refs)))
     const withPurchases = {
         ...refs,
         purchases: new Map(purchases.map((row) => [String(row["code"]), String(row["id"])])),
@@ -297,7 +297,7 @@ const tablesOf = (): Map<unknown, Array<Record<string, unknown>>> => {
         [PurchaseEntity, purchases],
         [
             PurchaseFollowupEntity,
-            of("purchase-followups").map((item) => withId(rows.followUpRowOf(item, WS, withPurchases))),
+            of("purchase-followups").map((item) => withId(rows.followUpRowOf(item, stamp, withPurchases))),
         ],
         [CustomerEntity, customers],
         [WebsiteEntity, websites],
