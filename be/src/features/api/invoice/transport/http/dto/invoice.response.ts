@@ -58,13 +58,25 @@ export class InvoiceDraftResponse implements InvoiceDraftView {
     @ApiProperty({ type: "integer", format: "int64" })
     readonly totalVnd!: number
 
-    /** draft. */
-    @ApiProperty({ type: String, enum: ["draft"] })
-    readonly state!: "draft"
+    /** draft, or issued once the e-invoice is recorded on it. */
+    @ApiProperty({ type: String, enum: ["draft", "issued"] })
+    readonly state!: InvoiceDraftView["state"]
 
     /** placeholder until the owner's price sheet is loaded. */
     @ApiProperty({ type: String, enum: ["placeholder", "price_sheet"] })
     readonly priceSource!: InvoiceDraftView["priceSource"]
+
+    /** The number of the e-invoice issued for the draft, or null while a draft. */
+    @ApiProperty({ type: String, maxLength: 40, nullable: true })
+    readonly invoiceNo!: string | null
+
+    /** The e-invoice provider's reference of that invoice. */
+    @ApiProperty({ type: String, maxLength: 200, nullable: true })
+    readonly providerRef!: string | null
+
+    /** The issue date of that invoice. */
+    @ApiProperty({ type: String, format: "date", nullable: true })
+    readonly issuedOn!: string | null
 }
 
 /** A VAT invoice of the workspace. */

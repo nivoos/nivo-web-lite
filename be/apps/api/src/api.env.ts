@@ -5,7 +5,6 @@ import { parseHttpSecurityConfig } from "@modules/platform/http-security"
 import { parsePassportConfig } from "@modules/integrations/passport"
 import { parseMailConfig } from "@modules/integrations/mail"
 import { parseObjectStorageConfig } from "@modules/integrations/object-storage"
-import { parseRenewalProviderConfig } from "@modules/integrations/renewal-provider"
 
 /** The API environment values required before composition. */
 export interface ApiEnv {
@@ -23,8 +22,6 @@ export interface ApiEnv {
     readonly objectStorage: ReturnType<typeof parseObjectStorageConfig>
     /** Outgoing mail: the SMTP server and the app's own mail settings. */
     readonly mail: ReturnType<typeof parseMailConfig>
-    /** Which plugin takes each provider's renewals (`CRM_PROVIDER_PLUGINS`, a tunable). */
-    readonly renewalProvider: ReturnType<typeof parseRenewalProviderConfig>
 }
 
 /** Reads the API environment; missing or invalid values fail boot, and secrets use `_FILE` first. */
@@ -36,5 +33,4 @@ export const readApiEnv = (env: EnvSource): ApiEnv => ({
     passport: parsePassportConfig(env),
     objectStorage: parseObjectStorageConfig(env),
     mail: parseMailConfig(env),
-    renewalProvider: parseRenewalProviderConfig(env),
 })

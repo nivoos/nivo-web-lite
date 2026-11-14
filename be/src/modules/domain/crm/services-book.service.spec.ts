@@ -4,15 +4,9 @@ import {
     type MockEntityManager,
     fakeIds,
     fakeTransaction,
-    mock,
     mockEntityManager,
     queueQueryBuilders,
 } from "@starci/jest-preset"
-import {
-    RENEWAL_PROVIDER,
-    type RenewalProviderPlugin,
-    type RenewalProviderService,
-} from "@modules/integrations/renewal-provider"
 import { CLOCK } from "@modules/platform/clock"
 import { IDS } from "@modules/platform/ids"
 import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
@@ -45,19 +39,15 @@ const NOW = "2026-11-12T03:00:00.000Z"
 
 const build = async (em: MockEntityManager) => {
     fakeTransaction(em)
-    const plugin = mock<RenewalProviderPlugin>()
-    const providers = mock<RenewalProviderService>()
-    providers.pluginFor.mockReturnValue(plugin)
     const moduleRef = await Test.createTestingModule({
         providers: [
             ServicesBookService,
             { provide: PRIMARY_ENTITY_MANAGER, useValue: em },
             { provide: CLOCK, useValue: new FakeClock(NOW) },
             { provide: IDS, useValue: fakeIds() },
-            { provide: RENEWAL_PROVIDER, useValue: providers },
         ],
     }).compile()
-    return { book: moduleRef.get(ServicesBookService), plugin }
+    return { book: moduleRef.get(ServicesBookService) }
 }
 
 const EXPIRING: ExpiringInput = {
@@ -173,34 +163,34 @@ describe("ServicesBookService", () => {
 })
 
 describe("ServicesBookService", () => {
-    it("answers a service's state from its plugin, and a plugin failure as unavailable", async () => {
+    // Owner ruling R57 (2026-11-14): the CRM is pure storage and holds no provider plugin; the state is the books' own row (the
+    // provider's own state is read with the provider's tool on the agent's account), so no provider is asked and none can fail here.
+    it("answers a service's state from the books: its status, its end date on today's date and that date's source", async () => {
         const em = mockEntityManager({ findOne: [ServiceEntity, serviceRow()] })
-        const { book, plugin } = await build(em)
-        plugin.status.mockResolvedValueOnce({
-            plugin: "fixture",
-            state: "active",
-            expiresOn: "2026-12-01",
-            checkedBy: "fixture",
-            note: "fixture",
-        })
+        const { book } = await build(em)
         await expect(book.status({ workspaceId: WS, code: "SYN-HOST" })).resolves.toEqual({
             serviceCode: "SYN-HOST",
-            plugin: "fixture",
+            status: "active",
             state: "active",
             expiresOn: "2026-12-01",
-            checkedBy: "fixture",
-            note: "fixture",
+            expirySource: "provider",
         })
-        expect(plugin.status).toHaveBeenCalledWith({
-            serviceCode: "SYN-HOST",
-            provider: "inet",
-            expiresOn: "2026-12-01",
-            today: "2026-11-12",
+    })
+
+    it("answers expired past the stored end date and unknown when the books hold none", async () => {
+        const past = mockEntityManager({ findOne: [ServiceEntity, serviceRow({ expiresOn: "2026-11-11" })] })
+        await expect((await build(past)).book.status({ workspaceId: WS, code: "SYN-HOST" })).resolves.toMatchObject({
+            state: "expired",
+            expiresOn: "2026-11-11",
         })
-        plugin.status.mockRejectedValueOnce(new Error("down"))
-        await expect(book.status({ workspaceId: WS, code: "SYN-HOST" })).rejects.toEqual(
-            expect.objectContaining({ code: CrmErrorCode.ProviderUnavailable }),
-        )
+        const none = mockEntityManager({
+            findOne: [ServiceEntity, serviceRow({ expiresOn: null, expirySource: "none" })],
+        })
+        await expect((await build(none)).book.status({ workspaceId: WS, code: "SYN-HOST" })).resolves.toMatchObject({
+            state: "unknown",
+            expiresOn: null,
+            expirySource: "none",
+        })
     })
 })
 

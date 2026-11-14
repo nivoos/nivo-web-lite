@@ -58,15 +58,7 @@ export class RenewalResponse implements RenewalView {
     @ApiProperty({ type: String, format: "date-time", nullable: true })
     readonly paidAt!: string | null
 
-    /** True while nothing was asked of a real provider. */
-    @ApiProperty({ type: Boolean })
-    readonly dryRun!: boolean
-
-    /** The plugin that took the provider step. */
-    @ApiProperty({ type: String, enum: ["manual", "mock"], nullable: true })
-    readonly plugin!: RenewalView["plugin"] | null
-
-    /** The provider's (or the mock's) reference. */
+    /** The provider's reference of the renewal, as recorded. */
     @ApiProperty({ type: String, maxLength: 200, nullable: true })
     readonly providerRef!: string | null
 
@@ -74,7 +66,7 @@ export class RenewalResponse implements RenewalView {
     @ApiProperty({ type: String, format: "date", nullable: true })
     readonly newExpiresOn!: string | null
 
-    /** Who confirmed the outcome. */
+    /** Who recorded the outcome (the agent or a person). */
     @ApiProperty({ type: String, maxLength: 120, nullable: true })
     readonly confirmedBy!: string | null
 

@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common"
 import { ConfigurableModuleClass } from "./renewal.module-definition"
-import { ExecuteRenewalHandler } from "./application/execute-renewal.handler"
 import { CreateQuoteHandler } from "./application/create-quote.handler"
 import { GetRenewalHandler } from "./application/get-renewal.handler"
 import { ListOpenRenewalsHandler } from "./application/list-open-renewals.handler"
@@ -9,7 +8,6 @@ import { RecordRenewalOutcomeHandler } from "./application/record-renewal-outcom
 
 @Module({
     providers: [
-        ExecuteRenewalHandler,
         CreateQuoteHandler,
         GetRenewalHandler,
         ListOpenRenewalsHandler,

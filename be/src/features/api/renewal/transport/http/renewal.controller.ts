@@ -9,20 +9,16 @@ import { CreateQuoteCommand } from "../../application/create-quote.command"
 import { ListOpenRenewalsQuery } from "../../application/list-open-renewals.query"
 import { GetRenewalQuery } from "../../application/get-renewal.query"
 import { RecordRenewalPaymentCommand } from "../../application/record-renewal-payment.command"
-import { ExecuteRenewalCommand } from "../../application/execute-renewal.command"
 import { RecordRenewalOutcomeCommand } from "../../application/record-renewal-outcome.command"
 import {
     CreateQuoteRequest,
-    ExecuteRenewalRequest,
     ListOpenRenewalsRequest,
     RecordRenewalOutcomeRequest,
     RecordRenewalPaymentRequest,
     RenewalPathRequest,
-    RenewalServicePathRequest,
 } from "./dto/renewal.request"
 import { RenewalPageResponse, RenewalResponse } from "./dto/renewal.response"
 import {
-    toExecuteRequest,
     toGetRequest,
     toListOpenRequest,
     toQuoteRequest,
@@ -33,7 +29,7 @@ import {
 @ApiTags("renewal")
 @Controller()
 @Credential({ kind: "api-key" })
-/** The renewal doors, pay first: quote, payment recorded, provider step, a person's confirmation. */
+/** The renewal doors, pay first, as RECORDS: quote, payment recorded, the provider's answer recorded (the CRM renews nothing). */
 export class RenewalController {
     constructor(
         @InjectQueryBus() private readonly queryBus: QueryBus,
@@ -63,11 +59,12 @@ export class RenewalController {
         )
     }
 
-    /** `renewal.open.list`: List the open renewal requests (awaiting payment, paid, waiting for a person). */
+    /** `renewal.open.list`: List the open renewal requests (awaiting payment, paid, a pending provider answer waiting for a person). */
     @Get("v1/renewals/open")
     @CrmOperation({
         id: "renewal.open.list",
-        summary: "List the open renewal requests (awaiting payment, paid, waiting for a person).",
+        summary:
+            "List the open renewal requests (awaiting payment, paid, a pending provider answer waiting for a person).",
         response: RenewalPageResponse,
         effect: "read",
         customerAudience: { parameter: "customerCode" },
@@ -111,33 +108,12 @@ export class RenewalController {
         )
     }
 
-    /** `service.renewal.create`: Renew a service at its provider for a PAID request (COSTS MONEY once a live plugin exists; dryRun defaults to true). */
-    @Post("v1/services/:code/renewals")
-    @CrmOperation({
-        id: "service.renewal.create",
-        summary:
-            "Renew a service at its provider for a PAID request (COSTS MONEY once a live plugin exists; dryRun defaults to true).",
-        response: RenewalResponse,
-        effect: "write",
-        nivoEffect: "money",
-        idempotencyKey: true,
-    })
-    execute(
-        @CrmWorkspace() workspaceId: string,
-        @CrmIdempotencyKey() requestKey: string,
-        @Param() path: RenewalServicePathRequest,
-        @Body() body: ExecuteRenewalRequest,
-    ): Promise<RenewalResponse> {
-        return this.commandBus.execute(
-            new ExecuteRenewalCommand({ request: toExecuteRequest(workspaceId, requestKey, path, body) }),
-        )
-    }
-
-    /** `renewal.outcome.record`: A person confirms the provider outcome: renewed (moves the service's end date) or failed. */
+    /** `renewal.outcome.record`: Record what the provider answered for a paid renewal: renewed (moves the service's end date), failed or pending, with its reference. */
     @Post("v1/renewals/:id/outcome")
     @CrmOperation({
         id: "renewal.outcome.record",
-        summary: "A person confirms the provider outcome: renewed (moves the service's end date) or failed.",
+        summary:
+            "Record what the provider answered for a paid renewal: renewed (moves the service's end date), failed or pending, with its reference.",
         response: RenewalResponse,
         effect: "write",
         nivoEffect: "irreversible",

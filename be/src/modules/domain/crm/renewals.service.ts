@@ -4,33 +4,20 @@ import { type Clock, InjectClock } from "@modules/platform/clock"
 import { type Ids, InjectIds } from "@modules/platform/ids"
 import { InjectPrimaryEntityManager } from "@modules/platform/database"
 import { type Page, decodeCursor, pageOf, pageSizeOf } from "@modules/platform/pagination"
-import { hcmDayOf } from "@modules/platform/primitives"
-import {
-    InjectRenewalProvider,
-    type ProviderRenewResult,
-    type RenewalProviderService,
-} from "@modules/integrations/renewal-provider"
 import { toRenewalView } from "./crm.mapper"
 import { CrmError, CrmErrorCode } from "./errors/crm.error"
-import {
-    CustomerEntity,
-    ProviderAccountEntity,
-    ReceivablePaymentEntity,
-    RenewalRequestEntity,
-    ServiceEntity,
-} from "./persistence/entities"
+import { CustomerEntity, ReceivablePaymentEntity, RenewalRequestEntity, ServiceEntity } from "./persistence/entities"
 import { paymentCodeOf, priceOf } from "./price.policy"
 import {
     NOT_RENEWABLE_STATUSES,
     OPEN_RENEWAL_STATES,
-    assertConfirmable,
-    assertExecutable,
     assertPayable,
+    assertRecordable,
+    stateOfOutcome,
 } from "./renewal-state.policy"
 import { isReplay, requestHashOf } from "./request-key.policy"
 import type {
     QuoteInput,
-    RenewalExecuteInput,
     RenewalKey,
     RenewalOpenListInput,
     RenewalOutcomeInput,
@@ -46,16 +33,16 @@ const FOR_UPDATE = { mode: "pessimistic_write" } as const
 
 @Injectable()
 /**
- * Renewals, pay first (owner, 2026-11-12): a request is opened on the customer's yes with the CRM's own total and transfer code
- * (`awaiting_payment`), marked `paid` by the bank row that proves it, executed at the provider only when paid (manual: `pending_person`;
- * mock: `renewed`, labelled, nothing called), and closed by a person's confirmation (`renewed` moves the service's end date; `failed`).
+ * Renewals as RECORDS, pay first (owner, 2026-11-12): a request is opened on the customer's yes with the CRM's own total and transfer
+ * code (`awaiting_payment`) and marked `paid` by the bank row that proves it. The CRM renews nothing (owner ruling R57, 2026-11-14): the
+ * Renewal agent renews at the provider through its own provider account and records the provider's answer here (`renewed` moves the
+ * service's end date; `failed`; `pending`: waits for a person, who records the end).
  */
 export class RenewalsService {
     constructor(
         @InjectPrimaryEntityManager() private readonly entityManager: EntityManager,
         @InjectClock() private readonly clock: Clock,
         @InjectIds() private readonly ids: Ids,
-        @InjectRenewalProvider() private readonly providers: RenewalProviderService,
     ) {}
 
     /** Opens a renewal request on the customer's yes: computes the total and the transfer code; a repeat of the key answers the same request. */
@@ -97,7 +84,6 @@ export class RenewalsService {
                 provider: service.provider ?? "manual",
                 termMonths: input.termMonths,
                 state: "awaiting_payment",
-                dryRun: true,
                 requestKey: input.requestKey,
                 requestHash: hash,
                 netVnd: price.netVnd,
@@ -107,10 +93,6 @@ export class RenewalsService {
                 paymentCode: paymentCodeOf(id, "GH"),
                 transactionRef: null,
                 paidAt: null,
-                plugin: null,
-                executeKey: null,
-                executeHash: null,
-                executedAt: null,
                 providerRef: null,
                 newExpiresOn: null,
                 outcomeNote: null,
@@ -187,75 +169,19 @@ export class RenewalsService {
     }
 
     /**
-     * Asks the provider plugin to renew a PAID request (refused otherwise: CRM_RENEWAL_NOT_PAID). The claim and the result are two
-     * transactions around the plugin call, never one across it; a retry with the same key re-asks only while no result is recorded.
+     * Records what the provider answered for a paid request: `renewed` with a date moves the service's end date (source `confirmed`),
+     * `failed` closes it, `pending` leaves it waiting for a person. The provider's reference is kept. The same outcome again answers
+     * the stored request.
      */
-    async execute(input: RenewalExecuteInput): Promise<RenewalView> {
-        const hash = requestHashOf({
-            operation: "service.renewal.create",
-            serviceCode: input.serviceCode,
-            renewalId: input.renewalId,
-            dryRun: input.dryRun,
-        })
-        const claimed = await this.entityManager.transaction(async (manager) => {
-            const renewal = await this.renewalOf(manager, { workspaceId: input.workspaceId, id: input.renewalId }, true)
-            const service = await this.serviceById(manager, input.workspaceId, renewal.serviceId)
-            if (service.code !== input.serviceCode)
-                throw new CrmError({ code: CrmErrorCode.RenewalServiceMismatch, params: { serviceCode: service.code } })
-            if (renewal.executeKey === input.requestKey) {
-                isReplay({ requestHash: renewal.executeHash }, hash)
-                if (renewal.state !== "paid") return { done: true as const, renewal, service }
-            } else {
-                const other = await manager.findOne(RenewalRequestEntity, {
-                    where: { workspaceId: input.workspaceId, executeKey: input.requestKey },
-                })
-                if (other !== null) throw new CrmError({ code: CrmErrorCode.IdempotencyKeyReused })
-                assertExecutable(renewal.state)
-                if (renewal.executeKey !== null)
-                    throw new CrmError({ code: CrmErrorCode.RenewalStateRefused, params: { state: "executing" } })
-                const executedAt = this.clock.now()
-                await manager.update(
-                    RenewalRequestEntity,
-                    { id: renewal.id, workspaceId: input.workspaceId },
-                    { executeKey: input.requestKey, executeHash: hash, executedAt },
-                )
-            }
-            const live = await manager.exists(ProviderAccountEntity, {
-                where: { workspaceId: input.workspaceId, provider: renewal.provider, mode: "live" },
-            })
-            return { done: false as const, renewal, service, dryRun: input.dryRun || !live }
-        })
-        if (claimed.done) return this.viewOf(this.entityManager, claimed.renewal, claimed.service)
-        const result = await this.askProvider(claimed.renewal, claimed.service, claimed.dryRun)
-        return this.entityManager.transaction(async (manager) => {
-            const changes = {
-                state: result.state,
-                plugin: result.plugin,
-                providerRef: result.providerRef,
-                newExpiresOn: result.newExpiresOn,
-                dryRun: result.dryRun,
-            }
-            await manager.update(
-                RenewalRequestEntity,
-                { id: claimed.renewal.id, workspaceId: input.workspaceId, state: "paid" },
-                changes,
-            )
-            return this.viewOf(
-                manager,
-                { ...claimed.renewal, ...changes, executeKey: input.requestKey, executeHash: hash },
-                claimed.service,
-            )
-        })
-    }
-
-    /** A person confirms what happened at the provider; `renewed` with a date moves the service's end date (source `confirmed`). */
     recordOutcome(input: RenewalOutcomeInput): Promise<RenewalView> {
         return this.entityManager.transaction(async (manager) => {
             const renewal = await this.renewalOf(manager, input, true)
-            if (renewal.state === input.outcome && renewal.confirmedBy !== null) return this.viewOf(manager, renewal)
-            assertConfirmable(renewal.state)
+            const state = stateOfOutcome(input.outcome)
+            if (renewal.state === state) return this.viewOf(manager, renewal)
+            assertRecordable(renewal.state, input.outcome)
             const changes = {
-                state: input.outcome,
+                state,
+                providerRef: input.providerRef ?? renewal.providerRef,
                 confirmedBy: input.confirmedBy,
                 confirmedAt: this.clock.now(),
                 newExpiresOn: input.newExpiresOn ?? renewal.newExpiresOn,
@@ -271,27 +197,6 @@ export class RenewalsService {
             }
             return this.viewOf(manager, { ...renewal, ...changes })
         })
-    }
-
-    private askProvider(
-        renewal: RenewalRequestEntity,
-        service: ServiceEntity,
-        dryRun: boolean,
-    ): Promise<ProviderRenewResult> {
-        return this.providers
-            .pluginFor(service.provider)
-            .renew({
-                serviceCode: service.code,
-                provider: service.provider,
-                expiresOn: service.expiresOn,
-                today: hcmDayOf(this.clock.now()),
-                renewalId: renewal.id,
-                termMonths: renewal.termMonths,
-                dryRun,
-            })
-            .catch((cause: unknown) => {
-                throw new CrmError({ code: CrmErrorCode.ProviderUnavailable, cause })
-            })
     }
 
     private async renewalOf(manager: EntityManager, key: RenewalKey, lock: boolean): Promise<RenewalRequestEntity> {

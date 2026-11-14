@@ -1,7 +1,8 @@
 import { Test } from "@nestjs/testing"
 import { isDomainError } from "@starci/common"
 import { CrmErrorCode } from "./errors/crm.error"
-import { assertConfirmable, assertExecutable, assertPayable } from "./renewal-state.policy"
+import type { RenewalOutcome } from "./renewal.contracts"
+import { assertPayable, assertRecordable, stateOfOutcome } from "./renewal-state.policy"
 
 /** The code a call threw, or undefined when it returned. */
 const codeOf = (call: () => unknown): string | undefined => {
@@ -17,9 +18,9 @@ const RENEWAL_STATE_POLICY: unique symbol = Symbol("renewal-state")
 
 /** The policy under test, resolved through a testing module. */
 interface RenewalStatePolicy {
-    readonly assertConfirmable: typeof assertConfirmable
-    readonly assertExecutable: typeof assertExecutable
     readonly assertPayable: typeof assertPayable
+    readonly assertRecordable: typeof assertRecordable
+    readonly stateOfOutcome: typeof stateOfOutcome
 }
 
 const policy = async (): Promise<RenewalStatePolicy> => {
@@ -27,7 +28,7 @@ const policy = async (): Promise<RenewalStatePolicy> => {
         providers: [
             {
                 provide: RENEWAL_STATE_POLICY,
-                useFactory: (): RenewalStatePolicy => ({ assertConfirmable, assertExecutable, assertPayable }),
+                useFactory: (): RenewalStatePolicy => ({ assertPayable, assertRecordable, stateOfOutcome }),
             },
         ],
     }).compile()
@@ -46,14 +47,31 @@ describe("renewal state policy", () => {
         expect(codeOf(() => subject.assertPayable("paid"))).toBe(CrmErrorCode.RenewalStateRefused)
     })
 
-    it("refuses the provider step on an unpaid request with CRM_RENEWAL_NOT_PAID, and on any state but paid", () => {
-        expect(codeOf(() => subject.assertExecutable("awaiting_payment"))).toBe(CrmErrorCode.RenewalNotPaid)
-        expect(codeOf(() => subject.assertExecutable("renewed"))).toBe(CrmErrorCode.RenewalStateRefused)
-        expect(codeOf(() => subject.assertExecutable("paid"))).toBeUndefined()
+    // Owner ruling R57 (2026-11-14): the CRM renews nothing; the Renewal agent renews at the provider and RECORDS the answer here, so
+    // a paid request takes the outcome directly (the provider step and its `pending_person` hand-over inside the CRM are gone).
+    it("refuses an outcome on an unpaid request with CRM_RENEWAL_NOT_PAID, and records one on a paid request", () => {
+        expect(codeOf(() => subject.assertRecordable("awaiting_payment", "renewed"))).toBe(CrmErrorCode.RenewalNotPaid)
+        expect(codeOf(() => subject.assertRecordable("paid", "renewed"))).toBeUndefined()
+        expect(codeOf(() => subject.assertRecordable("paid", "failed"))).toBeUndefined()
+        expect(codeOf(() => subject.assertRecordable("paid", "pending"))).toBeUndefined()
     })
 
-    it("confirms only a request waiting for a person", () => {
-        expect(codeOf(() => subject.assertConfirmable("pending_person"))).toBeUndefined()
-        expect(codeOf(() => subject.assertConfirmable("paid"))).toBe(CrmErrorCode.RenewalStateRefused)
+    it("closes a pending provider answer with renewed or failed, never pends it twice, and never reopens a closed request", () => {
+        expect(codeOf(() => subject.assertRecordable("pending_person", "renewed"))).toBeUndefined()
+        expect(codeOf(() => subject.assertRecordable("pending_person", "failed"))).toBeUndefined()
+        expect(codeOf(() => subject.assertRecordable("pending_person", "pending"))).toBe(
+            CrmErrorCode.RenewalStateRefused,
+        )
+        expect(codeOf(() => subject.assertRecordable("renewed", "failed"))).toBe(CrmErrorCode.RenewalStateRefused)
+        expect(codeOf(() => subject.assertRecordable("cancelled", "renewed"))).toBe(CrmErrorCode.RenewalStateRefused)
+    })
+
+    it("stores a pending provider answer as waiting for a person", () => {
+        const outcomes: ReadonlyArray<RenewalOutcome> = ["renewed", "failed", "pending"]
+        expect(outcomes.map((outcome) => subject.stateOfOutcome(outcome))).toEqual([
+            "renewed",
+            "failed",
+            "pending_person",
+        ])
     })
 })

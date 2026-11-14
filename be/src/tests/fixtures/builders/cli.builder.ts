@@ -19,7 +19,6 @@ export const buildWiringProof = (): WiringProof => ({
                 schema: "public",
             },
         ],
-        renewalProvider: { plugins: { inet: "fixture" } },
         objectStorage: {
             endpoint: "https://storage.fixture.example",
             region: "us-east-1",

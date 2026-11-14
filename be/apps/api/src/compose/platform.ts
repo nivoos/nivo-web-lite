@@ -1,7 +1,6 @@
 import type { DynamicModule } from "@nestjs/common"
 import { CRM_ERROR_KINDS, CRM_MESSAGES } from "@modules/domain/crm"
 import { IDENTITY_ERROR_KINDS, IDENTITY_MESSAGES } from "@modules/domain/identity"
-import { RENEWAL_PROVIDER_ERROR_KINDS, RENEWAL_PROVIDER_MESSAGES } from "@modules/integrations/renewal-provider"
 import { PAGINATION_ERROR_KINDS, PAGINATION_MESSAGES } from "@modules/platform/pagination"
 import { PASSPORT_ERROR_KINDS } from "@modules/integrations/passport"
 import { ClockModule } from "@modules/platform/clock"
@@ -38,7 +37,6 @@ export const platformModules = (options: ApiOptions): Array<DynamicModule> => [
             IDENTITY_MESSAGES,
             CRM_MESSAGES,
             PAGINATION_MESSAGES,
-            RENEWAL_PROVIDER_MESSAGES,
         ],
     }),
     ErrorsModule.register({
@@ -52,7 +50,6 @@ export const platformModules = (options: ApiOptions): Array<DynamicModule> => [
             PASSPORT_ERROR_KINDS,
             CRM_ERROR_KINDS,
             PAGINATION_ERROR_KINDS,
-            RENEWAL_PROVIDER_ERROR_KINDS,
         ],
     }),
     CqrsModule.register({ isGlobal: true }),

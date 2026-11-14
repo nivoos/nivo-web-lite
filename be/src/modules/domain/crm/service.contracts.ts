@@ -52,20 +52,21 @@ export interface ExpiringServiceView extends ServiceView {
     readonly openRenewalId: string | null
 }
 
-/** A service's state as its provider plugin answers it. */
+/**
+ * A service's state as the CRM's books hold it (the CRM asks no provider: owner ruling R57; the state AT the provider is the provider's
+ * own read, on the agent's provider account).
+ */
 export interface ServiceStatusView {
     /** The service. */
     readonly serviceCode: string
-    /** The plugin that answered: manual (a person checks) or mock (fixtures, nothing called). */
-    readonly plugin: "manual" | "fixture"
-    /** active, expired or unknown. */
+    /** The status the books hold (active, suspended, cancelled, pending, ...). */
+    readonly status: string
+    /** active or expired by the stored end date on today's date in Ho Chi Minh; unknown when the books hold no end date. */
     readonly state: "active" | "expired" | "unknown"
-    /** The end date the plugin knows. */
+    /** The end date the books hold. */
     readonly expiresOn: string | null
-    /** Who stands behind the answer. */
-    readonly checkedBy: "person" | "fixture"
-    /** A fixed note (a code-like text, never prose about a customer). */
-    readonly note: string
+    /** Where that end date came from (provider, estimated, invoice, confirmed, none). */
+    readonly expirySource: ExpirySource
 }
 
 /** A reminder recorded about a service. */

@@ -68,6 +68,9 @@ describe("InvoiceDraftsService", () => {
             totalVnd: 1_320_000,
             state: "draft",
             priceSource: "placeholder",
+            invoiceNo: null,
+            providerRef: null,
+            issuedOn: null,
         })
     })
 })
@@ -116,6 +119,77 @@ describe("InvoiceDraftsService: replays and refusals", () => {
         )
         const none = mockEntityManager({ findOne: [InvoiceDraftEntity, null] })
         await expect((await build(none)).get({ workspaceId: WS, id: uuid(9) })).rejects.toEqual(
+            expect.objectContaining({ code: CrmErrorCode.InvoiceDraftNotFound }),
+        )
+    })
+})
+
+/** The e-invoice MISA issued for the draft, as the Accounting agent records it (owner ruling R57: the CRM issues nothing). */
+const ISSUED = {
+    workspaceId: WS,
+    id: uuid(101),
+    invoiceNo: "00000123",
+    providerRef: "MISA-TX-1",
+    issuedOn: "2026-11-14",
+} as const
+
+describe("InvoiceDraftsService.recordIssued", () => {
+    it("records the issued e-invoice on its draft: number, provider reference and issue date", async () => {
+        const em = mockEntityManager({
+            findOne: [
+                [InvoiceDraftEntity, invoiceDraftRow()],
+                [CustomerEntity, customerRow()],
+            ],
+            exists: [InvoiceDraftEntity, false],
+            update: [InvoiceDraftEntity, {}],
+        })
+        await expect((await build(em)).recordIssued(ISSUED)).resolves.toEqual(
+            expect.objectContaining({
+                id: uuid(101),
+                state: "issued",
+                invoiceNo: "00000123",
+                providerRef: "MISA-TX-1",
+                issuedOn: "2026-11-14",
+                totalVnd: 1_320_000,
+            }),
+        )
+        expect(em.update).toHaveBeenCalledWith(
+            InvoiceDraftEntity,
+            { id: uuid(101), workspaceId: WS },
+            { state: "issued", invoiceNo: "00000123", providerRef: "MISA-TX-1", issuedOn: "2026-11-14" },
+        )
+    })
+
+    it("answers the stored draft for the same number, and refuses another number, a number in use and an unknown draft", async () => {
+        const issued = invoiceDraftRow({
+            state: "issued",
+            invoiceNo: "00000123",
+            providerRef: "MISA-TX-1",
+            issuedOn: "2026-11-14",
+        })
+        const repeat = mockEntityManager({
+            findOne: [
+                [InvoiceDraftEntity, issued],
+                [CustomerEntity, customerRow()],
+            ],
+        })
+        await expect((await build(repeat)).recordIssued(ISSUED)).resolves.toEqual(
+            expect.objectContaining({ state: "issued" }),
+        )
+        expect(repeat.update).not.toHaveBeenCalled()
+        const other = mockEntityManager({ findOne: [InvoiceDraftEntity, issued] })
+        await expect((await build(other)).recordIssued({ ...ISSUED, invoiceNo: "00000124" })).rejects.toEqual(
+            expect.objectContaining({ code: CrmErrorCode.InvoiceAlreadyIssued, params: { invoiceNo: "00000123" } }),
+        )
+        const used = mockEntityManager({
+            findOne: [InvoiceDraftEntity, invoiceDraftRow()],
+            exists: [InvoiceDraftEntity, true],
+        })
+        await expect((await build(used)).recordIssued(ISSUED)).rejects.toEqual(
+            expect.objectContaining({ code: CrmErrorCode.InvoiceNumberUsed }),
+        )
+        const none = mockEntityManager({ findOne: [InvoiceDraftEntity, null] })
+        await expect((await build(none)).recordIssued(ISSUED)).rejects.toEqual(
             expect.objectContaining({ code: CrmErrorCode.InvoiceDraftNotFound }),
         )
     })

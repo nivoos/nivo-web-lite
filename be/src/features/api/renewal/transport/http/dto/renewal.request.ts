@@ -1,18 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger"
 import { Type } from "class-transformer"
-import {
-    IsBoolean,
-    IsIn,
-    IsInt,
-    IsOptional,
-    IsString,
-    IsUUID,
-    Matches,
-    Max,
-    MaxLength,
-    Min,
-    MinLength,
-} from "class-validator"
+import { IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength } from "class-validator"
+import type { RenewalOutcome } from "@modules/domain/crm"
 import { PageRequest } from "@modules/platform/openapi"
 
 /** An open renewal state, as `renewal.open.list` filters by it. */
@@ -63,12 +52,20 @@ export class RecordRenewalPaymentRequest {
     readonly transactionRef!: string
 }
 
-/** A person confirms what happened at the provider. */
+/** What the provider answered for a paid renewal (the agent renewed at the provider; the CRM only records). */
 export class RecordRenewalOutcomeRequest {
-    /** renewed or failed. */
-    @ApiProperty({ type: String, enum: ["renewed", "failed"] })
-    @IsIn(["renewed", "failed"])
-    readonly outcome!: "renewed" | "failed"
+    /** renewed, failed, or pending (the provider's answer is pending or unknown: a person follows up). */
+    @ApiProperty({ type: String, enum: ["renewed", "failed", "pending"] })
+    @IsIn(["renewed", "failed", "pending"])
+    readonly outcome!: RenewalOutcome
+
+    /** The provider's reference of the renewal (its order or transaction id), when it gave one. */
+    @ApiProperty({ type: String, maxLength: 200, minLength: 1, required: false })
+    @IsOptional()
+    @IsString()
+    @MaxLength(200)
+    @MinLength(1)
+    readonly providerRef: string | null = null
 
     /** The new end date (renewed). */
     @ApiProperty({ type: String, format: "date", required: false })
@@ -78,7 +75,7 @@ export class RecordRenewalOutcomeRequest {
     @Matches(/^\d{4}-\d{2}-\d{2}$/u)
     readonly newExpiresOn: string | null = null
 
-    /** Who confirms (a person's name). */
+    /** Who records (the agent's name, or a person's). */
     @ApiProperty({ type: String, maxLength: 120, minLength: 1 })
     @IsString()
     @MaxLength(120)
@@ -94,21 +91,6 @@ export class RecordRenewalOutcomeRequest {
     readonly note: string | null = null
 }
 
-/** The paid renewal request to execute at the provider. */
-export class ExecuteRenewalRequest {
-    /** The renewal request (must be paid). */
-    @ApiProperty({ type: String, format: "uuid" })
-    @IsUUID()
-    @MaxLength(36)
-    readonly renewalId!: string
-
-    /** Default true: ask no real provider. */
-    @ApiProperty({ type: Boolean, required: false })
-    @IsOptional()
-    @IsBoolean()
-    readonly dryRun: boolean = true
-}
-
 /** The path of a renewal door. */
 export class RenewalPathRequest {
     /** The renewal request id. */
@@ -116,14 +98,4 @@ export class RenewalPathRequest {
     @IsUUID()
     @MaxLength(36)
     readonly id!: string
-}
-
-/** The path of the provider renewal door. */
-export class RenewalServicePathRequest {
-    /** The service code; must be the request's service. */
-    @ApiProperty({ type: String, maxLength: 120, minLength: 1 })
-    @IsString()
-    @MaxLength(120)
-    @MinLength(1)
-    readonly code!: string
 }

@@ -5,7 +5,7 @@ import { InjectLogger, type Logger } from "@modules/platform/logging"
 import { GetServiceStatusQuery } from "./get-service-status.query"
 
 @QueryHandler(GetServiceStatusQuery)
-/** Reads a service's state from its provider plugin. One delegating call; the domain service decides. */
+/** Reads a service's state as the books hold it. One delegating call; the domain service decides. */
 export class GetServiceStatusHandler extends ICQRSHandler<GetServiceStatusQuery, ServiceStatusView> {
     constructor(
         @InjectLogger() logger: Logger,

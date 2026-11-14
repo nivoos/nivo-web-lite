@@ -1,5 +1,5 @@
 import { Column, Entity } from "typeorm"
-import type { PriceSource } from "../../renewal.contracts"
+import type { InvoiceDraftState, PriceSource } from "../../renewal.contracts"
 import { UuidAbstractEntity, bigintNumberTransformer } from "./uuid-abstract.entity"
 
 /** One line of an invoice draft as stored. */
@@ -53,11 +53,23 @@ export class InvoiceDraftEntity extends UuidAbstractEntity {
     @Column({ name: "total_vnd", type: "bigint", transformer: bigintNumberTransformer })
     totalVnd!: number
 
-    /** draft. */
+    /** draft, or issued once the e-invoice is recorded. */
     @Column({ name: "state", type: "text" })
-    state!: string
+    state!: InvoiceDraftState
 
     /** placeholder or price_sheet. */
     @Column({ name: "price_source", type: "text" })
     priceSource!: PriceSource
+
+    /** The number of the e-invoice issued for it (unique in the workspace), or null while a draft. */
+    @Column({ name: "invoice_no", type: "text", nullable: true })
+    invoiceNo!: string | null
+
+    /** The e-invoice provider's reference of that invoice. */
+    @Column({ name: "provider_ref", type: "text", nullable: true })
+    providerRef!: string | null
+
+    /** The issue date of that invoice. */
+    @Column({ name: "issued_on", type: "date", nullable: true })
+    issuedOn!: string | null
 }

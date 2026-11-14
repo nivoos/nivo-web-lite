@@ -8,15 +8,13 @@ import {
 } from "@modules/integrations/passport"
 import { MailModule } from "@modules/integrations/mail"
 import { ObjectStorageModule } from "@modules/integrations/object-storage"
-import { RenewalProviderModule } from "@modules/integrations/renewal-provider"
 import type { ApiOptions } from "../api.options"
 
-/** The sign-in, object storage, mail and renewal provider integrations of the app, each registered once with the app's typed settings. */
+/** The sign-in, object storage and mail integrations of the app, each registered once with the app's typed settings. */
 export const integrationModules = (options: ApiOptions): Array<DynamicModule> => [
     PassportModule.register({ ...options.passport, authenticator: PASSPORT_AUTHENTICATOR, isGlobal: true }),
     ObjectStorageModule.register({ ...options.objectStorage, isGlobal: true }),
     MailModule.register({ ...options.mail, isGlobal: true }),
-    RenewalProviderModule.register({ ...options.renewalProvider, isGlobal: true }),
 ]
 
 /** The passport integration ports bound once for this app. */

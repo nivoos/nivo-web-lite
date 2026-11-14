@@ -16,7 +16,12 @@ import {
     ServiceEntity,
 } from "./persistence/entities"
 import { PLACEHOLDER_VAT_PERCENT } from "./price.policy"
-import type { InvoiceDraftCreateInput, InvoiceDraftKey, InvoiceDraftView } from "./renewal.contracts"
+import type {
+    InvoiceDraftCreateInput,
+    InvoiceDraftKey,
+    InvoiceDraftView,
+    InvoiceIssuedInput,
+} from "./renewal.contracts"
 
 /** The states of a renewal an invoice can be drafted for: the customer has paid. */
 const INVOICEABLE: ReadonlySet<string> = new Set(["paid", "pending_person", "renewed"])
@@ -28,7 +33,10 @@ const INVOICEABLE_PURCHASES: ReadonlySet<string> = new Set(["paid", "pending_per
 const INVOICE_LIST = "invoice.list"
 
 @Injectable()
-/** Invoice drafts: lines and amounts computed by the CRM from a paid renewal (data only; issuing is a later e-invoice provider). */
+/**
+ * Invoice drafts: lines and amounts computed by the CRM from a paid renewal or purchase, and the e-invoice issued for one RECORDED on
+ * it (data only: the Accounting agent issues the invoice at MISA meInvoice and records it here; owner ruling R57).
+ */
 export class InvoiceDraftsService {
     constructor(
         @InjectPrimaryEntityManager() private readonly entityManager: EntityManager,
@@ -98,6 +106,36 @@ export class InvoiceDraftsService {
         return this.viewOf(this.entityManager, draft)
     }
 
+    /**
+     * Records the e-invoice issued for a draft (its number, the provider's reference, the issue date): the draft becomes `issued`.
+     * The same number again answers the stored draft; another number on an issued draft, or a number another draft holds, is refused.
+     */
+    recordIssued(input: InvoiceIssuedInput): Promise<InvoiceDraftView> {
+        return this.entityManager.transaction(async (manager) => {
+            const draft = await manager.findOne(InvoiceDraftEntity, {
+                where: { workspaceId: input.workspaceId, id: input.id },
+                lock: { mode: "pessimistic_write" },
+            })
+            if (draft === null) throw new CrmError({ code: CrmErrorCode.InvoiceDraftNotFound })
+            if (draft.invoiceNo === input.invoiceNo) return this.viewOf(manager, draft)
+            if (draft.invoiceNo !== null) {
+                throw new CrmError({ code: CrmErrorCode.InvoiceAlreadyIssued, params: { invoiceNo: draft.invoiceNo } })
+            }
+            const used = await manager.exists(InvoiceDraftEntity, {
+                where: { workspaceId: input.workspaceId, invoiceNo: input.invoiceNo },
+            })
+            if (used) throw new CrmError({ code: CrmErrorCode.InvoiceNumberUsed })
+            const changes = {
+                state: "issued" as const,
+                invoiceNo: input.invoiceNo,
+                providerRef: input.providerRef,
+                issuedOn: input.issuedOn,
+            }
+            await manager.update(InvoiceDraftEntity, { id: draft.id, workspaceId: input.workspaceId }, changes)
+            return this.viewOf(manager, { ...draft, ...changes })
+        })
+    }
+
     /** The draft of a paid renewal: one line, the renewal's own amounts. */
     private async renewalDraftOf(
         manager: EntityManager,
@@ -136,6 +174,9 @@ export class InvoiceDraftsService {
             totalVnd: renewal.totalVnd,
             state: "draft",
             priceSource: renewal.priceSource,
+            invoiceNo: null,
+            providerRef: null,
+            issuedOn: null,
         })
     }
 
@@ -176,6 +217,9 @@ export class InvoiceDraftsService {
             totalVnd,
             state: "draft",
             priceSource: purchase.priceSource ?? "placeholder",
+            invoiceNo: null,
+            providerRef: null,
+            issuedOn: null,
         })
     }
 
@@ -202,8 +246,11 @@ export class InvoiceDraftsService {
             vatRatePercent: draft.vatRatePercent,
             vatVnd: draft.vatVnd,
             totalVnd: draft.totalVnd,
-            state: "draft",
+            state: draft.state,
             priceSource: draft.priceSource,
+            invoiceNo: draft.invoiceNo,
+            providerRef: draft.providerRef,
+            issuedOn: draft.issuedOn,
         }
     }
 }

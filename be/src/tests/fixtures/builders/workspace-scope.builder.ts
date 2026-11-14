@@ -102,25 +102,15 @@ export const RENEWAL_OPERATIONS: ReadonlyArray<ScopedOperation<RenewalsService>>
     ["renewal.open.list", (s, ws) => s.listOpen({ workspaceId: ws, customerCode: null, state: "paid", page: PAGE })],
     ["renewal.payment.record", (s, ws) => s.recordPayment({ workspaceId: ws, id: SOME_ID, transactionRef: "t" })],
     [
-        "service.renewal.create",
-        (s, ws) =>
-            s.execute({
-                workspaceId: ws,
-                serviceCode: "SYN-HOST",
-                renewalId: SOME_ID,
-                requestKey: "e-1",
-                dryRun: true,
-            }),
-    ],
-    [
         "renewal.outcome.record",
         (s, ws) =>
             s.recordOutcome({
                 workspaceId: ws,
                 id: SOME_ID,
                 outcome: "renewed",
+                providerRef: "INET-ORDER-1",
                 newExpiresOn: "2027-12-01",
-                confirmedBy: "Synthetic Staff",
+                confirmedBy: "webrenew",
                 note: null,
             }),
     ],
@@ -155,6 +145,17 @@ export const TICKET_OPERATIONS: ReadonlyArray<ScopedOperation<TicketsService>> =
 export const INVOICE_DRAFT_OPERATIONS: ReadonlyArray<ScopedOperation<InvoiceDraftsService>> = [
     ["invoice.draft.create", (s, ws) => s.create({ workspaceId: ws, renewalId: SOME_ID, purchaseId: null })],
     ["invoice.draft.get", (s, ws) => s.get({ workspaceId: ws, id: SOME_ID })],
+    [
+        "invoice.issued.record",
+        (s, ws) =>
+            s.recordIssued({
+                workspaceId: ws,
+                id: SOME_ID,
+                invoiceNo: "00000123",
+                providerRef: null,
+                issuedOn: "2026-11-14",
+            }),
+    ],
     [
         "invoice.list",
         (s, ws) =>

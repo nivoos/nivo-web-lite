@@ -1,11 +1,15 @@
 import type { PageInput } from "@modules/platform/pagination"
 import type { ServiceClass } from "./service.contracts"
 
-/** The life cycle of a renewal request: the customer pays first, then the provider step, then a person's confirmation. */
+/**
+ * The life cycle of a renewal request, as the CRM STORES it (it renews nothing itself): the customer pays first, the Renewal agent
+ * renews at the provider with its own provider account and records what the provider answered (`renewed`, `failed`, or
+ * `pending_person`: the provider's answer is pending or unknown, a person follows up and records the end).
+ */
 export type RenewalState = "awaiting_payment" | "paid" | "pending_person" | "renewed" | "failed" | "cancelled"
 
-/** The provider plugins. */
-export type RenewalPlugin = "manual" | "fixture"
+/** What the provider answered for a paid renewal, as the agent (or a person) records it. */
+export type RenewalOutcome = "renewed" | "failed" | "pending"
 
 /** Where a price came from. */
 export type PriceSource = "placeholder" | "price_sheet"
@@ -87,15 +91,11 @@ export interface RenewalView {
     readonly transactionRef: string | null
     /** When the payment was recorded. */
     readonly paidAt: string | null
-    /** True while nothing was asked of a real provider. */
-    readonly dryRun: boolean
-    /** The plugin that took the provider step. */
-    readonly plugin: RenewalPlugin | null
-    /** The provider's (or the mock's) reference. */
+    /** The provider's reference of the renewal (its order or transaction id), as recorded. */
     readonly providerRef: string | null
     /** The end date after the renewal. */
     readonly newExpiresOn: string | null
-    /** Who confirmed the outcome. */
+    /** Who recorded the outcome (the agent or a person). */
     readonly confirmedBy: string | null
     /** When. */
     readonly confirmedAt: string | null
@@ -141,27 +141,15 @@ export interface RenewalPaymentInput extends RenewalKey {
     readonly transactionRef: string
 }
 
-/** Asks the provider plugin to renew a paid request. */
-export interface RenewalExecuteInput {
-    /** The workspace. */
-    readonly workspaceId: string
-    /** The service named in the path; must be the request's. */
-    readonly serviceCode: string
-    /** The renewal request. */
-    readonly renewalId: string
-    /** The replay key. */
-    readonly requestKey: string
-    /** True (default): ask no real provider. */
-    readonly dryRun: boolean
-}
-
-/** A person confirms what happened at the provider. */
+/** Records what the provider answered for a paid renewal (the renewal itself happened at the provider, never in the CRM). */
 export interface RenewalOutcomeInput extends RenewalKey {
-    /** renewed or failed. */
-    readonly outcome: "renewed" | "failed"
+    /** renewed, failed, or pending (the provider's answer is pending or unknown). */
+    readonly outcome: RenewalOutcome
+    /** The provider's reference of the renewal, when it gave one. */
+    readonly providerRef: string | null
     /** The new end date (renewed). */
     readonly newExpiresOn: string | null
-    /** Who confirms. */
+    /** Who records (the agent or a person). */
     readonly confirmedBy: string
     /** A short note. */
     readonly note: string | null
@@ -209,11 +197,20 @@ export interface InvoiceDraftView {
     readonly vatVnd: number
     /** Total, whole VND. */
     readonly totalVnd: number
-    /** draft. */
-    readonly state: "draft"
+    /** draft, or issued once the e-invoice MISA issued is recorded on it. */
+    readonly state: InvoiceDraftState
     /** Where the price came from. */
     readonly priceSource: PriceSource
+    /** The number of the e-invoice issued for the draft, or null while it is a draft. */
+    readonly invoiceNo: string | null
+    /** The e-invoice provider's reference of that invoice (MISA meInvoice's transaction id), when it gave one. */
+    readonly providerRef: string | null
+    /** The issue date of that invoice. */
+    readonly issuedOn: string | null
 }
+
+/** A draft, or a draft whose e-invoice was issued (by the Accounting agent at MISA) and recorded. */
+export type InvoiceDraftState = "draft" | "issued"
 
 /** Creates the draft of a renewal OR of a purchase (exactly one is named). */
 export interface InvoiceDraftCreateInput {
@@ -231,4 +228,14 @@ export interface InvoiceDraftKey {
     readonly workspaceId: string
     /** The draft id. */
     readonly id: string
+}
+
+/** Records the e-invoice issued for a draft (issued at MISA by the Accounting agent; the CRM issues nothing). */
+export interface InvoiceIssuedInput extends InvoiceDraftKey {
+    /** The invoice number MISA gave. */
+    readonly invoiceNo: string
+    /** MISA's reference of the invoice, when it gave one. */
+    readonly providerRef: string | null
+    /** The issue date. */
+    readonly issuedOn: string
 }

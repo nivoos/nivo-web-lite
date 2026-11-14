@@ -15,7 +15,6 @@ import { type Ids, InjectIds } from "@modules/platform/ids"
 import { InjectPrimaryEntityManager } from "@modules/platform/database"
 import { type Page, decodeCursor, pageOf, pageSizeOf } from "@modules/platform/pagination"
 import { addDays, daysBetween, hcmDayOf } from "@modules/platform/primitives"
-import { InjectRenewalProvider, type RenewalProviderService } from "@modules/integrations/renewal-provider"
 import { isoOf, toServiceView } from "./crm.mapper"
 import { CrmError, CrmErrorCode } from "./errors/crm.error"
 import {
@@ -47,14 +46,19 @@ const WAITING_OUTCOMES: ReadonlySet<string> = new Set(["sent", "quoted"])
 /** Statuses the renewal list leaves out (a cancelled service is not renewed). */
 const NOT_LISTED_STATUSES = ["cancelled"]
 
+/** The state a stored end date implies on a day: unknown without one. */
+const stateOn = (expiresOn: string | null, today: string): ServiceStatusView["state"] => {
+    if (expiresOn === null) return "unknown"
+    return expiresOn >= today ? "active" : "expired"
+}
+
 @Injectable()
-/** The services book: the renewal list with its reminder facts, a service's state from its provider plugin, and reminder records. */
+/** The services book: the renewal list with its reminder facts, a service's state as the books hold it, and reminder records. */
 export class ServicesBookService {
     constructor(
         @InjectPrimaryEntityManager() private readonly entityManager: EntityManager,
         @InjectClock() private readonly clock: Clock,
         @InjectIds() private readonly ids: Ids,
-        @InjectRenewalProvider() private readonly providers: RenewalProviderService,
     ) {}
 
     /** Services ending within `withinDays` of `asOf` (and the expired ones when asked), by end date then code, with the facts to decide on. */
@@ -90,21 +94,16 @@ export class ServicesBookService {
         )
     }
 
-    /** The state of a service as its provider plugin answers it (manual: a person checks; fixture: the CRM's own row, nothing called). */
+    /** The state of a service as the books hold it: its status, its end date and that date's source; no provider is asked. */
     async status(key: ServiceKey): Promise<ServiceStatusView> {
         const service = await this.serviceOf(this.entityManager, key)
-        const answer = await this.providers
-            .pluginFor(service.provider)
-            .status({
-                serviceCode: service.code,
-                provider: service.provider,
-                expiresOn: service.expiresOn,
-                today: hcmDayOf(this.clock.now()),
-            })
-            .catch((cause: unknown) => {
-                throw new CrmError({ code: CrmErrorCode.ProviderUnavailable, cause })
-            })
-        return { serviceCode: service.code, ...answer }
+        return {
+            serviceCode: service.code,
+            status: service.status,
+            state: stateOn(service.expiresOn, hcmDayOf(this.clock.now())),
+            expiresOn: service.expiresOn,
+            expirySource: service.expirySource,
+        }
     }
 
     /** Records a reminder sent (or its outcome) about a service; a repeat of the key answers the first record. */

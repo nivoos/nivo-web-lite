@@ -46,7 +46,6 @@ component_management:
         - "be/src/modules/integrations/mail/**"
         - "be/src/modules/integrations/object-storage/**"
         - "be/src/modules/integrations/passport/**"
-        - "be/src/modules/integrations/renewal-provider/**"
     - component_id: platform
       name: platform
       paths:
@@ -98,7 +97,10 @@ ignore:
   - "be/**/*.templates.ts"
   - "be/**/*.type.ts"
   - "be/apps/*/Dockerfile"
+  - "be/apps/*/README.md"
+  - "be/apps/*/package.json"
   - "be/apps/*/src/**"
+  - "be/apps/*/tsconfig.build.json"
   - "be/contracts/*/*.tools.json"
   - "be/contracts/*/events.json"
   - "be/contracts/*/events.pin.json"
@@ -119,6 +121,7 @@ ignore:
   - "be/src/assets/*/**"
   - "be/src/features/api/*/**"
   - "be/src/features/cli/**"
+  - "be/src/features/client-cli/*/**"
   - "be/src/features/jobs/*/**"
   - "be/src/features/reactors/*/**"
   - "be/src/features/realtime/*/**"
@@ -153,9 +156,6 @@ ignore:
   - "be/tsconfig.build.json"
   - "be/tsconfig.json"
   - "fe/**"
-  - "packages/nivo-web-lite-shared/src/workbench/**"
-  - "packages/nivo-web-lite-shared/src/public/**"
-  - "packages/nivo-web-lite-shared/src/client/**"
   - "packages/nivo-web-lite-shared/src/**/index.ts"
   - "packages/nivo-web-lite-shared/src/**/*.types.ts"
   - "packages/nivo-web-lite-shared/src/**/*-types.ts"

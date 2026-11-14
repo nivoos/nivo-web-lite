@@ -79,17 +79,27 @@ outside the project: its status word map is not brought in.
 ## CRM REST contract for NIVO
 
 `be/contracts/api/openapi.json` (written by `starci app emit`) is the contract NIVO's OpenAPI provider pins. 43 operations,
-singular ids (a NIVO tool id is the plugin's namespace `nivo-web.` + operationId), each with a summary and no description (user copy goes through the
-catalog). Every operation answers the harness `ErrorResponse` as `default`, is secured by the `serviceKey` bearer (a service
+singular ids, each with a summary and no description (user copy goes through the catalog). The document states the base path NIVO
+drops from an operation's name in `info["x-nivo-source"].basePath` (`/v1`, set on the head in `be/apps/api/src/openapi.ts`; the
+document has no server): NIVO names every operation by the CRM id chosen when it pins the document, its method and its path,
+`nivo.api.crm.<crm_id>.<method>.<path>` (`GET /v1/prices` pinned as `nivoweb` is `nivo.api.crm.nivoweb.get.prices`); the document
+names no tool. Every operation answers the harness `ErrorResponse` as `default`, is secured by the `serviceKey` bearer (a service
 credential of one workspace, above) and carries `x-crm-effect` (`read` | `write`). Every write declares `x-nivo-effect`:
-`service.renewal.create` is `money` (it asks the provider to renew, only once the request is paid), `renewal.outcome.record` is
-`irreversible` (a person's confirmation moves the service end date), the other ten writes are `none`. NIVO runs a write marked
-other than `none` only after a person was asked. A customer-facing run (a conversation) may call only an operation marked
-`x-nivo-customer-audience: true`: `customer.get`, `customer.balance.get`, `customer.service.list`, `customer.invoice.list`,
+`renewal.outcome.record` is `irreversible` (a recorded renewal moves the service end date), the other writes are `none`. NIVO runs
+a write marked other than `none` only after a person was asked. A customer-facing run (a conversation) may call only an operation
+marked `x-nivo-customer-audience: true`: `customer.get`, `customer.balance.get`, `customer.service.list`, `customer.invoice.list`,
 `customer.contract.list`, `customer.document.list` and `customer.document.link.get`, each naming `x-nivo-customer-parameter: "code"` (NIVO fills the customer
 code from the conversation's trusted link, never from the model), and `ticket.create` (no customer parameter). `customer.find` and
-every other operation stay internal. The provider plugin that answers for iNET and Tino in dev is named `fixture` (it never calls
-out); AZ goes to a person (`manual`).
+every other operation stay internal.
+
+The CRM is PURE STORAGE (owner ruling R57, 2026-11-14): it performs no provider action and holds no provider plugin. A renewal is a
+record: opened on the customer's yes (`renewal.quote.create`), marked paid by the bank row (`renewal.payment.record`), and closed by
+the provider's answer the Renewal agent records after it renewed AT THE PROVIDER with its own provider account (iNET, Tino):
+`renewal.outcome.record` takes `renewed` (with the new end date, which moves the service's), `failed` or `pending` (the provider's
+answer is pending or unknown: the request waits for a person, who records the end), the provider's reference and who recorded it;
+only a paid request takes an outcome. `service.status.get` answers what the books hold (status, end date and its source), never a
+provider. An invoice draft records the e-invoice the Accounting agent issued at MISA meInvoice (`invoice.issued.record`: number,
+MISA's reference, issue date; the draft becomes `issued`; one number per workspace).
 
 ## The CRM database
 

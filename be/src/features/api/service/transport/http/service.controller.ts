@@ -39,12 +39,11 @@ export class ServiceController {
         )
     }
 
-    /** `service.status.get`: Get a service's state from its provider plugin (manual: a person checks; fixture: the CRM's own row, nothing called). */
+    /** `service.status.get`: Get a service's state as the books hold it: status, end date and its source (asks no provider). */
     @Get("v1/services/:code/status")
     @CrmOperation({
         id: "service.status.get",
-        summary:
-            "Get a service's state from its provider plugin (manual: a person checks; fixture: the CRM's own row, nothing called).",
+        summary: "Get a service's state as the books hold it: status, end date and its source (asks no provider).",
         response: ServiceStatusResponse,
         effect: "read",
         customerAudience: { parameter: null },

@@ -129,8 +129,6 @@ export const toRenewalView = (
     paymentCode: renewal.paymentCode,
     transactionRef: renewal.transactionRef,
     paidAt: isoOrNull(renewal.paidAt),
-    dryRun: renewal.dryRun,
-    plugin: renewal.plugin,
     providerRef: renewal.providerRef,
     newExpiresOn: renewal.newExpiresOn,
     confirmedBy: renewal.confirmedBy,

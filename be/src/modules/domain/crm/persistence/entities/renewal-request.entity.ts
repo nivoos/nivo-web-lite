@@ -1,9 +1,9 @@
 import { Column, Entity } from "typeorm"
-import type { PriceSource, RenewalPlugin, RenewalState } from "../../renewal.contracts"
+import type { PriceSource, RenewalState } from "../../renewal.contracts"
 import { UuidAbstractEntity, bigintNumberTransformer } from "./uuid-abstract.entity"
 
 @Entity({ name: "crm_renewal_requests" })
-/** One renewal asked of a provider plugin, keyed by the caller's replay key. Mapped from db/migrations 0001 to 0004; id, created_at and updated_at come from UuidAbstractEntity. */
+/** One renewal request as the CRM records it (the renewal itself happens at the provider, by the Renewal agent), keyed by the caller's replay key. Mapped from db/migrations 0001 to 0004; id, created_at and updated_at come from UuidAbstractEntity. */
 export class RenewalRequestEntity extends UuidAbstractEntity {
     /** The enterprise workspace the row belongs to (every CRM row is keyed by it). */
     @Column({ name: "workspace_id", type: "uuid" })
@@ -13,7 +13,7 @@ export class RenewalRequestEntity extends UuidAbstractEntity {
     @Column({ name: "service_id", type: "uuid" })
     serviceId!: string
 
-    /** The plugin that took it. */
+    /** The provider key the books name for the service (tino, inet, azwebsite; manual: none). */
     @Column({ name: "provider", type: "text" })
     provider!: string
 
@@ -21,13 +21,9 @@ export class RenewalRequestEntity extends UuidAbstractEntity {
     @Column({ name: "term_months", type: "integer" })
     termMonths!: number
 
-    /** awaiting_payment, paid, pending_person, renewed, failed or cancelled (0005). */
+    /** awaiting_payment, paid, pending_person (the provider's answer is pending), renewed, failed or cancelled (0005). */
     @Column({ name: "state", type: "text" })
     state!: RenewalState
-
-    /** True while nothing external was or will be asked of a provider (the quote, a dry execution, the mock plugin). */
-    @Column({ name: "dry_run", type: "boolean" })
-    dryRun!: boolean
 
     /** The caller's replay key. */
     @Column({ name: "request_key", type: "text" })
@@ -73,23 +69,7 @@ export class RenewalRequestEntity extends UuidAbstractEntity {
     @Column({ name: "paid_at", type: "timestamptz", nullable: true })
     paidAt!: Date | null
 
-    /** The provider plugin that took the execution: manual or mock. */
-    @Column({ name: "plugin", type: "text", nullable: true })
-    plugin!: RenewalPlugin | null
-
-    /** The replay key of the provider execution. */
-    @Column({ name: "execute_key", type: "text", nullable: true })
-    executeKey!: string | null
-
-    /** sha256 of the execution request. */
-    @Column({ name: "execute_hash", type: "text", nullable: true })
-    executeHash!: string | null
-
-    /** When the provider step was asked. */
-    @Column({ name: "executed_at", type: "timestamptz", nullable: true })
-    executedAt!: Date | null
-
-    /** The provider's (or the mock's) reference. */
+    /** The provider's reference of the renewal, as recorded. */
     @Column({ name: "provider_ref", type: "text", nullable: true })
     providerRef!: string | null
 
@@ -97,7 +77,7 @@ export class RenewalRequestEntity extends UuidAbstractEntity {
     @Column({ name: "new_expires_on", type: "date", nullable: true })
     newExpiresOn!: string | null
 
-    /** The confirming person's note. */
+    /** The recorder's note. */
     @Column({ name: "outcome_note", type: "text", nullable: true })
     outcomeNote!: string | null
 }

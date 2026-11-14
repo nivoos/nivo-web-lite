@@ -1,6 +1,6 @@
 export type { Outcome } from "./outcome.contracts"
 export { ok, refused, unwrapOutcome } from "./outcome.mapper"
 export { isRecord } from "./record.policy"
-export { addDays, addMonths, daysBetween, hcmDayOf } from "./calendar-day.policy"
+export { addDays, daysBetween, hcmDayOf } from "./calendar-day.policy"
 export { canonicalJson, sha256Hex } from "./canonical-json.policy"
 export { eachInOrder } from "./sequence.policy"

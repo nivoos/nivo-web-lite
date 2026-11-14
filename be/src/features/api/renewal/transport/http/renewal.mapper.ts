@@ -1,7 +1,6 @@
 import { toPageInput } from "@modules/platform/pagination"
 import type {
     QuoteInput,
-    RenewalExecuteInput,
     RenewalKey,
     RenewalOpenListInput,
     RenewalOutcomeInput,
@@ -9,12 +8,10 @@ import type {
 } from "@modules/domain/crm"
 import type {
     CreateQuoteRequest,
-    ExecuteRenewalRequest,
     ListOpenRenewalsRequest,
     RecordRenewalOutcomeRequest,
     RecordRenewalPaymentRequest,
     RenewalPathRequest,
-    RenewalServicePathRequest,
 } from "./dto/renewal.request"
 
 /** The request of `renewal.quote.create`. */
@@ -46,20 +43,6 @@ export const toRecordPaymentRequest = (
     body: RecordRenewalPaymentRequest,
 ): RenewalPaymentInput => ({ workspaceId, id: path.id, transactionRef: body.transactionRef })
 
-/** The request of `service.renewal.create`. */
-export const toExecuteRequest = (
-    workspaceId: string,
-    requestKey: string,
-    path: RenewalServicePathRequest,
-    body: ExecuteRenewalRequest,
-): RenewalExecuteInput => ({
-    workspaceId,
-    serviceCode: path.code,
-    renewalId: body.renewalId,
-    requestKey,
-    dryRun: body.dryRun,
-})
-
 /** The request of `renewal.outcome.record`. */
 export const toRecordOutcomeRequest = (
     workspaceId: string,
@@ -69,6 +52,7 @@ export const toRecordOutcomeRequest = (
     workspaceId,
     id: path.id,
     outcome: body.outcome,
+    providerRef: body.providerRef,
     newExpiresOn: body.newExpiresOn,
     confirmedBy: body.confirmedBy,
     note: body.note,

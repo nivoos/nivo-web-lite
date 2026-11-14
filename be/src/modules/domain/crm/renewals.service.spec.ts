@@ -1,18 +1,6 @@
 import { Test } from "@nestjs/testing"
 import { In } from "typeorm"
-import {
-    FakeClock,
-    type MockEntityManager,
-    fakeIds,
-    fakeTransaction,
-    mock,
-    mockEntityManager,
-} from "@starci/jest-preset"
-import {
-    RENEWAL_PROVIDER,
-    type RenewalProviderPlugin,
-    type RenewalProviderService,
-} from "@modules/integrations/renewal-provider"
+import { FakeClock, type MockEntityManager, fakeIds, fakeTransaction, mockEntityManager } from "@starci/jest-preset"
 import { CLOCK } from "@modules/platform/clock"
 import { IDS } from "@modules/platform/ids"
 import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
@@ -20,13 +8,7 @@ import { isRecord } from "@modules/platform/primitives"
 import { WS, customerRow, renewalRow, serviceRow, uuid } from "@tests/fixtures/builders/crm.builder"
 import { RENEWAL_OPERATIONS, NO_STRAYS, straysOf } from "@tests/fixtures/builders/workspace-scope.builder"
 import { CrmErrorCode } from "./errors/crm.error"
-import {
-    CustomerEntity,
-    ProviderAccountEntity,
-    ReceivablePaymentEntity,
-    RenewalRequestEntity,
-    ServiceEntity,
-} from "./persistence/entities"
+import { CustomerEntity, ReceivablePaymentEntity, RenewalRequestEntity, ServiceEntity } from "./persistence/entities"
 import { paymentCodeOf } from "./price.policy"
 import { RenewalsService } from "./renewals.service"
 import { requestHashOf } from "./request-key.policy"
@@ -35,19 +17,15 @@ const NOW = "2026-11-12T03:00:00.000Z"
 
 const build = async (em: MockEntityManager) => {
     const transaction = fakeTransaction(em)
-    const plugin = mock<RenewalProviderPlugin>()
-    const providers = mock<RenewalProviderService>()
-    providers.pluginFor.mockReturnValue(plugin)
     const moduleRef = await Test.createTestingModule({
         providers: [
             RenewalsService,
             { provide: PRIMARY_ENTITY_MANAGER, useValue: em },
             { provide: CLOCK, useValue: new FakeClock(NOW) },
             { provide: IDS, useValue: fakeIds() },
-            { provide: RENEWAL_PROVIDER, useValue: providers },
         ],
     }).compile()
-    return { renewals: moduleRef.get(RenewalsService), plugin, providers, transaction }
+    return { renewals: moduleRef.get(RenewalsService), transaction }
 }
 
 const refused = (code: CrmErrorCode, params?: Record<string, unknown>): unknown =>
@@ -60,28 +38,6 @@ const viewStubs = [
     [ServiceEntity, serviceRow()],
     [CustomerEntity, customerRow()],
 ] as const
-
-const INPUT = { workspaceId: WS, serviceCode: "SYN-HOST", renewalId: uuid(51), requestKey: "renew-1", dryRun: false }
-
-const HASH = requestHashOf({
-    operation: "service.renewal.create",
-    serviceCode: "SYN-HOST",
-    renewalId: uuid(51),
-    dryRun: false,
-})
-
-/** The reads and writes of one provider step on a request in `state`. */
-const executeStubs = (state: "awaiting_payment" | "paid", transactionRef: string | null) =>
-    ({
-        findOne: [
-            [RenewalRequestEntity, renewalRow({ state, transactionRef })],
-            [ServiceEntity, serviceRow()],
-            [RenewalRequestEntity, null],
-            [CustomerEntity, customerRow()],
-        ],
-        update: [RenewalRequestEntity, {}],
-        exists: [ProviderAccountEntity, false],
-    }) as const
 
 describe("RenewalsService quote", () => {
     it("opens a request awaiting payment with the CRM's own total and transfer code", async () => {
@@ -108,7 +64,7 @@ describe("RenewalsService quote", () => {
                 totalVnd: 1_320_000,
                 priceSource: "placeholder",
                 paymentCode: paymentCodeOf(id, "GH"),
-                dryRun: true,
+                providerRef: null,
                 createdAt: NOW,
             }),
         )
@@ -282,120 +238,22 @@ describe("RenewalsService recordPayment", () => {
     })
 })
 
-describe("RenewalsService execute (service.renewal.create)", () => {
-    it("refuses an unpaid request (pay first) without asking any provider", async () => {
-        const { renewals, plugin } = await build(mockEntityManager(executeStubs("awaiting_payment", null)))
-        await expect(renewals.execute(INPUT)).rejects.toEqual(
-            refused(CrmErrorCode.RenewalNotPaid, { state: "awaiting_payment" }),
-        )
-        expect(plugin.renew).not.toHaveBeenCalled()
-    })
-})
-
-describe("RenewalsService execute (service.renewal.create)", () => {
-    it("claims a paid request, asks its plugin outside the transaction (dry while no live account) and records the answer", async () => {
-        const em = mockEntityManager(executeStubs("paid", "BANK-9"))
-        const { renewals, plugin, transaction } = await build(em)
-        plugin.renew.mockResolvedValue({
-            plugin: "fixture",
-            state: "renewed",
-            providerRef: "FIXTURE-00000000",
-            newExpiresOn: "2027-12-01",
-            dryRun: true,
-        })
-        await expect(renewals.execute(INPUT)).resolves.toEqual(
-            expect.objectContaining({
-                state: "renewed",
-                plugin: "fixture",
-                providerRef: "FIXTURE-00000000",
-                newExpiresOn: "2027-12-01",
-                dryRun: true,
-            }),
-        )
-        expect(plugin.renew).toHaveBeenCalledWith(
-            expect.objectContaining({ renewalId: uuid(51), termMonths: 12, dryRun: true, today: "2026-11-12" }),
-        )
-        expect(em.update).toHaveBeenNthCalledWith(
-            1,
-            RenewalRequestEntity,
-            { id: uuid(51), workspaceId: WS },
-            { executeKey: "renew-1", executeHash: HASH, executedAt: new Date(NOW) },
-        )
-        expect(transaction.commits).toBe(2)
-    })
-})
-
-describe("RenewalsService execute (service.renewal.create)", () => {
-    it("passes dryRun false only when a live provider account exists and the caller asked for it", async () => {
-        const em = mockEntityManager({
-            findOne: [
-                [RenewalRequestEntity, renewalRow({ state: "paid", transactionRef: "BANK-9" })],
-                [ServiceEntity, serviceRow()],
-                [RenewalRequestEntity, null],
-                [CustomerEntity, customerRow()],
-            ],
-            update: [RenewalRequestEntity, {}],
-            exists: [ProviderAccountEntity, true],
-        })
-        const { renewals, plugin } = await build(em)
-        plugin.renew.mockResolvedValue({
-            plugin: "manual",
-            state: "pending_person",
-            providerRef: null,
-            newExpiresOn: null,
-            dryRun: false,
-        })
-        await expect(renewals.execute(INPUT)).resolves.toEqual(
-            expect.objectContaining({ state: "pending_person", plugin: "manual", dryRun: false }),
-        )
-        expect(plugin.renew).toHaveBeenCalledWith(expect.objectContaining({ dryRun: false }))
-    })
-})
-
-describe("RenewalsService execute (service.renewal.create)", () => {
-    it("answers a recorded execution on a repeat of its key without asking again", async () => {
-        const done = renewalRow({ state: "pending_person", executeKey: "renew-1", executeHash: HASH, plugin: "manual" })
-        const em = mockEntityManager({
-            findOne: [
-                [RenewalRequestEntity, done],
-                [ServiceEntity, serviceRow()],
-                [CustomerEntity, customerRow()],
-            ],
-        })
-        const { renewals, plugin } = await build(em)
-        await expect(renewals.execute(INPUT)).resolves.toEqual(expect.objectContaining({ state: "pending_person" }))
-        expect(plugin.renew).not.toHaveBeenCalled()
-    })
-})
-
-describe("RenewalsService execute (service.renewal.create)", () => {
-    it("refuses another service's request and a key already used for another request", async () => {
-        const mismatch = mockEntityManager({
-            findOne: [
-                [RenewalRequestEntity, renewalRow({ state: "paid" })],
-                [ServiceEntity, serviceRow({ code: "SYN-TM" })],
-            ],
-        })
-        await expect((await build(mismatch)).renewals.execute(INPUT)).rejects.toEqual(
-            refused(CrmErrorCode.RenewalServiceMismatch, { serviceCode: "SYN-TM" }),
-        )
-        const reused = mockEntityManager({
-            findOne: [
-                [RenewalRequestEntity, renewalRow({ state: "paid" })],
-                [ServiceEntity, serviceRow()],
-                [RenewalRequestEntity, renewalRow({ id: uuid(52) })],
-            ],
-        })
-        await expect((await build(reused)).renewals.execute(INPUT)).rejects.toEqual(
-            refused(CrmErrorCode.IdempotencyKeyReused),
-        )
-    })
-})
+/** The outcome the Renewal agent records after the provider answered (owner ruling R57: the agent renews at the provider). */
+const OUTCOME = {
+    workspaceId: WS,
+    id: uuid(51),
+    providerRef: "INET-ORDER-1",
+    newExpiresOn: null,
+    confirmedBy: "webrenew",
+    note: null,
+} as const
 
 describe("RenewalsService recordOutcome", () => {
-    it("records renewed and moves the service's end date as confirmed", async () => {
+    // Owner ruling R57 (2026-11-14): the CRM's own provider step (`service.renewal.create`, plugins manual/fixture) is gone; the agent
+    // renews at the provider and records the answer on the PAID request, so `renewed` is recorded from `paid` (it was `pending_person`).
+    it("records renewed on a paid request with the provider's reference and moves the service's end date as confirmed", async () => {
         const em = mockEntityManager({
-            findOne: [[RenewalRequestEntity, renewalRow({ state: "pending_person" })], ...viewStubs],
+            findOne: [[RenewalRequestEntity, renewalRow({ state: "paid", transactionRef: "BANK-9" })], ...viewStubs],
             update: [
                 [RenewalRequestEntity, {}],
                 [ServiceEntity, {}],
@@ -403,19 +261,13 @@ describe("RenewalsService recordOutcome", () => {
         })
         const { renewals } = await build(em)
         await expect(
-            renewals.recordOutcome({
-                workspaceId: WS,
-                id: uuid(51),
-                outcome: "renewed",
-                newExpiresOn: "2027-12-01",
-                confirmedBy: "Synthetic Staff",
-                note: null,
-            }),
+            renewals.recordOutcome({ ...OUTCOME, outcome: "renewed", newExpiresOn: "2027-12-01" }),
         ).resolves.toEqual(
             expect.objectContaining({
                 state: "renewed",
+                providerRef: "INET-ORDER-1",
                 newExpiresOn: "2027-12-01",
-                confirmedBy: "Synthetic Staff",
+                confirmedBy: "webrenew",
                 confirmedAt: NOW,
             }),
         )
@@ -428,47 +280,70 @@ describe("RenewalsService recordOutcome", () => {
 })
 
 describe("RenewalsService recordOutcome", () => {
-    it("records failed without touching the service, answers a repeat, and refuses a request not waiting for a person", async () => {
+    it("records a pending provider answer as waiting for a person, then a person closes it renewed", async () => {
         const em = mockEntityManager({
-            findOne: [[RenewalRequestEntity, renewalRow({ state: "pending_person" })], ...viewStubs],
+            findOne: [[RenewalRequestEntity, renewalRow({ state: "paid", transactionRef: "BANK-9" })], ...viewStubs],
+            update: [RenewalRequestEntity, {}],
+        })
+        const { renewals } = await build(em)
+        await expect(renewals.recordOutcome({ ...OUTCOME, outcome: "pending" })).resolves.toEqual(
+            expect.objectContaining({ state: "pending_person", providerRef: "INET-ORDER-1", newExpiresOn: null }),
+        )
+        expect(em.update).toHaveBeenCalledTimes(1)
+        const waiting = mockEntityManager({
+            findOne: [
+                [
+                    RenewalRequestEntity,
+                    renewalRow({ state: "pending_person", transactionRef: "BANK-9", providerRef: "INET-ORDER-1" }),
+                ],
+                ...viewStubs,
+            ],
+            update: [
+                [RenewalRequestEntity, {}],
+                [ServiceEntity, {}],
+            ],
+        })
+        await expect(
+            (await build(waiting)).renewals.recordOutcome({
+                ...OUTCOME,
+                outcome: "renewed",
+                providerRef: null,
+                newExpiresOn: "2027-12-01",
+                confirmedBy: "Synthetic Staff",
+            }),
+        ).resolves.toEqual(
+            expect.objectContaining({ state: "renewed", providerRef: "INET-ORDER-1", confirmedBy: "Synthetic Staff" }),
+        )
+    })
+})
+
+describe("RenewalsService recordOutcome", () => {
+    it("records failed without touching the service, answers a repeat, and refuses an unpaid or a closed request", async () => {
+        const em = mockEntityManager({
+            findOne: [[RenewalRequestEntity, renewalRow({ state: "paid", transactionRef: "BANK-9" })], ...viewStubs],
             update: [RenewalRequestEntity, {}],
         })
         const { renewals } = await build(em)
         await expect(
-            renewals.recordOutcome({
-                workspaceId: WS,
-                id: uuid(51),
-                outcome: "failed",
-                newExpiresOn: null,
-                confirmedBy: "S",
-                note: "panel refused",
-            }),
+            renewals.recordOutcome({ ...OUTCOME, outcome: "failed", note: "insufficient_balance" }),
         ).resolves.toEqual(expect.objectContaining({ state: "failed" }))
         expect(em.update).toHaveBeenCalledTimes(1)
         const repeat = mockEntityManager({
-            findOne: [[RenewalRequestEntity, renewalRow({ state: "failed", confirmedBy: "S" })], ...viewStubs],
+            findOne: [[RenewalRequestEntity, renewalRow({ state: "failed", confirmedBy: "webrenew" })], ...viewStubs],
         })
-        await expect(
-            (await build(repeat)).renewals.recordOutcome({
-                workspaceId: WS,
-                id: uuid(51),
-                outcome: "failed",
-                newExpiresOn: null,
-                confirmedBy: "S",
-                note: null,
-            }),
-        ).resolves.toEqual(expect.objectContaining({ state: "failed" }))
-        const paid = mockEntityManager({ findOne: [RenewalRequestEntity, renewalRow({ state: "paid" })] })
-        await expect(
-            (await build(paid)).renewals.recordOutcome({
-                workspaceId: WS,
-                id: uuid(51),
-                outcome: "renewed",
-                newExpiresOn: null,
-                confirmedBy: "S",
-                note: null,
-            }),
-        ).rejects.toEqual(refused(CrmErrorCode.RenewalStateRefused, { state: "paid" }))
+        const again = await build(repeat)
+        await expect(again.renewals.recordOutcome({ ...OUTCOME, outcome: "failed" })).resolves.toEqual(
+            expect.objectContaining({ state: "failed" }),
+        )
+        expect(repeat.update).not.toHaveBeenCalled()
+        const unpaid = mockEntityManager({ findOne: [RenewalRequestEntity, renewalRow({ state: "awaiting_payment" })] })
+        await expect((await build(unpaid)).renewals.recordOutcome({ ...OUTCOME, outcome: "renewed" })).rejects.toEqual(
+            refused(CrmErrorCode.RenewalNotPaid, { state: "awaiting_payment" }),
+        )
+        const closed = mockEntityManager({ findOne: [RenewalRequestEntity, renewalRow({ state: "renewed" })] })
+        await expect((await build(closed)).renewals.recordOutcome({ ...OUTCOME, outcome: "failed" })).rejects.toEqual(
+            refused(CrmErrorCode.RenewalStateRefused, { state: "renewed" }),
+        )
     })
 })
 

@@ -79,31 +79,27 @@ export class ExpiringServicePageResponse {
     readonly nextCursor!: string | null
 }
 
-/** A service's state as its provider plugin answers it. */
+/** A service's state as the CRM's books hold it (no provider is asked). */
 export class ServiceStatusResponse implements ServiceStatusView {
     /** The service. */
     @ApiProperty({ type: String, maxLength: 120 })
     readonly serviceCode!: string
 
-    /** manual: a person checks; mock: fixtures, nothing called. */
-    @ApiProperty({ type: String, enum: ["manual", "mock"] })
-    readonly plugin!: ServiceStatusView["plugin"]
+    /** The status the books hold. */
+    @ApiProperty({ type: String, maxLength: 40 })
+    readonly status!: string
 
-    /** The state. */
+    /** active or expired by the stored end date; unknown without one. */
     @ApiProperty({ type: String, enum: ["active", "expired", "unknown"] })
     readonly state!: ServiceStatusView["state"]
 
-    /** The end date the plugin knows. */
+    /** The end date the books hold. */
     @ApiProperty({ type: String, format: "date", nullable: true })
     readonly expiresOn!: string | null
 
-    /** Who stands behind the answer. */
-    @ApiProperty({ type: String, enum: ["person", "mock"] })
-    readonly checkedBy!: ServiceStatusView["checkedBy"]
-
-    /** A fixed label. */
-    @ApiProperty({ type: String, maxLength: 200 })
-    readonly note!: string
+    /** Where that end date came from. */
+    @ApiProperty({ type: String, enum: ["provider", "estimated", "invoice", "confirmed", "none"] })
+    readonly expirySource!: ServiceStatusView["expirySource"]
 }
 
 /** A reminder recorded. */
