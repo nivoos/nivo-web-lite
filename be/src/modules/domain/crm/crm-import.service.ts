@@ -87,7 +87,7 @@ const sameKeys = (...fields: Array<string>): Pick<EntityPlan, "itemKey" | "rowKe
 })
 
 /** The provenance key of an import issue: its source place, field and reason. */
-const issueKeys: Pick<EntityPlan, "itemKey" | "rowKey"> = {
+export const issueKeys: Pick<EntityPlan, "itemKey" | "rowKey"> = {
     itemKey: (item) => {
         const origin = item["origin"]
         const place = isRecord(origin) ? origin : {}
@@ -219,7 +219,7 @@ interface Snapshot {
 }
 
 /** The plan of an entity the format lists (every listed entity has one). */
-const planOf = (entity: string): EntityPlan => {
+export const planOf = (entity: string): EntityPlan => {
     const plan = PLANS.get(entity)
     if (plan === undefined) throw new CrmError({ code: CrmErrorCode.ImportManifestInvalid })
     return plan

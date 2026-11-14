@@ -117,6 +117,29 @@ describe("purchase policy: edits and opened records", () => {
         )
     })
 
+    it("carries every contact column an update names", async () => {
+        const subject = await policy()
+        expect(
+            subject.purchaseEditsOf({
+                workspaceId: "w",
+                id: "i",
+                need: "a new site",
+                contactName: "Synthetic Contact",
+                phone: "0900000000",
+                email: "c@synthetic.example",
+                domain: "synthetic.example",
+                state: null,
+                note: null,
+            }),
+        ).toEqual({
+            need: "a new site",
+            contactName: "Synthetic Contact",
+            phone: "0900000000",
+            email: "c@synthetic.example",
+            domain: "synthetic.example",
+        })
+    })
+
     it("opens no project and no service for a line whose row left the table, and keeps the receivable under its own code", async () => {
         const subject = await policy()
         const opened = subject.openedRecordsOf(quotedPurchaseRow(), [priceSheetRow()])

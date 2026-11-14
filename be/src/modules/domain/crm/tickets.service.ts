@@ -50,14 +50,15 @@ export class TicketsService {
                 codes.length === 0
                     ? []
                     : await manager.find(ServiceEntity, { where: { workspaceId, code: In(codes) }, take: codes.length })
-            const missing = codes.find((code) => !services.some((service) => service.code === code))
+            const named = codes.flatMap((code) => services.filter((service) => service.code === code))
+            const missing = codes.find((code) => !named.some((service) => service.code === code))
             if (missing !== undefined)
                 throw new CrmError({ code: CrmErrorCode.TicketServiceUnknown, params: { serviceCode: missing } })
             const row = manager.create(TicketEntity, {
                 id: this.ids.next(),
                 workspaceId,
                 customerId,
-                serviceIds: codes.map((code) => services.find((service) => service.code === code)?.id ?? ""),
+                serviceIds: named.map((service) => service.id),
                 kind: input.kind,
                 status: "open",
                 channel: input.channel,

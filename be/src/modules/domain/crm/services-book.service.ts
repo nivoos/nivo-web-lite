@@ -76,8 +76,8 @@ export class ServicesBookService {
             keys === null
                 ? [{ ...base, expiresOn: range }]
                 : [
-                      { ...base, expiresOn: And(range, MoreThan(keys[0] ?? "")) },
-                      { ...base, expiresOn: keys[0] ?? "", code: MoreThan(keys[1] ?? "") },
+                      { ...base, expiresOn: And(range, MoreThan(String(keys[0]))) },
+                      { ...base, expiresOn: String(keys[0]), code: MoreThan(String(keys[1])) },
                   ]
         const rows = await this.entityManager.find(ServiceEntity, {
             where,
@@ -85,13 +85,7 @@ export class ServicesBookService {
             take: limit + 1,
         })
         const views = await this.expiringViews(input.workspaceId, rows.slice(0, limit), asOf)
-        return pageOf(
-            EXPIRING_LIST,
-            rows,
-            limit,
-            (row) => [row.expiresOn ?? "", row.code],
-            rows.slice(0, limit).flatMap((row) => views.get(row.id) ?? []),
-        )
+        return pageOf(EXPIRING_LIST, rows, limit, (row) => [row.expiresOn ?? "", row.code], views)
     }
 
     /** The state of a service as the books hold it: its status, its end date and that date's source; no provider is asked. */
@@ -139,8 +133,8 @@ export class ServicesBookService {
         workspaceId: string,
         rows: ReadonlyArray<ServiceEntity>,
         asOf: string,
-    ): Promise<ReadonlyMap<string, ExpiringServiceView>> {
-        if (rows.length === 0) return new Map<string, never>()
+    ): Promise<ReadonlyArray<ExpiringServiceView>> {
+        if (rows.length === 0) return []
         const serviceIds = rows.map((row) => row.id)
         const customerIds = [...new Set(rows.map((row) => row.customerId))]
         const websiteIds = [...new Set(rows.flatMap((row) => (row.websiteId === null ? [] : [row.websiteId])))]
@@ -183,26 +177,24 @@ export class ServicesBookService {
         const domainOf = new Map(sites.map((site) => [site.id, site.domain]))
         const openOf = new Map<string, string>()
         for (const renewal of open) if (!openOf.has(renewal.serviceId)) openOf.set(renewal.serviceId, renewal.id)
-        return new Map(
-            rows.map((row) => {
-                const customer = customerOf.get(row.customerId)
-                const facts = reminders.get(row.id)
-                const view: ExpiringServiceView = {
-                    ...toServiceView(
-                        row,
-                        customer?.code ?? "",
-                        row.websiteId === null ? null : (domainOf.get(row.websiteId) ?? null),
-                    ),
-                    daysLeft: daysBetween(asOf, row.expiresOn ?? asOf),
-                    reachable: (customer?.reachable ?? false) || linked.has(row.customerId),
-                    lastReminderOn: facts?.last === null || facts === undefined ? null : hcmDayOf(facts.last),
-                    reminderCount: facts?.count ?? 0,
-                    openReminder: facts?.latest !== null && facts !== undefined && WAITING_OUTCOMES.has(facts.latest),
-                    openRenewalId: openOf.get(row.id) ?? null,
-                }
-                return [row.id, view]
-            }),
-        )
+        return rows.map((row): ExpiringServiceView => {
+            const customer = customerOf.get(row.customerId)
+            const facts = reminders.get(row.id)
+            const view: ExpiringServiceView = {
+                ...toServiceView(
+                    row,
+                    customer?.code ?? "",
+                    row.websiteId === null ? null : (domainOf.get(row.websiteId) ?? null),
+                ),
+                daysLeft: daysBetween(asOf, row.expiresOn ?? asOf),
+                reachable: (customer?.reachable ?? false) || linked.has(row.customerId),
+                lastReminderOn: facts?.last === null || facts === undefined ? null : hcmDayOf(facts.last),
+                reminderCount: facts?.count ?? 0,
+                openReminder: facts?.latest !== null && facts !== undefined && WAITING_OUTCOMES.has(facts.latest),
+                openRenewalId: openOf.get(row.id) ?? null,
+            }
+            return view
+        })
     }
 
     /** The reminder already recorded under the request's key, if any. */

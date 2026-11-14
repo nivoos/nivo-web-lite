@@ -198,7 +198,7 @@ const PLANS: ReadonlyMap<string, ExportPlan> = new Map<string, ExportPlan>([
 /** The value of a (possibly dotted) field of an item, as text. */
 const fieldOf = (item: SnapshotItem, field: string): string => {
     const [head, tail] = field.split(".")
-    const value = head === undefined ? undefined : item[head]
+    const value = item[String(head)]
     if (tail === undefined) return String(value)
     return String(isRecord(value) ? value[tail] : undefined)
 }
@@ -214,7 +214,7 @@ const sortedBy = (list: ReadonlyArray<SnapshotItem>, key: ReadonlyArray<string>)
 }
 
 /** The plan of an entity of the format (every listed entity has one). */
-const planOf = (entity: string): ExportPlan => {
+export const planOf = (entity: string): ExportPlan => {
     const plan = PLANS.get(entity)
     if (plan === undefined) throw new CrmError({ code: CrmErrorCode.ImportManifestInvalid })
     return plan
@@ -240,8 +240,8 @@ export class SnapshotExportService {
         const workspaceId = input.workspaceId.toLowerCase()
         const now = this.clock.now().toISOString()
         const names = await this.namesOf(workspaceId)
-        const entries = await eachInOrder([...SNAPSHOT_ENTITIES.keys()], (entity) =>
-            this.exported(input.out, workspaceId, entity, names, now),
+        const entries = await eachInOrder([...SNAPSHOT_ENTITIES], ([entity, format]) =>
+            this.exported(input.out, workspaceId, entity, format.schema, names, now),
         )
         const manifest = { format: SNAPSHOT_FORMAT, snapshotAt: now, source: EXPORT_SOURCE, files: entries }
         await this.files.write(input.out, "manifest.json", canonicalJson(manifest))
@@ -269,6 +269,7 @@ export class SnapshotExportService {
         out: string,
         workspaceId: string,
         entity: string,
+        schema: string,
         names: items.SnapshotNames,
         now: string,
     ): Promise<SnapshotEntry> {
@@ -277,7 +278,6 @@ export class SnapshotExportService {
         if (read.length > EXPORT_ROWS_MAX)
             throw new CrmError({ code: CrmErrorCode.ImportFileInvalid, params: { entity } })
         const list = sortedBy(read, plan.key)
-        const schema = SNAPSHOT_ENTITIES.get(entity)?.schema ?? ""
         const path = `data/${entity}.json`
         const exportedAt = (await this.unchangedSince(out, path, entity, list)) ?? now
         const text = canonicalJson({ schema, exportedAt, source: EXPORT_SOURCE, items: list })

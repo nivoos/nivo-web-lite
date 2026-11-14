@@ -1,8 +1,10 @@
 import { Test } from "@nestjs/testing"
+import { LessThan } from "typeorm"
 import { FakeClock, type MockEntityManager, fakeIds, fakeTransaction, mockEntityManager } from "@starci/jest-preset"
 import { CLOCK } from "@modules/platform/clock"
 import { IDS } from "@modules/platform/ids"
 import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
+import { pageOf } from "@modules/platform/pagination"
 import { WS, customerRow, serviceRow, ticketNoteRow, ticketRow, uuid } from "@tests/fixtures/builders/crm.builder"
 import { TICKET_OPERATIONS, NO_STRAYS, straysOf } from "@tests/fixtures/builders/workspace-scope.builder"
 import { CrmErrorCode } from "./errors/crm.error"
@@ -153,6 +155,99 @@ describe("TicketsService", () => {
             .filter(([entity]) => entity === TicketEntity)
             .map(([, options]) => [options?.where, options?.order])
         expect(ticketReads).toEqual([[{ workspaceId: WS, customerId: uuid(1), status: "open" }, { id: "DESC" }]])
+    })
+})
+
+describe("TicketsService", () => {
+    it("shows no customer code for a ticket without a customer or whose customer is gone, and an empty code for a gone service", async () => {
+        const noCustomer = mockEntityManager({
+            findOne: [TicketEntity, ticketRow({ customerId: null })],
+            find: [
+                [ServiceEntity, []],
+                [TicketNoteEntity, []],
+            ],
+        })
+        await expect((await build(noCustomer)).get({ workspaceId: WS, id: uuid(91) })).resolves.toEqual(
+            expect.objectContaining({ customerCode: null, serviceCodes: [""] }),
+        )
+        expect(noCustomer.find).not.toHaveBeenCalledWith(CustomerEntity, expect.anything())
+        const goneCustomer = mockEntityManager({
+            findOne: [TicketEntity, ticketRow()],
+            find: [
+                [CustomerEntity, []],
+                [ServiceEntity, [serviceRow()]],
+                [TicketNoteEntity, []],
+            ],
+        })
+        await expect((await build(goneCustomer)).get({ workspaceId: WS, id: uuid(91) })).resolves.toEqual(
+            expect.objectContaining({ customerCode: null, serviceCodes: ["SYN-HOST"] }),
+        )
+    })
+
+    it("lists every status of the workspace after a cursor, with empty codes where customer or services are gone", async () => {
+        const em = mockEntityManager({
+            find: [
+                [
+                    TicketEntity,
+                    [
+                        ticketRow({ customerId: null, serviceIds: [] }),
+                        ticketRow({ id: uuid(92), customerId: uuid(8), serviceIds: [uuid(98)] }),
+                    ],
+                ],
+                [CustomerEntity, []],
+                [ServiceEntity, []],
+            ],
+        })
+        const cursor = pageOf("ticket.list", [[uuid(95)], []], 1, (keys: ReadonlyArray<string>) => keys, [])
+        await expect(
+            (await build(em)).list({
+                workspaceId: WS,
+                customerCode: null,
+                status: null,
+                page: { limit: 20, cursor: cursor.nextCursor },
+            }),
+        ).resolves.toEqual({
+            items: [
+                expect.objectContaining({ id: uuid(91), customerCode: null, serviceCodes: [] }),
+                expect.objectContaining({ id: uuid(92), customerCode: null, serviceCodes: [""] }),
+            ],
+            nextCursor: null,
+        })
+        expect(em.find.mock.calls[0]?.[1]?.where).toEqual({ workspaceId: WS, id: LessThan(uuid(95)) })
+    })
+
+    it("refuses a list of an unknown customer", async () => {
+        const em = mockEntityManager({ findOne: [CustomerEntity, null] })
+        await expect(
+            (await build(em)).list({
+                workspaceId: WS,
+                customerCode: "NOPE",
+                status: null,
+                page: { limit: 20, cursor: null },
+            }),
+        ).rejects.toEqual(refused(CrmErrorCode.CustomerNotFound))
+    })
+})
+
+describe("TicketsService update", () => {
+    it("moves a ticket to a status other than closed and leaves closedAt empty", async () => {
+        const em = mockEntityManager({
+            findOne: [
+                [TicketEntity, ticketRow()],
+                [TicketNoteEntity, null],
+            ],
+            insert: [TicketNoteEntity, {}],
+            update: [TicketEntity, {}],
+            find: [...views, [TicketNoteEntity, []]],
+        })
+        await expect((await build(em)).update({ ...UPDATE, status: "in_progress" })).resolves.toEqual(
+            expect.objectContaining({ status: "in_progress", closedAt: null }),
+        )
+        expect(em.update).toHaveBeenCalledWith(
+            TicketEntity,
+            { id: uuid(91), workspaceId: WS },
+            { status: "in_progress", closedAt: null },
+        )
     })
 })
 

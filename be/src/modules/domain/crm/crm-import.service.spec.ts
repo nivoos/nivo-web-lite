@@ -7,9 +7,9 @@ import { LOGGER, type Logger } from "@modules/platform/logging"
 import { canonicalJson, isRecord, sha256Hex } from "@modules/platform/primitives"
 import { WS, documentRow } from "@tests/fixtures/builders/crm.builder"
 import { PURCHASE_SNAPSHOT_ITEMS } from "@tests/fixtures/builders/purchase.builder"
-import { CrmImportService } from "./crm-import.service"
+import { CrmImportService, issueKeys, planOf } from "./crm-import.service"
 import { CrmError, CrmErrorCode } from "./errors/crm.error"
-import { CustomerEntity, DocumentEntity, ImportRunEntity, ServiceEntity } from "./persistence/entities"
+import { ContactEntity, CustomerEntity, DocumentEntity, ImportRunEntity, ServiceEntity } from "./persistence/entities"
 import { SnapshotExportService } from "./snapshot-export.service"
 import { SnapshotFilesClient } from "./snapshot-files.client"
 
@@ -149,7 +149,7 @@ const ITEMS: Readonly<Record<string, ReadonlyArray<object>>> = {
             origin: ORIGIN,
         },
     ],
-    contacts: [],
+    contacts: [{ customerCode: "SYN-001", name: "Sam", phone: null, email: null, role: null, origin: ORIGIN }],
     issues: [
         { entity: "invoices", field: "", reason: "total_row", severity: "rejected", raw: { A: "x" }, origin: ORIGIN },
     ],
@@ -237,6 +237,10 @@ const build = async (em: MockEntityManager, stored: Map<string, string>) => {
     return { importer: moduleRef.get(CrmImportService), logger, transaction, files, storage, exporter }
 }
 
+/** A dry import of `files` against an empty (or the given) store. */
+const dryImport = async (files: Map<string, string>, em: MockEntityManager = mockEntityManager()) =>
+    (await build(em, files)).importer.import({ from: "snap", workspaceId: WS, execute: false })
+
 const counts = (inserted: number, updated: number, unchanged: number) => ({ inserted, updated, unchanged })
 
 describe("CrmImportService: dry by default", () => {
@@ -247,23 +251,9 @@ describe("CrmImportService: dry by default", () => {
 
         const summary = await importer.import({ from: "snap", workspaceId: WS, execute: false })
 
-        expect([summary.executed, summary.entities.map((count) => count.entity)]).toEqual([
-            false,
-            [
-                "customers",
-                "websites",
-                "providers",
-                "services",
-                "projects",
-                "contracts",
-                "documents",
-                "invoices",
-                "receivables",
-                "balances",
-                "contacts",
-                "issues",
-            ],
-        ])
+        const listed =
+            "customers websites providers services projects contracts documents invoices receivables balances contacts issues"
+        expect([summary.executed, summary.entities.map((count) => count.entity)]).toEqual([false, listed.split(" ")])
         expect(summary.entities[0]).toEqual({ entity: "customers", items: 2, ...counts(2, 0, 0) })
         expect([em.insert.mock.calls.length, em.upsert.mock.calls.length, transaction.outcomes]).toEqual([0, 0, []])
         expect(logger.info.mock.calls[0]?.[0]).toBe("crm.import.checked")
@@ -285,6 +275,7 @@ describe("CrmImportService: execute", () => {
         )
         expect([...tables.values()].flat().every((row) => row["workspaceId"] === WS)).toBe(true)
         expect(tables.get(ImportRunEntity)).toHaveLength(1)
+        expect(tables.get(ContactEntity)?.[0]?.["customerId"]).toBe(customer?.["id"])
         expect(em.update.mock.calls[0]?.[2]).toEqual({
             finishedAt: new Date(NOW),
             counts: { entities: summary.entities },
@@ -309,6 +300,17 @@ describe("CrmImportService: execute", () => {
         expect(changed.entities[0]).toEqual({ entity: "customers", items: 1, ...counts(0, 1, 0) })
         expect(tables.get(CustomerEntity)).toHaveLength(2)
     })
+
+    it("labels a run with no source and no returned id by empty text, writing the run's rows by insert", async () => {
+        const em = mockEntityManager()
+        tablesBehind(em)
+        em.insert.mockResolvedValueOnce({ identifiers: [], generatedMaps: [], raw: [] })
+        const files = snapshotOf()
+        files.set("manifest.json", (files.get("manifest.json") ?? "").replace('"source": "synthetic"', '"source": 7'))
+        await (await build(em, files)).importer.import({ from: "snap", workspaceId: WS, execute: true })
+        expect(em.insert.mock.calls[0]?.[1]).toEqual(expect.objectContaining({ sourceLabel: "" }))
+        expect(em.update.mock.calls[0]?.[1]).toEqual({ id: "", workspaceId: WS })
+    })
 })
 
 describe("CrmImportService: refusals before any write", () => {
@@ -319,35 +321,19 @@ describe("CrmImportService: refusals before any write", () => {
         )
         const other = snapshotOf()
         other.set("manifest.json", canonicalJson({ format: "nivo-web-lite-data@2", files: [] }))
-        await expect(
-            (await build(mockEntityManager(), other)).importer.import({
-                from: "snap",
-                workspaceId: WS,
-                execute: false,
-            }),
-        ).rejects.toEqual(expect.objectContaining({ code: CrmErrorCode.ImportManifestInvalid }))
+        await expect(dryImport(other)).rejects.toEqual(
+            expect.objectContaining({ code: CrmErrorCode.ImportManifestInvalid }),
+        )
     })
 
     it("refuses a file whose text is not the one its manifest digests, and an item with a mistyped field", async () => {
         const tampered = snapshotOf()
         tampered.set("data/websites.json", `${tampered.get("data/websites.json") ?? ""} `)
-        await expect(
-            (await build(mockEntityManager(), tampered)).importer.import({
-                from: "snap",
-                workspaceId: WS,
-                execute: false,
-            }),
-        ).rejects.toEqual(
+        await expect(dryImport(tampered)).rejects.toEqual(
             expect.objectContaining({ code: CrmErrorCode.ImportFileInvalid, params: { entity: "websites" } }),
         )
         const mistyped = snapshotOf({ services: [{ ...ITEMS["services"]?.[0], class: "mailbox" }] })
-        await expect(
-            (await build(mockEntityManager(), mistyped)).importer.import({
-                from: "snap",
-                workspaceId: WS,
-                execute: false,
-            }),
-        ).rejects.toEqual(
+        await expect(dryImport(mistyped)).rejects.toEqual(
             expect.objectContaining({ code: CrmErrorCode.ImportItemInvalid, params: { entity: "services", index: 0 } }),
         )
     })
@@ -366,6 +352,14 @@ describe("CrmImportService: refusals before any write", () => {
             }),
         )
         expect(transaction.rollbacks).toBe(1)
+    })
+
+    it("refuses a workspace whose stored rows exceed the read bound instead of cutting them silently", async () => {
+        const em = mockEntityManager()
+        em.find.mockResolvedValue(Array.from({ length: 50_001 }, () => ({})))
+        await expect(dryImport(snapshotOf(), em)).rejects.toEqual(
+            expect.objectContaining({ code: CrmErrorCode.ImportFileInvalid, params: { entity: "stored" } }),
+        )
     })
 })
 
@@ -488,5 +482,19 @@ describe("CrmImportService: purchases", () => {
             { entity: "purchases", items: 1, ...counts(0, 0, 1) },
             { entity: "purchase-followups", items: 1, ...counts(0, 0, 1) },
         ])
+    })
+})
+
+describe("CrmImportService plans", () => {
+    it("refuses an entity the format does not list, and keys an issue without a provenance record by an absent place", () => {
+        expect(() => planOf("unlisted")).toThrow(new CrmError({ code: CrmErrorCode.ImportManifestInvalid }))
+        const bare = issueKeys.itemKey({ origin: null, field: "f", reason: "r" })
+        expect(bare).toBe(["undefined", "undefined", "undefined", "f", "r"].join(""))
+        expect(issueKeys.itemKey({ origin: { file: "a", sheet: "S", row: 2 }, field: "f", reason: "r" })).toBe(
+            issueKeys.rowKey(
+                { sourceFile: "a", sourceSheet: "S", sourceRow: 2, field: "f", reason: "r" },
+                { customers: new Map(), websites: new Map(), projects: new Map(), purchases: new Map() },
+            ),
+        )
     })
 })

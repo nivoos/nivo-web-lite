@@ -1,4 +1,5 @@
 import { Test } from "@nestjs/testing"
+import { LessThanOrEqual } from "typeorm"
 import {
     FakeClock,
     type MockEntityManager,
@@ -159,6 +160,69 @@ describe("ServicesBookService", () => {
                 .map(([, options]) => options?.where)
                 .flat(),
         ).toHaveLength(2)
+    })
+})
+
+describe("ServicesBookService", () => {
+    it("reaches back to the expired services when asked, up to the end of the window", async () => {
+        const em = mockEntityManager({ find: [ServiceEntity, []] })
+        const page = await (await build(em)).book.listExpiring({ ...EXPIRING, includeExpired: "true" })
+        expect(page).toEqual({ items: [], nextCursor: null })
+        const options: unknown = em.find.mock.calls[0]?.[1]
+        expect(options).toEqual(
+            expect.objectContaining({
+                where: [expect.objectContaining({ workspaceId: WS, expiresOn: LessThanOrEqual("2026-12-12") })],
+            }),
+        )
+    })
+
+    it("lists a service with no end date, no website and no known customer as zero days left and unreachable", async () => {
+        const em = mockEntityManager({
+            find: [
+                [
+                    ServiceEntity,
+                    [
+                        serviceRow({ expiresOn: null, websiteId: null, customerId: uuid(9) }),
+                        serviceRow({ id: uuid(32), code: "SYN-TM" }),
+                    ],
+                ],
+                [CustomerEntity, []],
+                [ContactEntity, []],
+                [RenewalRequestEntity, []],
+            ],
+        })
+        queueQueryBuilders(em, [{ getRawMany: [] }])
+        const page = await (await build(em)).book.listExpiring({ ...EXPIRING, page: { limit: 1, cursor: null } })
+        expect(page.items).toEqual([
+            expect.objectContaining({
+                code: "SYN-HOST",
+                customerCode: "",
+                domain: null,
+                daysLeft: 0,
+                reachable: false,
+                lastReminderOn: null,
+                reminderCount: 0,
+                openReminder: false,
+                openRenewalId: null,
+            }),
+        ])
+        expect(decodeCursor("service.expiring.list", page.nextCursor, 2)).toEqual(["", "SYN-HOST"])
+        expect(em.find).not.toHaveBeenCalledWith(WebsiteEntity, expect.anything())
+    })
+
+    it("lists a service whose website row is gone with no domain", async () => {
+        const em = mockEntityManager({
+            find: [
+                [ServiceEntity, [serviceRow()]],
+                [CustomerEntity, [customerRow()]],
+                [ContactEntity, []],
+                [WebsiteEntity, []],
+                [RenewalRequestEntity, []],
+            ],
+        })
+        queueQueryBuilders(em, [{ getRawMany: [] }])
+        const page = await (await build(em)).book.listExpiring(EXPIRING)
+        expect(page.items).toEqual([expect.objectContaining({ code: "SYN-HOST", domain: null, reachable: true })])
     })
 })
 

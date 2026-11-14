@@ -151,6 +151,39 @@ describe("CrmBackupService.export: paging", () => {
     })
 })
 
+describe("CrmBackupService: answers that are not rows", () => {
+    it("lists only the table answers that carry a text table name", async () => {
+        const em = mockEntityManager({
+            query: [
+                [TABLES_SQL, [null, { table_name: 7 }, { table_name: "crm_customers" }]],
+                [PAGE_SQL, []],
+            ],
+        })
+        const { backup } = await build(em, new Map())
+        await expect(backup.export("out")).resolves.toEqual({ tables: 1, rows: 0 })
+    })
+
+    it("keeps only the page answers whose row_data is a record", async () => {
+        const em = mockEntityManager({
+            query: [
+                [TABLES_SQL, [{ table_name: "crm_customers" }]],
+                [PAGE_SQL, [null, { row_data: "text" }, { row_data: { id: uuid(1) } }]],
+            ],
+        })
+        const { backup, files } = await build(em, new Map())
+        await expect(backup.export("out")).resolves.toEqual({ tables: 1, rows: 1 })
+        expect(writtenAt(files, "tables/crm_customers.json")).toBe(fileText("crm_customers", [{ id: uuid(1) }], NOW))
+    })
+
+    it("refuses the restore of a manifest table the database answer left out when that answer holds non-rows", async () => {
+        const em = mockEntityManager({ query: [TABLES_SQL, [null, { table_name: 7 }, TABLES[0]]] })
+        const { backup } = await build(em, directory())
+        await expect(backup.restore("from")).rejects.toEqual(
+            expect.objectContaining({ code: CrmBackupErrorCode.TableMissing, params: { table: "crm_contacts" } }),
+        )
+    })
+})
+
 describe("CrmBackupService.restore: an empty database", () => {
     it("inserts every verified file in restore order inside one transaction and recounts", async () => {
         const em = mockEntityManager({

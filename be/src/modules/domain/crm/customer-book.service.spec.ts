@@ -1,4 +1,5 @@
 import { Test } from "@nestjs/testing"
+import { MoreThan } from "typeorm"
 import {
     type MockEntityManager,
     fakeIds,
@@ -57,6 +58,9 @@ const build = async (em: MockEntityManager) => {
 }
 
 const PAGE = { limit: 20, cursor: null }
+
+const cursorOf = (list: string, key: string): string =>
+    Buffer.from(JSON.stringify({ l: list, k: [key] }), "utf8").toString("base64url")
 
 describe("CustomerBookService", () => {
     it("gets a customer with its domains and contacts; a linked contact makes it reachable", async () => {
@@ -181,6 +185,84 @@ describe("CustomerBookService", () => {
         await expect(book.listContracts(input)).resolves.toEqual(empty)
         await expect(book.listInvoices(input)).resolves.toEqual(empty)
         await expect(book.listDocuments(input)).resolves.toEqual(empty)
+    })
+})
+
+describe("CustomerBookService", () => {
+    it("continues a customer's services after the cursor's code; an unknown domain and no website are null", async () => {
+        const unknownSite = serviceRow({ id: uuid(32), code: "SYN-B", websiteId: uuid(98) })
+        const em = mockEntityManager({
+            findOne: [CustomerEntity, customerRow()],
+            find: [
+                [ServiceEntity, [unknownSite]],
+                [WebsiteEntity, []],
+            ],
+        })
+        const cursor = cursorOf("customer.service.list", "SYN-A")
+        await expect(
+            (await build(em)).book.listServices({ workspaceId: WS, code: "SYN-001", page: { limit: 20, cursor } }),
+        ).resolves.toEqual({ items: [expect.objectContaining({ code: "SYN-B", domain: null })], nextCursor: null })
+        expect(em.find).toHaveBeenCalledWith(
+            ServiceEntity,
+            expect.objectContaining({ where: { workspaceId: WS, customerId: uuid(1), code: MoreThan("SYN-A") } }),
+        )
+        const bare = mockEntityManager({
+            findOne: [CustomerEntity, customerRow()],
+            find: [ServiceEntity, [serviceRow({ websiteId: null })]],
+        })
+        await expect(
+            (await build(bare)).book.listServices({ workspaceId: WS, code: "SYN-001", page: PAGE }),
+        ).resolves.toEqual({ items: [expect.objectContaining({ domain: null })], nextCursor: null })
+        expect(bare.find).not.toHaveBeenCalledWith(WebsiteEntity, expect.anything())
+    })
+
+    it.each([
+        ["listContracts", "customer.contract.list", ContractEntity, "contractNo"],
+        ["listInvoices", "customer.invoice.list", InvoiceEntity, "invoiceNo"],
+        ["listDocuments", "customer.document.list", DocumentEntity, "path"],
+    ] as const)("%s continues after the cursor's key", async (method, list, entity, column) => {
+        const em = mockEntityManager({ findOne: [CustomerEntity, customerRow()], find: [entity, []] })
+        const { book } = await build(em)
+        await expect(
+            book[method]({ workspaceId: WS, code: "SYN-001", page: { limit: 20, cursor: cursorOf(list, "K-1") } }),
+        ).resolves.toEqual({ items: [], nextCursor: null })
+        expect(em.find).toHaveBeenCalledWith(
+            entity,
+            expect.objectContaining({ where: { workspaceId: WS, customerId: uuid(1), [column]: MoreThan("K-1") } }),
+        )
+    })
+})
+
+describe("CustomerBookService", () => {
+    it("answers no TK131 balance, drops an open receivable without a view and counts an unknown remaining as zero", async () => {
+        const em = mockEntityManager({
+            findOne: [
+                [CustomerEntity, customerRow()],
+                [LedgerBalanceEntity, null],
+            ],
+            find: [ReceivableEntity, [receivableRow(), receivableRow({ id: uuid(62), projectCode: "SYN-WEB2" })]],
+        })
+        const { book, collections } = await build(em)
+        const view: ReceivableView = {
+            projectCode: "SYN-WEB2",
+            customerCode: "SYN-001",
+            contractRef: null,
+            totalVnd: null,
+            collectedVnd: null,
+            remainingVnd: null,
+            dueOn: null,
+            projectState: null,
+            lastNoticeOn: null,
+            noticeCount: 0,
+            paymentCount: 0,
+        }
+        collections.receivableViews.mockResolvedValue(new Map([[uuid(62), view]]))
+        await expect(book.balance({ workspaceId: WS, code: "SYN-001" })).resolves.toEqual({
+            customerCode: "SYN-001",
+            ledger131: null,
+            openReceivables: [view],
+            openRemainingVnd: 0,
+        })
     })
 })
 

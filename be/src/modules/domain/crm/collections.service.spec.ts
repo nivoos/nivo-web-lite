@@ -1,4 +1,5 @@
 import { Test } from "@nestjs/testing"
+import { MoreThan } from "typeorm"
 import {
     FakeClock,
     type MockEntityManager,
@@ -49,6 +50,10 @@ const build = async (em: MockEntityManager) => {
     }).compile()
     return moduleRef.get(CollectionsService)
 }
+
+/** A cursor of `list` at `keys`, as the pagination policy hands it out. */
+const encodeCursor = (list: string, keys: ReadonlyArray<string>): string =>
+    Buffer.from(JSON.stringify({ l: list, k: keys }), "utf8").toString("base64url")
 
 const refused = (code: CrmErrorCode): unknown => expect.objectContaining({ code })
 
@@ -130,6 +135,66 @@ describe("CollectionsService", () => {
         expect(decodeCursor("receivable.overdue.list", page.nextCursor, 1)).toEqual(["SYN-WEB"])
         expect(notices?.callsOf("andWhere")).toEqual([["n.receivable_id IN (:...ids)", { ids: [uuid(61)] }]])
         expect(payments?.callsOf("groupBy")).toEqual([["p.receivable_id"]])
+    })
+})
+
+describe("CollectionsService", () => {
+    it("continues the overdue list after the cursor's project code, and says unknown facts as null and zero", async () => {
+        const em = mockEntityManager({
+            find: [
+                [ReceivableEntity, [receivableRow({ id: uuid(62), projectCode: "SYN-B", customerId: uuid(99) })]],
+                [CustomerEntity, [customerRow()]],
+            ],
+        })
+        queueQueryBuilders(em, [{ getRawMany: [] }, { getRawMany: [] }])
+        const page = await (
+            await build(em)
+        ).listOverdue({
+            workspaceId: WS,
+            asOf: "2026-11-12",
+            page: { limit: 20, cursor: encodeCursor("receivable.overdue.list", ["SYN-A"]) },
+        })
+        expect(page.items).toEqual([
+            expect.objectContaining({
+                projectCode: "SYN-B",
+                customerCode: null,
+                lastNoticeOn: null,
+                noticeCount: 0,
+                paymentCount: 0,
+            }),
+        ])
+        expect(em.find).toHaveBeenCalledWith(
+            ReceivableEntity,
+            expect.objectContaining({
+                where: [
+                    expect.objectContaining({ workspaceId: WS, projectCode: MoreThan("SYN-A") }),
+                    expect.objectContaining({ workspaceId: WS, projectCode: MoreThan("SYN-A") }),
+                ],
+            }),
+        )
+    })
+
+    it("reads no customers when no receivable has one, and answers a notice without a sent time as no notice day", async () => {
+        const em = mockEntityManager({
+            find: [ReceivableEntity, [receivableRow({ customerId: null })]],
+        })
+        queueQueryBuilders(em, [{ getRawMany: [{ id: uuid(61), count: "1", last: null }] }, { getRawMany: [] }])
+        const page = await (
+            await build(em)
+        ).listOverdue({ workspaceId: WS, asOf: "2026-11-12", page: { limit: 20, cursor: null } })
+        expect(page.items).toEqual([
+            expect.objectContaining({ customerCode: null, lastNoticeOn: null, noticeCount: 1, paymentCount: 0 }),
+        ])
+        expect(em.find).not.toHaveBeenCalledWith(CustomerEntity, expect.anything())
+    })
+
+    it("drops a receivable whose view is missing from the page", async () => {
+        const em = mockEntityManager({ find: [ReceivableEntity, [receivableRow()]] })
+        const service = await build(em)
+        jest.spyOn(service, "receivableViews").mockResolvedValue(new Map())
+        await expect(
+            service.listOverdue({ workspaceId: WS, asOf: "2026-11-12", page: { limit: 20, cursor: null } }),
+        ).resolves.toEqual({ items: [], nextCursor: null })
     })
 })
 
@@ -256,6 +321,36 @@ describe("CollectionsService", () => {
             ],
             nextCursor: null,
         })
+    })
+})
+
+describe("CollectionsService", () => {
+    it("continues the payables after the cursor's party code and answers parties without notes", async () => {
+        const em = mockEntityManager({ find: [LedgerBalanceEntity, [payableRow({ partyCode: "SUP-2" })]] })
+        queueQueryBuilders(em, [{ getRawMany: [] }])
+        await expect(
+            (await build(em)).listPayables({
+                workspaceId: WS,
+                page: { limit: 20, cursor: encodeCursor("payable.list", ["SUP-1"]) },
+            }),
+        ).resolves.toEqual({
+            items: [expect.objectContaining({ partyCode: "SUP-2", noteCount: 0, lastNoteInvoiceNo: null })],
+            nextCursor: null,
+        })
+        expect(em.find).toHaveBeenCalledWith(
+            LedgerBalanceEntity,
+            expect.objectContaining({
+                where: { workspaceId: WS, account: "331", partyCode: MoreThan("SUP-1") },
+            }),
+        )
+    })
+
+    it("answers an empty payables page without reading notes", async () => {
+        const em = mockEntityManager({ find: [LedgerBalanceEntity, []] })
+        await expect(
+            (await build(em)).listPayables({ workspaceId: WS, page: { limit: 20, cursor: null } }),
+        ).resolves.toEqual({ items: [], nextCursor: null })
+        expect(em.createQueryBuilder).not.toHaveBeenCalled()
     })
 })
 

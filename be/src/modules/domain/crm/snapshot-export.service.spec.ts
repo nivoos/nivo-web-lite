@@ -5,7 +5,7 @@ import { PRIMARY_ENTITY_MANAGER } from "@modules/platform/database"
 import { LOGGER, type Logger } from "@modules/platform/logging"
 import { canonicalJson, isRecord, sha256Hex } from "@modules/platform/primitives"
 import { WS } from "@tests/fixtures/builders/crm.builder"
-import { CrmErrorCode } from "./errors/crm.error"
+import { CrmError, CrmErrorCode } from "./errors/crm.error"
 import {
     ContactEntity,
     ContractEntity,
@@ -23,10 +23,15 @@ import {
     WebsiteEntity,
 } from "./persistence/entities"
 import { snapshotJsonOf } from "./snapshot-format.policy"
-import { SnapshotExportService } from "./snapshot-export.service"
+import * as items from "./snapshot-items.mapper"
+import { SnapshotExportService, planOf } from "./snapshot-export.service"
 import { SnapshotFilesClient } from "./snapshot-files.client"
 import * as rows from "./snapshot-rows.mapper"
 import type { SnapshotItem } from "./snapshot.contracts"
+
+afterEach(() => {
+    jest.restoreAllMocks()
+})
 
 const NOW = "2026-11-12T03:00:00.000Z"
 const ORIGIN = { file: "synthetic/books.xlsx", sheet: "S", row: 2 }
@@ -408,5 +413,42 @@ describe("SnapshotExportService: no diff without a change", () => {
             "2026-11-01T00:00:00.000Z",
             NOW,
         ])
+    })
+})
+
+describe("SnapshotExportService: bounds and drift", () => {
+    it("refuses a table over the export bound instead of cutting it silently", async () => {
+        const em = mockEntityManager()
+        const { exporter } = await build(em, new Map())
+        const customer = tablesOf().get(CustomerEntity)?.[0] ?? {}
+        em.find.mockImplementation((target: unknown) =>
+            Promise.resolve(target === CustomerEntity ? Array.from({ length: 50_001 }, () => customer) : []),
+        )
+
+        await expect(exporter.export({ out: "repo", workspaceId: WS })).rejects.toEqual(
+            expect.objectContaining({ code: CrmErrorCode.ImportFileInvalid, params: { entity: "customers" } }),
+        )
+    })
+
+    it("sorts an issue that carries no provenance record by an absent place", async () => {
+        const { exporter, written } = await build(mockEntityManager(), new Map())
+        const bare: SnapshotItem = {
+            entity: "invoices",
+            field: "f",
+            reason: "r",
+            severity: "rejected",
+            raw: {},
+            origin: null,
+        }
+        jest.spyOn(items, "issueItemOf").mockReturnValue(bare)
+
+        await exporter.export({ out: "repo", workspaceId: WS })
+
+        expect(itemsOf(written.get("data/issues.json"))).toEqual([bare])
+    })
+
+    it("refuses an entity the format does not list instead of reading a table for it", () => {
+        expect(() => planOf("unlisted")).toThrow(new CrmError({ code: CrmErrorCode.ImportManifestInvalid }))
+        expect(planOf("customers").key).toEqual(["code"])
     })
 })

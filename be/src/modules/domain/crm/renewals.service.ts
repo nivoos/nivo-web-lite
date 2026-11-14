@@ -136,13 +136,7 @@ export class RenewalsService {
             take: limit + 1,
         })
         const views = await this.viewsOf(input.workspaceId, rows.slice(0, limit))
-        return pageOf(
-            LISTS.open,
-            rows,
-            limit,
-            (row) => [row.id],
-            rows.slice(0, limit).flatMap((row) => views.get(row.id) ?? []),
-        )
+        return pageOf(LISTS.open, rows, limit, (row) => [row.id], views)
     }
 
     /** Marks an awaiting request paid by the bank row that proves it (no amount is taken); the same row again answers the same request. */
@@ -229,8 +223,8 @@ export class RenewalsService {
     private async viewsOf(
         workspaceId: string,
         rows: ReadonlyArray<RenewalRequestEntity>,
-    ): Promise<ReadonlyMap<string, RenewalView>> {
-        if (rows.length === 0) return new Map<string, never>()
+    ): Promise<ReadonlyArray<RenewalView>> {
+        if (rows.length === 0) return []
         const serviceIds = [...new Set(rows.map((row) => row.serviceId))]
         const services = await this.entityManager.find(ServiceEntity, {
             where: { workspaceId, id: In(serviceIds) },
@@ -243,18 +237,13 @@ export class RenewalsService {
         })
         const serviceOf = new Map(services.map((service) => [service.id, service]))
         const codeOf = new Map(customers.map((customer) => [customer.id, customer.code]))
-        return new Map(
-            rows.map((row) => {
-                const service = serviceOf.get(row.serviceId)
-                return [
-                    row.id,
-                    toRenewalView(
-                        row,
-                        service?.code ?? "",
-                        service === undefined ? "" : (codeOf.get(service.customerId) ?? ""),
-                    ),
-                ]
-            }),
-        )
+        return rows.map((row) => {
+            const service = serviceOf.get(row.serviceId)
+            return toRenewalView(
+                row,
+                service?.code ?? "",
+                service === undefined ? "" : (codeOf.get(service.customerId) ?? ""),
+            )
+        })
     }
 }

@@ -21,6 +21,25 @@ describe("MigrationRunnerService", () => {
         expect(DB_PUSH_COMMAND.args).toEqual(["run", "db:push"])
     })
 
+    it("starts npm.cmd on win32 and npm elsewhere", () => {
+        const platform = Object.getOwnPropertyDescriptor(process, "platform")
+        const commandOn = (name: NodeJS.Platform): string => {
+            Object.defineProperty(process, "platform", { value: name })
+            let command = ""
+            jest.isolateModules(() => {
+                command =
+                    jest.requireActual<typeof import("./migration-runner.service")>("./migration-runner.service")
+                        .DB_PUSH_COMMAND.command
+            })
+            return command
+        }
+        try {
+            expect([commandOn("win32"), commandOn("linux")]).toEqual(["npm.cmd", "npm"])
+        } finally {
+            if (platform !== undefined) Object.defineProperty(process, "platform", platform)
+        }
+    })
+
     it("resolves when the process exits with status 0", async () => {
         const moduleRef = await Test.createTestingModule({
             providers: [MigrationRunnerService, { provide: MIGRATION_COMMAND, useValue: SUCCEEDS }],

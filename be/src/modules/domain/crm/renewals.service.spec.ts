@@ -1,5 +1,5 @@
 import { Test } from "@nestjs/testing"
-import { In } from "typeorm"
+import { In, MoreThan } from "typeorm"
 import { FakeClock, type MockEntityManager, fakeIds, fakeTransaction, mockEntityManager } from "@starci/jest-preset"
 import { CLOCK } from "@modules/platform/clock"
 import { IDS } from "@modules/platform/ids"
@@ -140,7 +140,53 @@ describe("RenewalsService quote", () => {
     })
 })
 
+describe("RenewalsService quote", () => {
+    it("names the provider manual when the service has none", async () => {
+        const em = mockEntityManager({
+            findOne: [
+                [RenewalRequestEntity, null],
+                [ServiceEntity, serviceRow({ provider: null })],
+                [CustomerEntity, customerRow()],
+            ],
+            insert: [RenewalRequestEntity, {}],
+        })
+        await expect((await build(em)).renewals.quote(QUOTE)).resolves.toEqual(
+            expect.objectContaining({ provider: "manual", state: "awaiting_payment" }),
+        )
+        expect(em.insert).toHaveBeenCalledWith(RenewalRequestEntity, expect.objectContaining({ provider: "manual" }))
+    })
+})
+
 describe("RenewalsService get and listOpen", () => {
+    it("returns one request with its service and customer codes", async () => {
+        const em = mockEntityManager({ findOne: [[RenewalRequestEntity, renewalRow()], ...viewStubs] })
+        await expect((await build(em)).renewals.get({ workspaceId: WS, id: uuid(51) })).resolves.toEqual(
+            expect.objectContaining({ id: uuid(51), serviceCode: "SYN-HOST", customerCode: "SYN-001" }),
+        )
+    })
+
+    it("refuses a request whose service is gone and shows an empty customer code when the customer is gone", async () => {
+        const gone = mockEntityManager({
+            findOne: [
+                [RenewalRequestEntity, renewalRow()],
+                [ServiceEntity, null],
+            ],
+        })
+        await expect((await build(gone)).renewals.get({ workspaceId: WS, id: uuid(51) })).rejects.toEqual(
+            refused(CrmErrorCode.ServiceNotFound),
+        )
+        const orphan = mockEntityManager({
+            findOne: [
+                [RenewalRequestEntity, renewalRow()],
+                [ServiceEntity, serviceRow()],
+                [CustomerEntity, null],
+            ],
+        })
+        await expect((await build(orphan)).renewals.get({ workspaceId: WS, id: uuid(51) })).resolves.toEqual(
+            expect.objectContaining({ serviceCode: "SYN-HOST", customerCode: "" }),
+        )
+    })
+
     it("refuses an unknown request", async () => {
         const { renewals } = await build(mockEntityManager({ findOne: [RenewalRequestEntity, null] }))
         await expect(renewals.get({ workspaceId: WS, id: uuid(9) })).rejects.toEqual(
@@ -169,6 +215,65 @@ describe("RenewalsService get and listOpen", () => {
         const options: unknown = em.find.mock.calls[1]?.[1]
         const where: unknown = isRecord(options) ? options["where"] : undefined
         expect(isRecord(where) ? where["state"] : undefined).toEqual(In(["awaiting_payment"]))
+    })
+})
+
+describe("RenewalsService get and listOpen", () => {
+    it("lists every open state of the workspace after a cursor and answers an empty page without reading codes", async () => {
+        const first = mockEntityManager({
+            find: [
+                [RenewalRequestEntity, [renewalRow(), renewalRow({ id: uuid(52) })]],
+                [ServiceEntity, [serviceRow()]],
+                [CustomerEntity, [customerRow()]],
+            ],
+        })
+        const open = { customerCode: null, state: null } as const
+        const head = await (
+            await build(first)
+        ).renewals.listOpen({
+            workspaceId: WS,
+            ...open,
+            page: { limit: 1, cursor: null },
+        })
+        expect(head.nextCursor).not.toBeNull()
+        const em = mockEntityManager({ find: [RenewalRequestEntity, []] })
+        const { renewals } = await build(em)
+        await expect(
+            renewals.listOpen({ workspaceId: WS, ...open, page: { limit: 20, cursor: head.nextCursor } }),
+        ).resolves.toEqual({ items: [], nextCursor: null })
+        expect(em.find).toHaveBeenCalledTimes(1)
+        const options: unknown = em.find.mock.calls[0]?.[1]
+        const where: unknown = isRecord(options) ? options["where"] : undefined
+        expect(isRecord(where) ? where["state"] : undefined).toEqual(In(["awaiting_payment", "paid", "pending_person"]))
+        expect(isRecord(where) ? where["id"] : undefined).toEqual(MoreThan(uuid(51)))
+    })
+})
+
+describe("RenewalsService get and listOpen", () => {
+    it("shows empty codes for a request whose service or customer is gone", async () => {
+        const noService = mockEntityManager({
+            find: [
+                [RenewalRequestEntity, [renewalRow()]],
+                [ServiceEntity, []],
+                [CustomerEntity, []],
+            ],
+        })
+        const open = { customerCode: null, state: null, page: { limit: 20, cursor: null } } as const
+        await expect((await build(noService)).renewals.listOpen({ workspaceId: WS, ...open })).resolves.toEqual({
+            items: [expect.objectContaining({ serviceCode: "", customerCode: "" })],
+            nextCursor: null,
+        })
+        const noCustomer = mockEntityManager({
+            find: [
+                [RenewalRequestEntity, [renewalRow()]],
+                [ServiceEntity, [serviceRow()]],
+                [CustomerEntity, []],
+            ],
+        })
+        await expect((await build(noCustomer)).renewals.listOpen({ workspaceId: WS, ...open })).resolves.toEqual({
+            items: [expect.objectContaining({ serviceCode: "SYN-HOST", customerCode: "" })],
+            nextCursor: null,
+        })
     })
 
     it("refuses an unknown customer filter", async () => {

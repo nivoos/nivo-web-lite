@@ -170,6 +170,24 @@ describe("snapshot rows mapper: purchases", () => {
         expect(subject.purchaseRowOf({ ...purchase, quote: { lines: "x" } }, STAMP, REFS).lines).toEqual([])
     })
 
+    it("reads a quote line's term in months, and a line without a quantity as one", async () => {
+        const subject = await mapper()
+        const purchase = { code: "MUA-2", state: "quoted", channel: "web", sourceRef: "c", need: "n" }
+        const line = {
+            priceCode: "p12",
+            name: "Twelve months",
+            termMonths: 12,
+            unitPrice: { amount: 7, currency: "VND" },
+            amount: { amount: 7, currency: "VND" },
+        }
+
+        const row = subject.purchaseRowOf({ ...purchase, quote: { lines: [line] } }, STAMP, REFS)
+
+        expect(row.lines).toEqual([
+            { priceCode: "p12", name: "Twelve months", termMonths: 12, quantity: 1, unitPriceVnd: 7, amountVnd: 7 },
+        ])
+    })
+
     it("refuses a follow-up of a purchase the snapshot does not hold", async () => {
         const subject = await mapper()
         await expect(

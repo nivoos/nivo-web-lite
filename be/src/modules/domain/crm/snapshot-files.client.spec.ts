@@ -50,3 +50,11 @@ describe("SnapshotFilesClient: originals", () => {
         )
     })
 })
+
+describe("SnapshotFilesClient: writing", () => {
+    it("writes text under the root, creating the missing folders", async () => {
+        const files = await build()
+        await files.write(ROOT, "out/nested/note.txt", "hello")
+        await expect(files.read(ROOT, "out/nested/note.txt", "note")).resolves.toBe("hello")
+    })
+})
