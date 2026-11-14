@@ -52,13 +52,16 @@ environments:
       # The project base port: web = base, api = base+1, an AI gateway base+2, further native processes from base+3; the compose ports below are exempt (R389, PROJECT-STACKS-10).
       basePort: 3200
       ports:
-        db: 54322
+        db: 3290
         api: 3201
-        mail: 1025
-        mailui: 8025
+        mail: 3291
+        mailui: 3292
+        storage: 3293
+        storage-console: 3294
       services:
         - { name: db, wait: healthy }
         - { name: mail, wait: healthy }
+        - {name: storage, wait: healthy}
       database:
         service: db
         port: db
@@ -69,6 +72,7 @@ environments:
         appPassword: { member: db, key: DEV_DB_APP_PASSWORD }
       grants:
         - { name: db, keys: [POSTGRES_PASSWORD] }
+        - {name: storage, keys: [STORAGE_ACCESS_KEY_ID, STORAGE_SECRET_ACCESS_KEY]}
       custody:
         - { member: db, key: POSTGRES_PASSWORD, kind: password }
         - { member: db, key: DEV_DB_OWNER_PASSWORD, kind: password }
@@ -101,19 +105,21 @@ environments:
             MAIL_SECURITY: none
             MAIL_FROM: no-reply@nivo-web-lite.example.invalid
             MAIL_FROM_NAME: nivo-web-lite
-            STORAGE_ENDPOINT: "http://127.0.0.1:9000"
+            STORAGE_ENDPOINT: "http://127.0.0.1:${port.storage}"
             STORAGE_REGION: us-east-1
             STORAGE_BUCKET: nivo-web-lite-dev
           health: { url: "http://localhost:${port.api}/health/live" }
       ready:
         - { name: api-live, url: "http://localhost:${port.api}/health/live" }
         - { name: api-ready, url: "http://localhost:${port.api}/health/ready" }
+        - {name: storage-live, url: "http://localhost:${port.storage}/minio/health/live"}
       verify:
         - { name: api-live, url: "http://localhost:${port.api}/health/live" }
         - { name: api-ready, url: "http://localhost:${port.api}/health/ready" }
       origins:
         - { name: api, url: "http://localhost:${port.api}" }
         - { name: mail, url: "http://localhost:${port.mailui}" }
+        - {name: storage, url: "http://localhost:${port.storage-console}"}
   production:
     status: supported
     runtime: docker-swarm

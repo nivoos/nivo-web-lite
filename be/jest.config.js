@@ -41,9 +41,6 @@ module.exports = require("@starci/jest-preset").starciJestConfig({
         folders: ["packages/nivo-web-lite-shared"],
         files: ["packages/nivo-web-lite-shared/src/**/*.ts"],
         excludes: [
-            "packages/nivo-web-lite-shared/src/workbench/**",
-            "packages/nivo-web-lite-shared/src/public/**",
-            "packages/nivo-web-lite-shared/src/client/**",
             "packages/nivo-web-lite-shared/src/**/index.ts",
             "packages/nivo-web-lite-shared/src/**/*.types.ts",
             "packages/nivo-web-lite-shared/src/**/*-types.ts",
