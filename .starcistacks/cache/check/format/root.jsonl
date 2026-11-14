@@ -1,0 +1,15 @@
+{"findings":[],"hash":"c76635dd97112b2ef2371304b722a42943d5198fc77aa4b2cfa79d5cd2273418","path":".dockerignore","step":"prettier"}
+{"findings":[],"hash":"1498bbef48c2d86b4756f46b5ad5ce5ac0356d8097e1f2f42470ca5cb248427b","path":".editorconfig","step":"prettier"}
+{"findings":[],"hash":"d5e7d4eeb3a5ec0dd278de79d3356b59584ea2ec38e5e922b193e3cd1a182e1e","path":".gitattributes","step":"prettier"}
+{"findings":[],"hash":"ed6168743022d7c0363d6f00db235e58ad12bdad0484a5d3379c22f9477c6dcb","path":".gitignore","step":"prettier"}
+{"findings":[],"hash":"f14b4987904bcb5814e4459a057ed4d20f58a633152288a761214dcd28780b56","path":".nvmrc","step":"prettier"}
+{"findings":[],"hash":"49fb39ee1c0135043dae9e526e28c01ba900c1b269bbe4496e2c4719d22b7ce5","path":".prettierignore","step":"prettier"}
+{"findings":[],"hash":"7940273320387409c9d24de8ad5f964a8fa889424fa4ce47a67efa698c1f2c25","path":".prettierrc","step":"prettier"}
+{"findings":[],"hash":"987d30762a1381f66003ee6a160998b01ec49add0ae56b0d485529c5619bddec","path":".sops.yaml","step":"prettier"}
+{"findings":[],"hash":"20e0afa7ed314a56e93c5410fc2a1c5919ec03b7f62768ea108b60317788b15c","path":"README.md","step":"prettier"}
+{"findings":[],"hash":"40f8855a7054af316d88d750f63de2ac51bedcc7c303a80382bfbbf40ad2e087","path":"codecov.yml","step":"prettier"}
+{"findings":[],"hash":"99a42afd63a281ee8a34b3c96abbfc443e50f65b83f42b18638d349a965371f9","path":"eslint.config.mjs","step":"prettier"}
+{"findings":[],"hash":"64575c15ce3fbb478d6ea0d4336db9e1d554be907763a7e2ab935d0542af835e","path":"hfs.json","step":"prettier"}
+{"findings":[],"hash":"e0cfcc6674fdc9e04d7618f158890aae12109c134efcc2419f4bd395baa2b582","path":"package.json","step":"prettier"}
+{"findings":[],"hash":"d1b383c1758cb9a820c0236f6bc0f218340fb9f17f737c2977b401017bfcc28e","path":"sonar-project.properties","step":"prettier"}
+{"findings":[],"hash":"b249ad2cdb8664438d3833a9e7e856d55adfdc56115486bd441d5ce03ed3810a","path":"turbo.json","step":"prettier"}

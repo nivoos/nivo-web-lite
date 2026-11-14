@@ -1,0 +1,5 @@
+{"data":{},"findings":[],"hash":"751d7f8a1d60ff8ea044770fabfd35e746a04460de16acaa7af480f0e14416c3","path":".github/workflows/cache-verify.yml","step":"file-rules"}
+{"data":{},"findings":[],"hash":"d092da5932e6b83328ae6719a6d31af8461bc1ab28574cad1e4f6c95af2dccc1","path":".github/workflows/ci.yml","step":"file-rules"}
+{"data":{},"findings":[],"hash":"d16f30a553502edca780c06013a903d2c6f3a717592281612c9fa87db49f07a4","path":".github/workflows/images.yml","step":"file-rules"}
+{"data":{},"findings":[],"hash":"09f9363ef88d8086040f11678cf5ace2577692d13518f2a65674ed008d234efd","path":".github/workflows/stack-deploy.yml","step":"file-rules"}
+{"data":{},"findings":[],"hash":"26eef2ced5f7981a2c46918022f20d9c95597bbace1339b9d89e4ad9637e1cc9","path":".github/workflows/stack-key-restore.yml","step":"file-rules"}

@@ -1,0 +1,13 @@
+{"findings":[],"hash":"8e6a08c6bd41a6a99ade8ba05fafc59209a7ff794e9fbcc85989e935bf2ad41a","path":"db/migrations/20261111184812_baseline.sql","step":"prettier"}
+{"findings":[],"hash":"d1f718d6db214581064818ea841d9d1e84431f989a3cb39f8afed6163e272f04","path":"db/migrations/20261111190830_crm-customers-services.sql","step":"prettier"}
+{"findings":[],"hash":"fd7907e5249b9d19cec3a435fbb1b773a42dfecf24648a359243b017409c4b3e","path":"db/migrations/20261111190831_crm-books-documents-import.sql","step":"prettier"}
+{"findings":[],"hash":"dc26eff11b52ab24bbe4fd555e450b523a87ba0170d462ff82c4663f65a140e8","path":"db/migrations/20261111190832_crm-collections-tickets-drafts.sql","step":"prettier"}
+{"findings":[],"hash":"a2b9b20139a4ff956880e894c990a89f824df7f5f361adf3ca70cd87246be052","path":"db/migrations/20261111201809_crm-backup-functions.sql","step":"prettier"}
+{"findings":[],"hash":"0dad968519a4a00033ee157730b6f49cb96f0737c7ad65feb6095792be4ddb9f","path":"db/migrations/20261111201810_crm-service-credentials.sql","step":"prettier"}
+{"findings":[],"hash":"f0bb0faaaeab79d54e2ed966f341da0e10d921e29f194d77ca16232216f28fcd","path":"db/migrations/20261111201811_crm-documents-storage.sql","step":"prettier"}
+{"findings":[],"hash":"f5732f4fdbac72b03584a071e439aa46fd1af7e6b95ddbd4d9381c94ac506457","path":"db/migrations/20261111201812_crm-snapshot-fidelity.sql","step":"prettier"}
+{"findings":[],"hash":"2ddd674c0b065f1afae0fa5f3173d55384b49177ed6061d2fe73f4344f0f0aeb","path":"db/migrations/20261111201813_crm-purchases.sql","step":"prettier"}
+{"findings":[],"hash":"c15ed02d0f273821fd7e80cc90ee74f249c4d3cd43028c00da45fd843904f75e","path":"db/migrations/20261111201814_contract_crm-services-pending-status.sql","step":"prettier"}
+{"findings":[],"hash":"29838d1477e8e7c966684897a0d4f7dc16d02672d23c3270023136a48625b7c5","path":"db/migrations/20261111201815_crm-purchases-source-hash.sql","step":"prettier"}
+{"findings":[],"hash":"97fc4c94bd2696402048c20b9ec9df824a71af42df00c67156e320a50e20c8ec","path":"db/migrations/20261114120000_crm-invoice-issued.sql","step":"prettier"}
+{"findings":[],"hash":"da4937cb7e5a65ee9da32d93b6b39acc9a40660b688ffcba9c1610d5dab6b433","path":"db/migrations/20261114120001_contract_crm-renewals-recorded.sql","step":"prettier"}
