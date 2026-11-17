@@ -1,4 +1,11 @@
 {"findings":[],"hash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","path":".starcistacks/dev/seeds/data/.gitkeep","step":"prettier"}
 {"findings":[],"hash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","path":".starcistacks/dev/seeds/files/.gitkeep","step":"prettier"}
-{"findings":[],"hash":"2900d1d86b977c6f270c5cffee7573987d5a88e6298b7c4b7164a50ad92c2666","path":".starcistacks/dev/seeds/seeds.yaml","step":"prettier"}
+{"findings":[],"hash":"4500340cee1004261794a965b7ec60edb059dc68928131950e23dc144a5a5eb3","path":".starcistacks/dev/seeds/seeds.yaml","step":"prettier"}
 {"findings":[],"hash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","path":".starcistacks/dev/seeds/sql/.gitkeep","step":"prettier"}
+{"findings":[],"hash":"d0f0c50ca15c8facc9d3d2a72932a05cbde4e1fb76d689f05e130fce14225afa","path":".starcistacks/dev/seeds/sql/01-customers.sql","step":"prettier"}
+{"findings":[],"hash":"7898852dfaff26ee4a932702c7da105e15f391be52231f928371faad72ed68d8","path":".starcistacks/dev/seeds/sql/02-services.sql","step":"prettier"}
+{"findings":[],"hash":"1b4fd0bc4a8a002813ca8251f1d5ff94e6ed55e30e14527f1d6529bf57d3c043","path":".starcistacks/dev/seeds/sql/03-service-links.sql","step":"prettier"}
+{"findings":[],"hash":"fba4dcaafd3a7f52a6dff221c4606a10ff73417f227066ceb6c731b28e823c25","path":".starcistacks/dev/seeds/sql/04-renewals.sql","step":"prettier"}
+{"findings":[],"hash":"048858b285b0fc37c02fa9a7ccf3613368fa73881b5b6acfa18d451c41ba8cdc","path":".starcistacks/dev/seeds/sql/05-deals.sql","step":"prettier"}
+{"findings":[],"hash":"86e492b514df3903f1ed26ec89133a42ea544d08b108bb481a7b11346bfe92fa","path":".starcistacks/dev/seeds/sql/06-tickets.sql","step":"prettier"}
+{"findings":[],"hash":"9cbfd116014c0761e6deb0ee11a4801cb2e3b2802ed51f7985d0028fa0afb42d","path":".starcistacks/dev/seeds/sql/07-books.sql","step":"prettier"}

@@ -1,2 +1,2 @@
 {"data":{"verdict":"green"},"findings":[],"hash":"ee69cf4a66746003bc18e0258e063a11b48e8f5d34979cb85a4957e941574a3e","path":"build/build be","step":"ci-step"}
-{"data":{"verdict":"green"},"findings":[],"hash":"f4fe3e96324b3958ffa07e4379b03998a8cf40856e4f19e3813c366cf949393a","path":"build/database migration checks","step":"ci-step"}
+{"data":{"verdict":"green"},"findings":[],"hash":"28b539a778032f1b69997ef409ff2c609bbb3bd3a0cebe1e4d725c0d52a3fa91","path":"build/database migration checks","step":"ci-step"}
