@@ -1,2 +1,14 @@
 schema: starci/seeds@1
-entries: []
+# The NIVO Web dev sample: invented Vietnamese small businesses with their websites, services, renewals, deals, tickets and books, for the
+# workbench demo. It lives in the dev level only, so no other environment ever applies it. One workspace (5e0d1c7a-3b2f-4e11-9a6d-0000000000a1):
+# issue a CRM service credential for it with `cli credential issue --workspace <that id> --label dev`. Each file is one idempotent
+# insert per table, written once per natural key. The services and their reminders run on every dev up and keep their dates relative to
+# today; the other files run again only when their content changes.
+entries:
+  - { id: web-customers, kind: sql, path: sql/01-customers.sql, target: primary, mode: upsert }
+  - { id: web-services, kind: sql, path: sql/02-services.sql, target: primary, mode: always, after: [web-customers] }
+  - { id: web-service-links, kind: sql, path: sql/03-service-links.sql, target: primary, mode: always, after: [web-services] }
+  - { id: web-renewals, kind: sql, path: sql/04-renewals.sql, target: primary, mode: upsert, after: [web-services] }
+  - { id: web-deals, kind: sql, path: sql/05-deals.sql, target: primary, mode: upsert, after: [web-customers] }
+  - { id: web-tickets, kind: sql, path: sql/06-tickets.sql, target: primary, mode: upsert, after: [web-services] }
+  - { id: web-books, kind: sql, path: sql/07-books.sql, target: primary, mode: upsert, after: [web-renewals, web-deals] }

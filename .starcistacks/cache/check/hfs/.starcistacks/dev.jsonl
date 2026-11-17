@@ -5,5 +5,12 @@
 {"data":{},"findings":[],"hash":"2d9f25e6298a4f661ba75aaca49173c799283747d03a40724e2cf441c70ad3a9","path":".starcistacks/dev/secrets/.gitkeep","step":"file-rules"}
 {"data":{},"findings":[],"hash":"c4982f1128245d6f3cd98a185158c2ccfb0e43ab08adb0b9fc51461377658d9d","path":".starcistacks/dev/seeds/data/.gitkeep","step":"file-rules"}
 {"data":{},"findings":[],"hash":"c4982f1128245d6f3cd98a185158c2ccfb0e43ab08adb0b9fc51461377658d9d","path":".starcistacks/dev/seeds/files/.gitkeep","step":"file-rules"}
-{"data":{},"findings":[],"hash":"3e6fafc2f2b5e9244dc38747c50b91c38894d547e8ce0de17e9181e1b608b76e","path":".starcistacks/dev/seeds/seeds.yaml","step":"file-rules"}
+{"data":{},"findings":[],"hash":"c59bf5d720b5846125aeeda0b8945ff163e48afe660888be7feef8573af49345","path":".starcistacks/dev/seeds/seeds.yaml","step":"file-rules"}
 {"data":{},"findings":[],"hash":"c4982f1128245d6f3cd98a185158c2ccfb0e43ab08adb0b9fc51461377658d9d","path":".starcistacks/dev/seeds/sql/.gitkeep","step":"file-rules"}
+{"data":{},"findings":[],"hash":"835e11b6f5b16a435b68a011325d0d92c1513da8ff1e44bf359eb45c78aff9aa","path":".starcistacks/dev/seeds/sql/01-customers.sql","step":"file-rules"}
+{"data":{},"findings":[],"hash":"ce03faf26177cb1cfcb209c2195b7bacd70c013e3749891af82d0ba8bc2c044c","path":".starcistacks/dev/seeds/sql/02-services.sql","step":"file-rules"}
+{"data":{},"findings":[],"hash":"bd32e5e2a60efe60cc0a51aca775318f22449fa70771f70d954302b163d53f67","path":".starcistacks/dev/seeds/sql/03-service-links.sql","step":"file-rules"}
+{"data":{},"findings":[],"hash":"46ba4be1a11e1484e3036d4856afd4c2c75d8656410f519f6c400acf3c226c83","path":".starcistacks/dev/seeds/sql/04-renewals.sql","step":"file-rules"}
+{"data":{},"findings":[],"hash":"a50a4f0076a346dd96ada6b6e890fbd8a4eaf5987806d0aa44d0206b61c16963","path":".starcistacks/dev/seeds/sql/05-deals.sql","step":"file-rules"}
+{"data":{},"findings":[],"hash":"6c6cc2da5db547166e3d032439fc08472001a2c0816245c84ef1c3c721de5904","path":".starcistacks/dev/seeds/sql/06-tickets.sql","step":"file-rules"}
+{"data":{},"findings":[],"hash":"922ca624179a33a34987facbe7cc9e7309b546ae4bb70b0f170bb751de88d1ba","path":".starcistacks/dev/seeds/sql/07-books.sql","step":"file-rules"}
