@@ -12,6 +12,8 @@ import { UnderstandOutput } from "./understand.cell.ts"
 import { Answer } from "./steps/answer.step.ts"
 import { AnswerSent } from "./steps/answer-sent.step.ts"
 import { Answered } from "./steps/answered.step.ts"
+import { AskTeam } from "./steps/ask-team.step.ts"
+import { CanAnswer } from "./steps/can-answer.step.ts"
 import { ComplaintNotice } from "./steps/complaint-notice.step.ts"
 import { ComplaintReply } from "./steps/complaint-reply.step.ts"
 import { ComplaintSent } from "./steps/complaint-sent.step.ts"
@@ -45,7 +47,7 @@ export type Message = z.infer<typeof MessageEvent>
  * `nivo-web.webdesk-front` (Tiếp nhận tin khách): the Support agent's front door, nivo-web-core's `webdesk.front` v13. A customer's Zalo message to the company's OA opens it; the front
  * door understands what the customer wants NOW and routes it: a fault, a renewal or something new to buy is handed on (the Support agent's incident, the Renewal agent's answer, the
  * Sales agent's enquiry); a complaint is apologised for and told to the team (`person`); anything else is answered from the company's public information (`answered`). A send the
- * channel refuses (a member holds the route) ends `declined`; a question the brain does not answer stops the run at the answer for a person.
+ * channel refuses (a member holds the route) ends `declined`; a question the brain does not answer is posted to the team and ends `person`.
  */
 export class Front implements Workflow<typeof State> {
     readonly key = keyOf("webdesk-front")
@@ -70,6 +72,8 @@ export class Front implements Workflow<typeof State> {
         PostNotice,
         ToPerson,
         Answer,
+        CanAnswer,
+        AskTeam,
         SendAnswer,
         AnswerSent,
         Answered,

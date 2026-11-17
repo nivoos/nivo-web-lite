@@ -59,8 +59,7 @@ const queryOf = (input: In): string => {
 
 /**
  * `nivo-web.webdesk-answer` (Trả lời từ thông tin công khai): the front door's "anything else" route. It reads the conversation and searches the brain with the customer's words,
- * then ONE generation writes the reply or says it cannot. When the brain does not answer, the run stops HERE for a person with the owner's question on the card (nivo-web-core's
- * "confused": no holding line is sent; the person replies, hands back or completes). The send is the next step.
+ * then ONE generation writes the reply or says it cannot. When the brain does not answer it returns `answered` false with the owner's question: the workflow's next step branches on it (the question goes to the team, no holding line is sent). The send is a later step.
  */
 export class Answer implements Node<typeof AnswerInput, typeof AnswerOutput, typeof AnswerSettings> {
     readonly key = keyOf("webdesk-answer")
@@ -92,8 +91,9 @@ export class Answer implements Node<typeof AnswerInput, typeof AnswerOutput, typ
             },
         })
         if (error) throw error
-        if (!result.value.answered || result.value.reply.trim() === "")
-            throw new Error(`front_door_cannot_answer: ${result.value.question}`)
-        return result.value
+        // An empty reply is no answer; an unanswered turn always carries the question the team must answer (the front door's summary when the model left it empty).
+        const answered = result.value.answered && result.value.reply.trim() !== ""
+        const question = result.value.question.trim() === "" ? input.summary : result.value.question
+        return answered ? { ...result.value, question: "" } : { answered, reply: "", question }
     }
 }
