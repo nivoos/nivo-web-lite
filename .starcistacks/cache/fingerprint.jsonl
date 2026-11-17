@@ -10,6 +10,7 @@
 {"name":"file:codecov.yml","sha256":"40f8855a7054af316d88d750f63de2ac51bedcc7c303a80382bfbbf40ad2e087"}
 {"name":"file:eslint.config.mjs","sha256":"99a42afd63a281ee8a34b3c96abbfc443e50f65b83f42b18638d349a965371f9"}
 {"name":"file:hfs.json","sha256":"64575c15ce3fbb478d6ea0d4336db9e1d554be907763a7e2ab935d0542af835e"}
+{"name":"file:nivo-web/tsconfig.json","sha256":"e0c33aaa3675d2e79bd7e1f8d28f11044ede989f7e4bdeb888e31756977b4b3b"}
 {"name":"file:packages/nivo-web-lite-shared/tsconfig.build.json","sha256":"9f0b2ed3ffbba9a50ce13d7af2b2560354a87ec057595f34312a2e3f9bc16ef6"}
 {"name":"file:packages/nivo-web-lite-shared/tsconfig.json","sha256":"77c2e20cd2eb7790a5e0c246b1fc837549d1e907842fc15167a9fbbd4b173542"}
 {"name":"file:sonar-project.properties","sha256":"d1b383c1758cb9a820c0236f6bc0f218340fb9f17f737c2977b401017bfcc28e"}
@@ -29,5 +30,6 @@
 {"name":"pkg:@starci/prettier-config","sha256":"f03ea046c6e44ee950df7a1fefbc34a5fa22321686f6d1af8cb040b937c8a672"}
 {"name":"pkg:@starci/tsconfig","sha256":"1b90ae7e9de8f30d099a9aec149038ac08455e5c11114db795412e1175955f0d"}
 {"name":"shape:gallery/package.json","sha256":"ee35d6a4240b980146931bddb793b1cc2fb6b5d63973a870ae3a045eb475705a"}
+{"name":"shape:nivo-web/package.json","sha256":"3fd863aa2bf544b75b3b5772eec452821571866a576c3965c240a560394d593c"}
 {"name":"shape:package.json","sha256":"6331bcf4db1dfbdd3164e84313ebd0d26bdb68e7d3886e14034cfdf7e79955fc"}
 {"name":"shape:packages/nivo-web-lite-shared/package.json","sha256":"aeb085d572009b87710d528e0110f7ebb3c1732170cb5ab5a72829a16b42ec46"}

@@ -6,7 +6,7 @@
 {"findings":[],"hash":"49fb39ee1c0135043dae9e526e28c01ba900c1b269bbe4496e2c4719d22b7ce5","path":".prettierignore","step":"prettier"}
 {"findings":[],"hash":"7940273320387409c9d24de8ad5f964a8fa889424fa4ce47a67efa698c1f2c25","path":".prettierrc","step":"prettier"}
 {"findings":[],"hash":"987d30762a1381f66003ee6a160998b01ec49add0ae56b0d485529c5619bddec","path":".sops.yaml","step":"prettier"}
-{"findings":[],"hash":"20e0afa7ed314a56e93c5410fc2a1c5919ec03b7f62768ea108b60317788b15c","path":"README.md","step":"prettier"}
+{"findings":[],"hash":"3731c9102496d6223f7791aba2d79d0ca8c0b54f9b2e6265d8d49ef2ac0b552f","path":"README.md","step":"prettier"}
 {"findings":[],"hash":"40f8855a7054af316d88d750f63de2ac51bedcc7c303a80382bfbbf40ad2e087","path":"codecov.yml","step":"prettier"}
 {"findings":[],"hash":"99a42afd63a281ee8a34b3c96abbfc443e50f65b83f42b18638d349a965371f9","path":"eslint.config.mjs","step":"prettier"}
 {"findings":[],"hash":"64575c15ce3fbb478d6ea0d4336db9e1d554be907763a7e2ab935d0542af835e","path":"hfs.json","step":"prettier"}

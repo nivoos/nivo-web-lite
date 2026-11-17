@@ -25,7 +25,7 @@ const GOAL =
 /** `nivo-web.webdesk-complaint-notice` (Soạn báo đội về khiếu nại): ONE generation writes the team's notice of a complaint; the post is the next step. */
 export class ComplaintNotice implements Node<typeof ComplaintNoticeInput, typeof ComplaintNoticeOutput> {
     readonly key = keyOf("webdesk-complaint-notice")
-    readonly version = 1
+    readonly version = 2
     readonly title = { vi: "Soạn báo đội về khiếu nại", en: "Write the complaint notice" }
     readonly input = ComplaintNoticeInput
     readonly output = ComplaintNoticeOutput

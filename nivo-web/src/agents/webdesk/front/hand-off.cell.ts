@@ -31,7 +31,7 @@ const textOf = (input: In): string =>
  */
 export class HandOff implements Node<typeof HandOffInput, typeof HandOffOutput> {
     readonly key = keyOf("webdesk-hand-off")
-    readonly version = 1
+    readonly version = 2
     readonly title = { vi: "Chuyển việc", en: "Hand the work on" }
     readonly input = HandOffInput
     readonly output = HandOffOutput

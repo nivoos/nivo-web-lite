@@ -1,0 +1,5 @@
+{"findings":[],"hash":"932b61e4f3f0f1c83c01e72e0700e2d48e238ae9cb259be25493b47f716829eb","path":"nivo-web/.gitignore","step":"prettier"}
+{"findings":[],"hash":"486fa5f273a9938ecde877785789d4e2b5c4749cfacce3c4447be9d6de4d3a4d","path":"nivo-web/README.md","step":"prettier"}
+{"findings":[],"hash":"8f50a38ca0671eddfd2c492d892b6a800193591be5dfe92b5e7edf13a415cc01","path":"nivo-web/package.json","step":"prettier"}
+{"findings":[],"hash":"1897701dc9a1d8c9e3672ac830f55964ddf26c2793dc2f1a3eebd6ea2dca29d7","path":"nivo-web/secrets.env.template","step":"prettier"}
+{"findings":[],"hash":"e0c33aaa3675d2e79bd7e1f8d28f11044ede989f7e4bdeb888e31756977b4b3b","path":"nivo-web/tsconfig.json","step":"prettier"}

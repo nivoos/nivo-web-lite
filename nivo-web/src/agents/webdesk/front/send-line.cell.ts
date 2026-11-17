@@ -15,7 +15,7 @@ type Out = z.infer<typeof SendLineOutput>
  */
 export class SendLine implements Node<typeof SendLineInput, typeof SendLineOutput> {
     readonly key = keyOf("send-line")
-    readonly version = 1
+    readonly version = 2
     readonly title = { vi: "Gửi tin cho khách", en: "Send the customer a line" }
     readonly input = SendLineInput
     readonly output = SendLineOutput

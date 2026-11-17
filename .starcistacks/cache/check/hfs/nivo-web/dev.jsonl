@@ -1,0 +1,2 @@
+{"data":{},"findings":[],"hash":"468e31b37d3f92653483096bcde7b8351d91d3211f092b85057116ac9bbaa67a","path":"nivo-web/dev/deploy.mjs","step":"file-rules"}
+{"findings":[{"column":0,"line":0,"message":"nivo-web/dev/deploy.mjs matches no slot; nearest slot app.ci (.github/workflows/ci.yml), matched . then expected .github","path":"nivo-web/dev/deploy.mjs","rule":"HFS_SLOT_UNDECLARED"}],"hash":"8f1f477ec5348ab80e717680e31404fe1995854429012ced221b5b5ae8fb99b4","path":"nivo-web/dev/deploy.mjs","step":"hfs"}

@@ -37,7 +37,7 @@ const GOAL =
  */
 export class Understand implements Node<typeof UnderstandInput, typeof UnderstandOutput, typeof UnderstandSettings> {
     readonly key = keyOf("webdesk-understand")
-    readonly version = 1
+    readonly version = 2
     readonly title = { vi: "Hiểu ý khách", en: "Understand the customer" }
     readonly input = UnderstandInput
     readonly output = UnderstandOutput

@@ -1,2 +1,2 @@
-{"data":{"baseContent":"d9587b0c3ef36c7c028b932f5d0d2c09fea106f949ff784a7cfc3df86820c4a0"},"findings":[],"hash":"d9587b0c3ef36c7c028b932f5d0d2c09fea106f949ff784a7cfc3df86820c4a0","path":"base","step":"reference"}
+{"data":{"baseContent":"ae15f0205b5463826b24b0a31f50e6a9330a5549bb2e98d8d724c40c5d51a988"},"findings":[],"hash":"ae15f0205b5463826b24b0a31f50e6a9330a5549bb2e98d8d724c40c5d51a988","path":"base","step":"reference"}
 {"data":{"owner":"codecov.yml","patch":100,"project":100},"findings":[],"hash":"40f8855a7054af316d88d750f63de2ac51bedcc7c303a80382bfbbf40ad2e087","path":"targets","step":"reference"}

@@ -48,7 +48,7 @@ export type Message = z.infer<typeof MessageEvent>
  */
 export class Front implements Workflow<typeof State> {
     readonly key = keyOf("webdesk-front")
-    readonly version = 1
+    readonly version = 2
     readonly title = { vi: "Tiếp nhận tin khách", en: "Take a customer's message" }
     readonly state = State
     readonly append = ["messages"] as const
