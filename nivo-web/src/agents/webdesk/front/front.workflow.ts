@@ -48,11 +48,13 @@ export type Message = z.infer<typeof MessageEvent>
  */
 export class Front implements Workflow<typeof State> {
     readonly key = keyOf("webdesk-front")
-    readonly version = 2
+    readonly version = 3
     readonly title = { vi: "Tiếp nhận tin khách", en: "Take a customer's message" }
     readonly state = State
     readonly append = ["messages"] as const
     readonly start = Hear
+    /** Version 3 carries the live runs of versions 1 and 2 over unchanged: the state is the same, a run parked at the first wait continues at it. */
+    readonly upgrade = { from: [1, 2], state: (old: never) => old, steps: [[Hear, Hear]] } as const
     readonly steps = [
         Hear,
         Understand,

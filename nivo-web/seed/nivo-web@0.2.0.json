@@ -1998,7 +1998,7 @@
   "graphs": [
     {
       "key": "nivo-web.webdesk-front",
-      "version": 2,
+      "version": 3,
       "title": {
         "vi": "Tiếp nhận tin khách",
         "en": "Take a customer's message"
@@ -2198,6 +2198,13 @@
             }
           }
         ],
+        "upgrade": {
+          "from": [1, 2],
+          "state": "(old) => old",
+          "steps": {
+            "hear": "hear"
+          }
+        },
         "steps": {
           "hear": {
             "kind": "core.wait",
@@ -2472,7 +2479,7 @@
   "agents": [
     {
       "key": "nivo-web.webdesk",
-      "version": 2,
+      "version": 3,
       "title": {
         "vi": "Hỗ trợ",
         "en": "Support"
@@ -2480,7 +2487,7 @@
       "workflows": [
         {
           "key": "nivo-web.webdesk-front",
-          "version": 2
+          "version": 3
         }
       ],
       "providers": [
@@ -2532,7 +2539,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 2
+            "version": 3
           },
           "step": "understand",
           "mode": "auto",
@@ -2541,7 +2548,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 2
+            "version": 3
           },
           "step": "hand-off",
           "mode": "auto",
@@ -2550,7 +2557,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 2
+            "version": 3
           },
           "step": "complaint-reply",
           "mode": "auto",
@@ -2559,7 +2566,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 2
+            "version": 3
           },
           "step": "send-complaint",
           "mode": "auto",
@@ -2568,7 +2575,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 2
+            "version": 3
           },
           "step": "complaint-notice",
           "mode": "auto",
@@ -2577,7 +2584,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 2
+            "version": 3
           },
           "step": "post-notice",
           "mode": "auto",
@@ -2586,7 +2593,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 2
+            "version": 3
           },
           "step": "answer",
           "mode": "auto",
@@ -2595,7 +2602,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 2
+            "version": 3
           },
           "step": "send-answer",
           "mode": "auto",
