@@ -1,0 +1,27 @@
+{
+  "name": "nivo-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The NIVO Web workspace (the web-hosting company's six agents) authored with the nivoos SDK, with its own CRM provider `nivoweb-crm` that reaches this repository's CRM service (be/). The build writes ONE seed document the dev deploy applies. Slice 1: the Support agent (Hỗ trợ), the brain and the CRM provider.",
+  "scripts": {
+    "build": "nivoos package build src/nivo-web.package.ts --out seed",
+    "check": "nivoos package check src/nivo-web.package.ts --out seed",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@starci/nivoos-provider-templates": "0.1.0",
+    "@starci/nivoos-sdk": "0.1.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@starci/nivoos-cli": "0.1.0",
+    "@types/node": "22.20.4",
+    "typescript": "5.9.3"
+  },
+  "nivoos": {
+    "instances": {
+      "dev": "http://127.0.0.1:3501"
+    }
+  }
+}

@@ -47,6 +47,13 @@
       ],
       "patterns": []
     },
-    "packages": {}
+    "packages": {},
+    "nivoos": {
+      "packages": [
+        {
+          "name": "nivo-web"
+        }
+      ]
+    }
   }
 }

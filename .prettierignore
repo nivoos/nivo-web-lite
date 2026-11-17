@@ -11,3 +11,4 @@ contracts/
 .starciwork/
 **/__generated__/
 **/i18n/messages/**
+packages/nivo-web/seed/
