@@ -10,7 +10,7 @@
 //      package (from this repository) with the owner key, through `nivoos package deploy`: the package's Workspace class makes "NIVO Web" under its derived id (the owner owns it), with the
 //      Support agent, the brain, the Zalo OA account `zalo-main` and the sandbox CRM account `crm-sandbox` (provider `nivoweb-crm`, carried by the package). `zalo-main` takes the dev custody
 //      values `nivo-web/ZALO_MAIN_OA_SECRET_KEY` and `nivo-web/ZALO_MAIN_ACCESS_TOKEN` of the nivoos-lite dev custody (generated dev values: the real OA is connected by the owner in the
-//      console). `crm-sandbox` points at `CRM_SANDBOX_URL` (default http://127.0.0.1:3201, this repository's CRM api) with the service key in `CRM_SANDBOX_SERVICE_KEY` of the deploying shell
+//      console). `crm-sandbox` points at `CRM_SANDBOX_URL` (default http://127.0.0.1:3701, this repository's CRM api) with the service key `nivo-web/CRM_SANDBOX_SERVICE_KEY` of the nivoos-lite dev custody (sealed from the issuance output with `starci app secret`, never printed)
 //      (`cli credential issue --workspace <uuid> --label nivo-sandbox`); without it the account is made with an unissued placeholder and the CRM refuses its calls until a deploy carries the key.
 // It posts no chat. Every secret is read through `starci app secret get --to-file` and passed on; no value is printed. Safe to run twice.
 import { spawnSync } from "node:child_process"
@@ -40,8 +40,8 @@ const fail = (line) => {
     process.exit(1)
 }
 
-/** A dev custody value, read through the harness (never printed). */
-const custody = (member, key) => {
+/** A dev custody value, read through the harness (never printed), or null when it is not sealed. */
+const custodyOrNull = (member, key) => {
     const ran = spawnSync("node", [STARCI, "app", "secret", "get", "--env", "dev", member, key, "--to-file"], {
         cwd: NIVOOS_LITE,
         encoding: "utf8",
@@ -49,11 +49,17 @@ const custody = (member, key) => {
     const line = `${ran.stdout ?? ""}\n${ran.stderr ?? ""}`
         .split(/\r?\n/u)
         .find((each) => each.startsWith(`${key}_FILE=`))
-    if (ran.status !== 0 || line === undefined)
+    return ran.status !== 0 || line === undefined ? null : readFileSync(line.slice(key.length + 6), "utf8").trim()
+}
+
+/** The same, refusing when the key is not sealed. */
+const custody = (member, key) => {
+    const value = custodyOrNull(member, key)
+    if (value === null)
         fail(
             `dev custody ${member}/${key} is not readable: the owner arms \`starci app secret init --env dev --execute\` (it makes every key the stack declares) first`,
         )
-    return readFileSync(line.slice(key.length + 6), "utf8").trim()
+    return value
 }
 
 const json = async (response) => {
@@ -96,13 +102,13 @@ say("issued an owner API key for the workspace")
 // ---- 2. the deploys, through the CLI ---------------------------------------------------------------------------
 // The CLI is the one this package depends on (TEMPORARY: a link to the nivoos-lite checkout; a published `nivoos` replaces it, see README.md).
 const NIVOOS = resolve(HERE, "../node_modules/nivoos/dist/main.js")
-const CRM_SANDBOX_URL = process.env.CRM_SANDBOX_URL ?? "http://127.0.0.1:3201"
+const CRM_SANDBOX_URL = process.env.CRM_SANDBOX_URL ?? "http://127.0.0.1:3701"
 /** Until the operator issues the sandbox key the account holds this marker; the CRM refuses it (401) and a deploy that carries the real key rotates it. */
 const CRM_KEY_PLACEHOLDER = "unissued.sandbox-key-not-issued-yet"
-const crmKey = process.env.CRM_SANDBOX_SERVICE_KEY
+const crmKey = custodyOrNull("nivo-web", "CRM_SANDBOX_SERVICE_KEY")
 if (crmKey === undefined || crmKey === "")
     say(
-        "CRM_SANDBOX_SERVICE_KEY is not set: the crm-sandbox account is made with a placeholder key (issue one with `cli credential issue --workspace <uuid> --label nivo-sandbox` in this repository and deploy again)",
+        "CRM_SANDBOX_SERVICE_KEY is not sealed in dev custody member nivo-web: the crm-sandbox account is made with a placeholder key (issue one with `cli credential issue --workspace <uuid> --label nivo-sandbox` in this repository and deploy again)",
     )
 
 const deploy = (packageDir, entry, apiKey, secretsLines, publicFacts) => {

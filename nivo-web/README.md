@@ -16,9 +16,9 @@ It moved here from `nivoos-lite/packages/nivo-web` with its history: the platfor
 
 ## CRM: sandbox first
 
-The agent is bound to `crm-sandbox` only: this repository's CRM api in dev (`http://127.0.0.1:3201`, `CRM_SANDBOX_URL` at deploy) with invented records, never real customers. A production account
+The agent is bound to `crm-sandbox` only: this repository's CRM api in dev (`http://127.0.0.1:3701`, `CRM_SANDBOX_URL` at deploy) with invented records, never real customers. A production account
 (`crm-main`) is added when the owner switches the agents over. The service key is the one `cli credential issue --workspace <uuid> --label nivo-sandbox` prints once; set it as
-`CRM_SANDBOX_SERVICE_KEY` in the shell that runs the deploy (without it the account holds a placeholder and the CRM answers 401 until a deploy carries the key).
+`CRM_SANDBOX_SERVICE_KEY` of the dev custody member `nivo-web` (the deploy reads it through `starci app secret get --to-file`) (without it the account holds a placeholder and the CRM answers 401 until a deploy carries the key).
 
 ## TEMPORARY: the nivoos SDK and CLI come from a sibling checkout
 
