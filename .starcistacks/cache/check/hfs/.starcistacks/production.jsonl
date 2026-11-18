@@ -6,7 +6,7 @@
 {"data":{},"findings":[],"hash":"c6cd4baa46b2d1e747ca5ac73262454844e686d609ae6f8fafeb97f552838ce6","path":".starcistacks/production/infra/swarm/releases/current.yaml","step":"file-rules"}
 {"data":{},"findings":[],"hash":"88f60686c565ec48196039574e60de95fe15630d07f44e527a1f36d54ebb01ca","path":".starcistacks/production/infra/swarm/releases/images.lock.yaml","step":"file-rules"}
 {"data":{},"findings":[],"hash":"82544386730812f191e1689b2b48038afb8e71c9c8058b91946fc1ed610dff1a","path":".starcistacks/production/infra/swarm/releases/previous.yaml","step":"file-rules"}
-{"data":{},"findings":[],"hash":"75d8b1f3668de3807ea60533146de069f435f53f8c8747e0f362a17c45bb25ba","path":".starcistacks/production/infra/swarm/stack.yaml","step":"file-rules"}
+{"data":{},"findings":[],"hash":"73efbf50609a8dd3e66a7376be9c8485eadf7165a21cf918fdfaf9dd2529c3ec","path":".starcistacks/production/infra/swarm/stack.yaml","step":"file-rules"}
 {"data":{},"findings":[],"hash":"1fbf8e3f3362dc389b3bfbbee09c791409d0ace0669c340ca493259c7a61041c","path":".starcistacks/production/runtime/env/KEYS.md","step":"file-rules"}
 {"data":{},"findings":[],"hash":"75a15c78e46e790145295579f21e850661c4f9fcb0f345a30316287a2e2a6ec8","path":".starcistacks/production/secrets/auth-jwt-private-key.enc","step":"file-rules"}
 {"data":{},"findings":[],"hash":"a5ffed6ce68a90c04cd20e7fd4c1285257c39d6047173f0132d0516f9f659950","path":".starcistacks/production/secrets/db-password.enc","step":"file-rules"}

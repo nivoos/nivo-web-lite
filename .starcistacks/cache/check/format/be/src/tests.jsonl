@@ -1,7 +1,0 @@
-{"findings":[],"hash":"b3e6d6aa1721e1ff628fb08dc26e73c212f28d5877bece6abf48022889e1b352","path":"be/src/tests/fixtures/builders/api.builder.ts","step":"prettier"}
-{"findings":[],"hash":"01063b321cb0516900520407836bcd6c2f1fcb128a0d409fa66b0563e4d82d8b","path":"be/src/tests/fixtures/builders/cli.builder.ts","step":"prettier"}
-{"findings":[],"hash":"5517052ed8541d1127a1e45c9b23ffdb7814473968afd5a9f3da05698aa8982e","path":"be/src/tests/fixtures/builders/crm.builder.ts","step":"prettier"}
-{"findings":[],"hash":"ebe4c929fa8780b8b59a1ca5ca0946ddbae0eccd2c40651da749d1913b962f10","path":"be/src/tests/fixtures/builders/identity.builder.ts","step":"prettier"}
-{"findings":[],"hash":"cf52e5d191ac325368c97e3be04f99f0833199d40fe8c52285f5356e3e05518f","path":"be/src/tests/fixtures/builders/purchase.builder.ts","step":"prettier"}
-{"findings":[],"hash":"5a56d68c5b5712ef0f6a3c6e851b5fdfe8615b7562307bf88c091659535aabb4","path":"be/src/tests/fixtures/builders/workspace-scope.builder.ts","step":"prettier"}
-{"findings":[],"hash":"051c09d2e086e6b75e867e9ee0e7a7afb745527529adea21204701fea3305291","path":"be/src/tests/tsconfig.json","step":"prettier"}

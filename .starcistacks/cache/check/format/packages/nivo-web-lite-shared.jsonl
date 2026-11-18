@@ -1,3 +1,0 @@
-{"findings":[],"hash":"c12eb0a81039b2d314d79520e0a5b251611edfd435a94fe9e8fba0c0c81be67d","path":"packages/nivo-web-lite-shared/package.json","step":"prettier"}
-{"findings":[],"hash":"9f0b2ed3ffbba9a50ce13d7af2b2560354a87ec057595f34312a2e3f9bc16ef6","path":"packages/nivo-web-lite-shared/tsconfig.build.json","step":"prettier"}
-{"findings":[],"hash":"77c2e20cd2eb7790a5e0c246b1fc837549d1e907842fc15167a9fbbd4b173542","path":"packages/nivo-web-lite-shared/tsconfig.json","step":"prettier"}

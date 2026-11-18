@@ -1,4 +1,0 @@
-{"findings":[],"hash":"abf04a4fc58c63f508bd1e38afb5891d1e22430cdcdeea2bbd7f880fa8098f0d","path":"nivo-web/src/index.ts","step":"prettier"}
-{"findings":[],"hash":"b3c9b53368fe41900f989c972d9c655d464e4e5cff76ae67b40ce290710b464c","path":"nivo-web/src/nivo-web.package.ts","step":"prettier"}
-{"findings":[],"hash":"fa04ac99ca9a484a822896c2dd8a1538a16a089cc3018e32e947882fe196de81","path":"nivo-web/src/nivo-web.workspace.ts","step":"prettier"}
-{"findings":[],"hash":"bbbd6824e4a7dff9d7b4af546a07c08b25af8618186f83d41420b8b632b5539b","path":"nivo-web/src/package-key.ts","step":"prettier"}

@@ -1827,7 +1827,9 @@
           "base64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij48cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxNCIgZmlsbD0iIzFmNmY1YyIvPjxwYXRoIGQ9Ik0xOCA0NlYxOGg2bDE2IDIwVjE4aDZ2MjhoLTZMMjQgMjZ2MjB6IiBmaWxsPSIjZmZmZmZmIi8+PC9zdmc+",
           "mark": "monogram"
         },
-        "accountOwner": "workspace",
+        "accountOwners": [
+          "workspace"
+        ],
         "transport": "http",
         "mail": null,
         "identityField": "baseUrl",
@@ -2304,7 +2306,7 @@
     {
       "kind": "node",
       "key": "nivo-web.send-line",
-      "version": 2,
+      "version": 3,
       "title": {
         "vi": "Gửi tin cho khách",
         "en": "Send the customer a line"
@@ -2333,23 +2335,12 @@
         "type": "object",
         "properties": {
           "sent": {
-            "type": "boolean"
-          },
-          "refusal": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 60
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "type": "boolean",
+            "const": true
           }
         },
         "required": [
-          "sent",
-          "refusal"
+          "sent"
         ],
         "additionalProperties": false
       },
@@ -2364,8 +2355,8 @@
         "mutation": "contact_message.send"
       },
       "source": {
-        "text": "/**\n * `nivo-web.send-line` (Gửi tin cho khách): one act, `contact_message.send` on the Zalo OA to the person who wrote. A held route or an erased contact is a declared refusal: the\n * node says why nothing went out and the workflow ends `declined` (nivo-web-core: a send the channel refused ended the run declined). Any other failure stops the run here for a person.\n */\nclass SendLine {\n    run(input, reach) {\n        const { error } = reach.call(\"contact_message.send\", {\n            provider: \"zalo\",\n            to: input.to,\n            text: input.text,\n        });\n        if (error)\n            return { sent: false, refusal: error.code };\n        return { sent: true, refusal: null };\n    }\n}\n\nSendLine;\n",
-        "sha256": "f5406530a07ebf1e7b573b04ce24608ac24254fc14c1aaf5197878fde7fa2dc3",
+        "text": "/**\n * `nivo-web.send-line` (Gửi tin cho khách): one act, `contact_message.send` on the Zalo OA to the person who wrote. A held route (`route_held`) or an erased contact (`contact_erased`) is a declared refusal the node hands up (`if (error) throw error`): the step routes it with `onRefused` and the workflow ends `declined`. Any other failure stops the run here for a person.\n */\nclass SendLine {\n    run(input, reach) {\n        const { error } = reach.call(\"contact_message.send\", {\n            provider: \"zalo\",\n            to: input.to,\n            text: input.text,\n        });\n        if (error)\n            throw error;\n        return { sent: true };\n    }\n}\n\nSendLine;\n",
+        "sha256": "3aec98bbb3abdb71f4c72e0a9cf46a76b92553e9684acd9c3795ba4d9329a101",
         "origin": "nivo-web:agents/webdesk/front/send-line.cell.ts"
       }
     },
@@ -2847,7 +2838,7 @@
     {
       "kind": "node",
       "key": "nivo-web.webdesk-hand-off",
-      "version": 3,
+      "version": 4,
       "title": {
         "vi": "Chuyển việc",
         "en": "Hand the work on"
@@ -2967,8 +2958,15 @@
             ]
           },
           "eventKey": {
-            "type": "string",
-            "maxLength": 200
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -2988,8 +2986,8 @@
         "mutation": "events.emit"
       },
       "source": {
-        "text": "/** The words of the burst, one message per line (a picture or a file has none). */\nconst textOf = (input) => input.messages\n    .map((message) => message.text)\n    .join(\"\\n\")\n    .slice(0, 8000);\n\n/**\n * `nivo-web.webdesk-hand-off` (Chuyển việc): one act, `events.emit` of the hand-off kind of the route on the person's subject, keyed by the last message so a rerun writes nothing new.\n * Fault goes to the Support agent's incident, renewal to the Renewal agent's answer, sales to the Sales agent's enquiry (nivo-web-core's three `callWorkflow` hand-offs). No `link`:\n * the front door ends and the callee carries the conversation on.\n */\nclass HandOff {\n    run(input, reach) {\n        const last = input.messages.at(-1);\n        if (last === undefined)\n            throw new Error(\"hand_off_without_messages\");\n        const data = {\n            channel: \"zalo\",\n            userId: last.userId,\n            msgId: last.msgId,\n            text: textOf(input),\n            summary: input.summary,\n        };\n        const subject = { kind: \"person\", id: last.userId };\n        const key = `front:${last.msgId}`;\n        if (input.branch === \"fault\") {\n            const { error } = reach.emit(\"nivo-web.fault.reported\", { subject, data, key });\n            if (error)\n                throw error;\n        }\n        else if (input.branch === \"renewal\") {\n            const { error } = reach.emit(\"nivo-web.renewal.asked\", { subject, data, key });\n            if (error)\n                throw error;\n        }\n        else if (input.branch === \"sales\") {\n            const { error } = reach.emit(\"nivo-web.sales.asked\", { subject, data, key });\n            if (error)\n                throw error;\n        }\n        else\n            throw new Error(`not_a_hand_off: ${input.branch}`);\n        return { branch: input.branch, eventKey: key };\n    }\n}\n\nHandOff;\n",
-        "sha256": "fa36f07f14276d155fb67893d37bc4137bc27fed376c645b6560b7e1ff587464",
+        "text": "/** The words of the burst, one message per line (a picture or a file has none). */\nconst textOf = (input) => input.messages\n    .map((message) => message.text)\n    .join(\"\\n\")\n    .slice(0, 8000);\n\n/**\n * `nivo-web.webdesk-hand-off` (Chuyển việc): one act, `events.emit` of the hand-off kind of the route on the person's subject, keyed by the last message so a rerun writes nothing new.\n * Fault goes to the Support agent's incident, renewal to the Renewal agent's answer, sales to the Sales agent's enquiry (nivo-web-core's three `callWorkflow` hand-offs). `eventKey` is null for a route that stays in the front door (complaint, question): nothing is handed on. No `link`:\n * the front door ends and the callee carries the conversation on.\n */\nclass HandOff {\n    run(input, reach) {\n        const last = input.messages.reduce((_, message) => message);\n        const data = {\n            channel: \"zalo\",\n            userId: last.userId,\n            msgId: last.msgId,\n            text: textOf(input),\n            summary: input.summary,\n        };\n        const subject = { kind: \"person\", id: last.userId };\n        const key = `front:${last.msgId}`;\n        let handedOn = true;\n        if (input.branch === \"fault\") {\n            const { error } = reach.emit(\"nivo-web.fault.reported\", { subject, data, key });\n            if (error)\n                throw error;\n        }\n        else if (input.branch === \"renewal\") {\n            const { error } = reach.emit(\"nivo-web.renewal.asked\", { subject, data, key });\n            if (error)\n                throw error;\n        }\n        else if (input.branch === \"sales\") {\n            const { error } = reach.emit(\"nivo-web.sales.asked\", { subject, data, key });\n            if (error)\n                throw error;\n        }\n        else\n            handedOn = false;\n        return { branch: input.branch, eventKey: handedOn ? key : null };\n    }\n}\n\nHandOff;\n",
+        "sha256": "d1546cb5f049465d978aaa1935c4a7ed9eed56c8a86044eeb8cead8da198d96f",
         "origin": "nivo-web:agents/webdesk/front/hand-off.cell.ts"
       }
     },
@@ -3148,7 +3146,7 @@
   "graphs": [
     {
       "key": "nivo-web.webdesk-front",
-      "version": 4,
+      "version": 5,
       "title": {
         "vi": "Tiếp nhận tin khách",
         "en": "Take a customer's message"
@@ -3276,8 +3274,15 @@
                   ]
                 },
                 "eventKey": {
-                  "type": "string",
-                  "maxLength": 200
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               "required": [
@@ -3377,23 +3382,12 @@
               "type": "object",
               "properties": {
                 "sent": {
-                  "type": "boolean"
-                },
-                "refusal": {
-                  "anyOf": [
-                    {
-                      "type": "string",
-                      "maxLength": 60
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
+                  "type": "boolean",
+                  "const": true
                 }
               },
               "required": [
-                "sent",
-                "refusal"
+                "sent"
               ],
               "additionalProperties": false
             },
@@ -3461,7 +3455,8 @@
           "from": [
             1,
             2,
-            3
+            3,
+            4
           ],
           "state": "(old) => old",
           "steps": {
@@ -3538,7 +3533,7 @@
             "cell": {
               "kind": "node",
               "key": "nivo-web.webdesk-hand-off",
-              "version": 3
+              "version": 4
             },
             "input": {
               "branch": {
@@ -3603,7 +3598,7 @@
             "cell": {
               "kind": "node",
               "key": "nivo-web.send-line",
-              "version": 2
+              "version": 3
             },
             "input": {
               "to": {
@@ -3616,22 +3611,10 @@
             "into": [
               "sent"
             ],
-            "next": "complaint-sent"
-          },
-          "complaint-sent": {
-            "kind": "core.if",
-            "when": {
-              "op": "eq",
-              "ref": {
-                "$ref": "state.sent.sent"
-              },
-              "value": true
-            },
-            "yes": "complaint-notice",
-            "no": "declined",
-            "label": {
-              "vi": "Đã gửi lời xin lỗi?",
-              "en": "Apology sent?"
+            "next": "complaint-notice",
+            "onRefused": {
+              "contact_erased": "declined",
+              "route_held": "declined"
             }
           },
           "complaint-notice": {
@@ -3763,7 +3746,7 @@
             "cell": {
               "kind": "node",
               "key": "nivo-web.send-line",
-              "version": 2
+              "version": 3
             },
             "input": {
               "to": {
@@ -3776,7 +3759,11 @@
             "into": [
               "sent"
             ],
-            "next": "await-person"
+            "next": "await-person",
+            "onRefused": {
+              "contact_erased": "declined",
+              "route_held": "declined"
+            }
           },
           "await-person": {
             "kind": "core.wait",
@@ -3795,7 +3782,7 @@
             "cell": {
               "kind": "node",
               "key": "nivo-web.send-line",
-              "version": 2
+              "version": 3
             },
             "input": {
               "to": {
@@ -3808,22 +3795,10 @@
             "into": [
               "sent"
             ],
-            "next": "answer-sent"
-          },
-          "answer-sent": {
-            "kind": "core.if",
-            "when": {
-              "op": "eq",
-              "ref": {
-                "$ref": "state.sent.sent"
-              },
-              "value": true
-            },
-            "yes": "answered",
-            "no": "declined",
-            "label": {
-              "vi": "Đã gửi câu trả lời?",
-              "en": "Answer sent?"
+            "next": "answered",
+            "onRefused": {
+              "contact_erased": "declined",
+              "route_held": "declined"
             }
           },
           "answered": {
@@ -3853,7 +3828,7 @@
       "workflows": [
         {
           "key": "nivo-web.webdesk-front",
-          "version": 4
+          "version": 5
         }
       ],
       "providers": [
@@ -3905,7 +3880,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 4
+            "version": 5
           },
           "step": "understand",
           "mode": "auto",
@@ -3914,7 +3889,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 4
+            "version": 5
           },
           "step": "hand-off",
           "mode": "auto",
@@ -3923,7 +3898,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 4
+            "version": 5
           },
           "step": "complaint-reply",
           "mode": "auto",
@@ -3932,7 +3907,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 4
+            "version": 5
           },
           "step": "send-complaint",
           "mode": "auto",
@@ -3941,7 +3916,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 4
+            "version": 5
           },
           "step": "complaint-notice",
           "mode": "auto",
@@ -3950,7 +3925,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 4
+            "version": 5
           },
           "step": "post-notice",
           "mode": "auto",
@@ -3959,7 +3934,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 4
+            "version": 5
           },
           "step": "answer",
           "mode": "auto",
@@ -3968,7 +3943,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 4
+            "version": 5
           },
           "step": "ask-team",
           "mode": "auto",
@@ -3977,7 +3952,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 4
+            "version": 5
           },
           "step": "holding-reply",
           "mode": "auto",
@@ -3986,7 +3961,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 4
+            "version": 5
           },
           "step": "send-answer",
           "mode": "auto",

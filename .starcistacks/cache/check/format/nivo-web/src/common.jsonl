@@ -1,4 +1,0 @@
-{"findings":[],"hash":"0985ed265a493d30cdf253fec1969e27264f06f8f85fc670c857839d85ab954b","path":"nivo-web/src/common/handoff/fault-reported.event.ts","step":"prettier"}
-{"findings":[],"hash":"e2cc31fb365aee8c9993961821eac083ccfcd7273e2cdd4cf24def5d207e4383","path":"nivo-web/src/common/handoff/handoff-data.ts","step":"prettier"}
-{"findings":[],"hash":"6a43b528c8b94fe1b545909018b00024c25023c5afe62a8ce1373f9d4bb36dc8","path":"nivo-web/src/common/handoff/renewal-asked.event.ts","step":"prettier"}
-{"findings":[],"hash":"0380d6b667764a4645b93fe0bcde59b5d7ce5baf43e337e76ddc62da15bc6859","path":"nivo-web/src/common/handoff/sales-asked.event.ts","step":"prettier"}

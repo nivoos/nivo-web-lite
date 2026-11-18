@@ -11,13 +11,11 @@ import { PostNoticeOutput } from "./post-notice.cell.ts"
 import { SendLineOutput } from "./send-line.cell.ts"
 import { UnderstandOutput } from "./understand.cell.ts"
 import { Answer } from "./steps/answer.step.ts"
-import { AnswerSent } from "./steps/answer-sent.step.ts"
 import { Answered } from "./steps/answered.step.ts"
 import { AskTeam } from "./steps/ask-team.step.ts"
 import { CanAnswer } from "./steps/can-answer.step.ts"
 import { ComplaintNotice } from "./steps/complaint-notice.step.ts"
 import { ComplaintReply } from "./steps/complaint-reply.step.ts"
-import { ComplaintSent } from "./steps/complaint-sent.step.ts"
 import { Declined } from "./steps/declined.step.ts"
 import { HandOff } from "./steps/hand-off.step.ts"
 import { Handed } from "./steps/handed.step.ts"
@@ -56,13 +54,13 @@ export type Message = z.infer<typeof MessageEvent>
  */
 export class Front implements Workflow<typeof State> {
     readonly key = keyOf("webdesk-front")
-    readonly version = 4
+    readonly version = 5
     readonly title = { vi: "Tiếp nhận tin khách", en: "Take a customer's message" }
     readonly state = State
     readonly append = ["messages"] as const
     readonly start = Hear
-    /** Version 4 carries the live runs of versions 1, 2 and 3 over unchanged: the state is the same, a run parked at the first wait continues at it. */
-    readonly upgrade = { from: [1, 2, 3], state: (old: never) => old, steps: [[Hear, Hear]] } as const
+    /** Version 5 carries the live runs of versions 1 to 4 over unchanged: the state is the same, a run parked at the first wait continues at it. */
+    readonly upgrade = { from: [1, 2, 3, 4], state: (old: never) => old, steps: [[Hear, Hear]] } as const
     readonly steps = [
         Hear,
         Understand,
@@ -72,7 +70,6 @@ export class Front implements Workflow<typeof State> {
         IsComplaint,
         ComplaintReply,
         SendComplaint,
-        ComplaintSent,
         ComplaintNotice,
         PostNotice,
         ToPerson,
@@ -83,7 +80,6 @@ export class Front implements Workflow<typeof State> {
         HoldingReply,
         AwaitPerson,
         SendAnswer,
-        AnswerSent,
         Answered,
         Declined,
     ]

@@ -52,6 +52,10 @@ jobs:
             file: .starcistacks/images/db/Dockerfile
             deployed: true
             args: false
+          - name: storage
+            file: .starcistacks/images/storage/Dockerfile
+            deployed: true
+            args: false
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: release tag matches package version
@@ -140,5 +144,6 @@ jobs:
           done <<'LIST'
           api api false
           db db false
+          storage storage false
           LIST
           echo "refs=$refs" >> "$GITHUB_OUTPUT"

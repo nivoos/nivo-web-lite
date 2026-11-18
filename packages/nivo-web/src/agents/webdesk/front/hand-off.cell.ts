@@ -12,7 +12,7 @@ export const HandOffInput = z.strictObject({
     summary: z.string().min(1).max(600),
     messages: z.array(MessageEvent).min(1).max(50),
 })
-export const HandOffOutput = z.strictObject({ branch: FrontBranch, eventKey: z.string().max(200) })
+export const HandOffOutput = z.strictObject({ branch: FrontBranch, eventKey: z.string().max(200).nullable() })
 
 type In = z.infer<typeof HandOffInput>
 type Out = z.infer<typeof HandOffOutput>
@@ -26,12 +26,12 @@ const textOf = (input: In): string =>
 
 /**
  * `nivo-web.webdesk-hand-off` (Chuyển việc): one act, `events.emit` of the hand-off kind of the route on the person's subject, keyed by the last message so a rerun writes nothing new.
- * Fault goes to the Support agent's incident, renewal to the Renewal agent's answer, sales to the Sales agent's enquiry (nivo-web-core's three `callWorkflow` hand-offs). No `link`:
+ * Fault goes to the Support agent's incident, renewal to the Renewal agent's answer, sales to the Sales agent's enquiry (nivo-web-core's three `callWorkflow` hand-offs). `eventKey` is null for a route that stays in the front door (complaint, question): nothing is handed on. No `link`:
  * the front door ends and the callee carries the conversation on.
  */
 export class HandOff implements Node<typeof HandOffInput, typeof HandOffOutput> {
     readonly key = keyOf("webdesk-hand-off")
-    readonly version = 3
+    readonly version = 4
     readonly title = { vi: "Chuyển việc", en: "Hand the work on" }
     readonly input = HandOffInput
     readonly output = HandOffOutput
@@ -39,8 +39,7 @@ export class HandOff implements Node<typeof HandOffInput, typeof HandOffOutput> 
     readonly mutation = "events.emit"
 
     run(input: In, reach: NodeReach): Out {
-        const last = input.messages.at(-1)
-        if (last === undefined) throw new Error("hand_off_without_messages")
+        const last = input.messages.reduce((_, message) => message)
         const data = {
             channel: "zalo",
             userId: last.userId,
@@ -50,6 +49,7 @@ export class HandOff implements Node<typeof HandOffInput, typeof HandOffOutput> 
         }
         const subject = { kind: "person", id: last.userId }
         const key = `front:${last.msgId}`
+        let handedOn = true
         if (input.branch === "fault") {
             const { error } = reach.emit<typeof FaultReported>("nivo-web.fault.reported", { subject, data, key })
             if (error) throw error
@@ -59,7 +59,7 @@ export class HandOff implements Node<typeof HandOffInput, typeof HandOffOutput> 
         } else if (input.branch === "sales") {
             const { error } = reach.emit<typeof SalesAsked>("nivo-web.sales.asked", { subject, data, key })
             if (error) throw error
-        } else throw new Error(`not_a_hand_off: ${input.branch}`)
-        return { branch: input.branch, eventKey: key }
+        } else handedOn = false
+        return { branch: input.branch, eventKey: handedOn ? key : null }
     }
 }

@@ -1,2 +1,0 @@
-{"data":{},"findings":[],"hash":"86d3451600e1b4b35715389d76ee91b13ef7ff86456811d90bda23cbfa9bb4e2","path":"nivo-web/seed/nivo-web@0.2.0.json","step":"file-rules"}
-{"findings":[{"column":0,"line":0,"message":"nivo-web/seed/nivo-web@0.2.0.json matches no slot; nearest slot app.ci (.github/workflows/ci.yml), matched . then expected .github","path":"nivo-web/seed/nivo-web@0.2.0.json","rule":"HFS_SLOT_UNDECLARED"}],"hash":"f65ce9032ef7f1905fb9b58ee6a4109f9d120a6fb9d9740232f9c2ce7845863e","path":"nivo-web/seed/nivo-web@0.2.0.json","step":"hfs"}

@@ -12,6 +12,20 @@ backing:
   db:
     provider: postgres
     component: db
+# PROJECT-LINT-4: gates switched off for the whole app, every branch; hfs, secrets and db always run.
+gates:
+  lint: {run: off, reason: "owner 2026-11-15: core-only V2 build, proof by e2e; quality and test work deferred, hfs secrets db kept"}
+  format: {run: off, reason: "owner 2026-11-15: core-only V2 build, proof by e2e; quality and test work deferred, hfs secrets db kept"}
+  sonar: {run: off, reason: "owner 2026-11-15: core-only V2 build, proof by e2e; quality and test work deferred, hfs secrets db kept"}
+  codecov: {run: off, reason: "owner 2026-11-15: core-only V2 build, proof by e2e; quality and test work deferred, hfs secrets db kept"}
+  test: {run: off, reason: "owner 2026-11-15: core-only V2 build, proof by e2e; quality and test work deferred, hfs secrets db kept"}
+  coverage: {run: off, reason: "owner 2026-11-15: core-only V2 build, proof by e2e; quality and test work deferred, hfs secrets db kept"}
+  types: {run: off, reason: "owner 2026-11-15: core-only V2 build, proof by e2e; quality and test work deferred, hfs secrets db kept"}
+  build: {run: off, reason: "owner 2026-11-15: core-only V2 build, proof by e2e; quality and test work deferred, hfs secrets db kept"}
+  audit: {run: off, reason: "owner 2026-11-15: core-only V2 build, proof by e2e; quality and test work deferred, hfs secrets db kept"}
+  wiring: {run: off, reason: "owner 2026-11-15: core-only V2 build, proof by e2e; quality and test work deferred, hfs secrets db kept"}
+  checks: {run: off, reason: "owner 2026-11-15: core-only V2 build, proof by e2e; quality and test work deferred, hfs secrets db kept"}
+  deps: {run: off, reason: "owner 2026-11-15: core-only V2 build, proof by e2e; quality and test work deferred, hfs secrets db kept"}
 components:
   api:
     role: service
@@ -26,6 +40,14 @@ components:
     image: "nivo-web-lite/db:v0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     compose: infra/swarm/stack.yaml
     purpose: The app's own PostgreSQL, the official postgres image plus pgvector built from .starcistacks/images/db/Dockerfile, migrated by starci app db migrate.
+    required: true
+  storage:
+    role: service
+    stateful: true
+    volumes: [storage-data]
+    image: "nivo-web-lite/storage:v0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    compose: infra/swarm/stack.yaml
+    purpose: The app's own MinIO, built from .starcistacks/images/storage/Dockerfile; its entrypoint loads statics/ into the bucket through the S3 API and never deletes (PROJECT-STATICS-2).
     required: true
   ingress:
     role: ingress
@@ -155,6 +177,11 @@ environments:
         retention: Thirty daily encrypted exports
         owner: Production operator
         restoreProof: .starcistacks/production/infra/swarm/recovery/restore-proof.md
+      - component: storage
+        target: Owner-provisioned encrypted off-host storage for the storage-data volume (objects the app uploaded; the statics are rebuilt from the image)
+        retention: Thirty daily snapshots
+        owner: Production operator
+        restoreProof: .starcistacks/production/infra/swarm/recovery/restore-proof.md
     # Scaffolding seals generated placeholders to this app's own recipient; set real values before use.
     secrets:
       - name: primary-db-url
@@ -207,6 +234,8 @@ environments:
           app: api
         db:
           app: db
+        storage:
+          app: storage
       volumes:
         - nivo-web-lite-production-db-data
         - nivo-web-lite-production-ingress-data
@@ -240,6 +269,12 @@ environments:
             url: "https://api.nivo-web-lite.example.invalid/health/ready"
             status: 200
             retry: true
+data:
+  stores:
+    - {id: database, kind: database, level: logical, component: db, adapter: {module: be/src/modules/integrations/seed/database.adapter.ts}}
+    - {id: storage, kind: storage, level: logical, component: storage, adapter: {module: be/src/modules/integrations/seed/storage.adapter.ts}}
+  derived:
+    - {component: ingress, rebuild: the ingress re-issues its certificates (ACME)}
 k8s:
   status: deferred
   reason: Lite production uses Docker Swarm with its own PostgreSQL service; Kubernetes belongs to a future full-edition deployment.

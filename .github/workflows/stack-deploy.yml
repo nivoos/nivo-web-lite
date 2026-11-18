@@ -156,6 +156,7 @@ jobs:
           done <<'LIST'
           api api
           db db
+          storage storage
           LIST
       - name: CI run of the commit
         id: ci
@@ -188,12 +189,14 @@ jobs:
           CI_RUN: ${{ steps.ci.outputs.run }}
           IMAGE_API: ${{ steps.images.outputs.api }}
           IMAGE_DB: ${{ steps.images.outputs.db }}
+          IMAGE_STORAGE: ${{ steps.images.outputs.storage }}
         run: |
           again=()
           [[ "$OPERATION" != redeploy ]] || again=(--redeploy)
           npx --no-install starci app stack deploy --env "$STACK_ENVIRONMENT" \
             --image "api=$IMAGE_API" \
             --image "db=$IMAGE_DB" \
+            --image "storage=$IMAGE_STORAGE" \
             --sha "$GITHUB_SHA" --ci-run "$CI_RUN" "${again[@]}" --execute
       - name: disconnect from the swarm manager
         env:
