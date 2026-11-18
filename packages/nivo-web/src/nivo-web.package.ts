@@ -6,6 +6,7 @@ import { Answer } from "./agents/webdesk/front/answer.cell.ts"
 import { ComplaintNotice } from "./agents/webdesk/front/complaint-notice.cell.ts"
 import { ComplaintReply } from "./agents/webdesk/front/complaint-reply.cell.ts"
 import { HandOff } from "./agents/webdesk/front/hand-off.cell.ts"
+import { AskPerson } from "./agents/webdesk/front/ask-person.cell.ts"
 import { PostNotice } from "./agents/webdesk/front/post-notice.cell.ts"
 import { SendLine } from "./agents/webdesk/front/send-line.cell.ts"
 import { Understand } from "./agents/webdesk/front/understand.cell.ts"
@@ -47,6 +48,7 @@ export default {
         ComplaintReply,
         ComplaintNotice,
         PostNotice,
+        AskPerson,
         Answer,
         SendLine,
     ],

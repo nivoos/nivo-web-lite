@@ -3,6 +3,7 @@ import type { Workflow } from "@starci/nivoos-sdk"
 import { MessageEvent } from "@starci/nivoos-provider-templates/zalo/message-received.cell"
 import { keyOf } from "../../../package-key.ts"
 import { AnswerOutput } from "./answer.cell.ts"
+import { AskPersonOutput } from "./ask-person.cell.ts"
 import { ComplaintNoticeOutput } from "./complaint-notice.cell.ts"
 import { ComplaintReplyOutput } from "./complaint-reply.cell.ts"
 import { HandOffOutput } from "./hand-off.cell.ts"
@@ -28,6 +29,7 @@ import { SendAnswer } from "./steps/send-answer.step.ts"
 import { SendComplaint } from "./steps/send-complaint.step.ts"
 import { ToPerson } from "./steps/to-person.step.ts"
 import { Understand } from "./steps/understand.step.ts"
+import { WaitPerson } from "./steps/wait-person.step.ts"
 
 /** The one state object of a run: the customer's messages that opened it (appended), the decision, and what each route did. */
 export const State = z.strictObject({
@@ -39,6 +41,7 @@ export const State = z.strictObject({
     notice: ComplaintNoticeOutput.optional(),
     sent: SendLineOutput.optional(),
     posted: PostNoticeOutput.optional(),
+    asked: AskPersonOutput.optional(),
 })
 /** One customer message of the burst the front door hears (the Zalo message event). */
 export type Message = z.infer<typeof MessageEvent>
@@ -47,7 +50,7 @@ export type Message = z.infer<typeof MessageEvent>
  * `nivo-web.webdesk-front` (Tiếp nhận tin khách): the Support agent's front door, nivo-web-core's `webdesk.front` v13. A customer's Zalo message to the company's OA opens it; the front
  * door understands what the customer wants NOW and routes it: a fault, a renewal or something new to buy is handed on (the Support agent's incident, the Renewal agent's answer, the
  * Sales agent's enquiry); a complaint is apologised for and told to the team (`person`); anything else is answered from the company's public information (`answered`). A send the
- * channel refuses (a member holds the route) ends `declined`; a question the brain does not answer is posted to the team and ends `person`.
+ * channel refuses (a member holds the route) ends `declined`; a question the brain does not answer goes to the person in charge as a card with a reply box; the run waits for the typed reply and sends it through the approved send.
  */
 export class Front implements Workflow<typeof State> {
     readonly key = keyOf("webdesk-front")
@@ -74,6 +77,7 @@ export class Front implements Workflow<typeof State> {
         Answer,
         CanAnswer,
         AskTeam,
+        WaitPerson,
         SendAnswer,
         AnswerSent,
         Answered,

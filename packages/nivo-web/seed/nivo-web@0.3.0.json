@@ -2157,6 +2157,62 @@
     },
     {
       "kind": "node",
+      "key": "nivo-web.ask-person",
+      "version": 1,
+      "title": {
+        "vi": "Hỏi người phụ trách",
+        "en": "Ask the person in charge"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 600
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "asked": {
+            "type": "boolean",
+            "const": true
+          },
+          "messageId": {
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "asked",
+          "messageId"
+        ],
+        "additionalProperties": false
+      },
+      "semantics": {
+        "mutates": true
+      },
+      "facts": {
+        "kind": "node",
+        "model": null,
+        "blocking": false,
+        "reads": [],
+        "mutation": "room.message.post"
+      },
+      "source": {
+        "text": "/** The most characters of the typed reply (the Zalo line the customer gets is shorter than this). */\nconst REPLY_MAX = 2000;\n\n/**\n * `nivo-web.ask-person` (Hỏi người phụ trách): one act, `room.message.post` of a card with the question the public information could not answer and a box to type the reply. The run waits\n * for the typed answer (`engine.room.answered`); the send to the customer stays the approved, ask-locked step.\n */\nclass AskPerson {\n    run(input, reach) {\n        const { result } = reach.call(\"room.message.post\", {\n            text: `Cần người trả lời khách: ${input.question}`,\n            input: { max: REPLY_MAX, placeholder: \"Nhập câu trả lời gửi khách\" },\n        });\n        return { asked: true, messageId: result.messageId };\n    }\n}\n\nAskPerson;\n",
+        "sha256": "3142690f364cd50561e6d60decd577cd489982451ac7a87bc3deed59a5c6630e",
+        "origin": "nivo-web:agents/webdesk/front/ask-person.cell.ts"
+      }
+    },
+    {
+      "kind": "node",
       "key": "nivo-web.post-notice",
       "version": 2,
       "title": {
@@ -3335,6 +3391,27 @@
               "additionalProperties": false
             },
             "merge": "replace"
+          },
+          "asked": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "asked": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "messageId": {
+                  "type": "string",
+                  "maxLength": 200
+                }
+              },
+              "required": [
+                "asked",
+                "messageId"
+              ],
+              "additionalProperties": false
+            },
+            "merge": "replace"
           }
         },
         "triggers": [
@@ -3612,19 +3689,30 @@
             "kind": "node",
             "cell": {
               "kind": "node",
-              "key": "nivo-web.post-notice",
-              "version": 2
+              "key": "nivo-web.ask-person",
+              "version": 1
             },
             "input": {
-              "title": "Cần người trả lời khách",
-              "text": {
+              "question": {
                 "$ref": "state.answer.question"
               }
             },
             "into": [
-              "posted"
+              "asked"
             ],
-            "next": "to-person"
+            "next": "wait-person"
+          },
+          "wait-person": {
+            "kind": "core.wait",
+            "config": {
+              "take": [
+                {
+                  "trigger": "engine.room.answered",
+                  "source": "(s, answers) => {\n    for (const answer of answers) {\n        if (answer.text !== undefined && answer.text.trim() !== \"\")\n            s.answer = { answered: true, reply: answer.text.trim(), question: \"\" };\n    }\n}"
+                }
+              ],
+              "next": "send-answer"
+            }
           },
           "send-answer": {
             "kind": "node",
