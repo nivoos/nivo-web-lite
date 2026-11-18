@@ -1,0 +1,11 @@
+{
+  "schema": "starci/project-ext@1",
+  "api": 1,
+  "checks": [
+    {
+      "id": "package-boundary",
+      "run": "ext/checks/package-boundary.mjs",
+      "why": "A business package holds business logic only (try/catch, the machine clock, timers, direct http, hand-written retry, hashed ids, zone offsets, counting by query, throw new Error and the other IT logic of the engine's domain fail the gate, each finding naming the engine capability to use instead."
+    }
+  ]
+}
