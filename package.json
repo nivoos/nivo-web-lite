@@ -4,8 +4,7 @@
   "private": true,
   "packageManager": "npm@11.6.2",
   "workspaces": [
-    "packages/*",
-    "!packages/nivo-web"
+    "packages/*"
   ],
   "dependencies": {
     "@nestjs/common": "11.2.5",
