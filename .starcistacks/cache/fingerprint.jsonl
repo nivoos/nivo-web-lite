@@ -26,9 +26,9 @@
 {"name":"pkg:@starci/jest-preset","sha256":"3b91f7ec8fe66c2b699e6d2604e5f016bb0c939d793d2e96425b3ef654249274"}
 {"name":"pkg:@starci/mail","sha256":"5666c5e806b6c880878822f17d4c476e96474930c762aa6cdc059d11aeb4bb6f"}
 {"name":"pkg:@starci/nest-kit","sha256":"680f5362ce42f3899707c94bd3a3ac120328246fd70f7784a3363b5e22b62a75"}
-{"name":"pkg:@starci/nivoos-cli","sha256":"36c5691aa06c8cd6820b34fe1111dd0f05cd332630ba77480d025fa5c99c1740"}
-{"name":"pkg:@starci/nivoos-provider-templates","sha256":"45de99aaf0ddd01733ba66d40c975c177c4deaa03c70dc09bafc7528bf842961"}
-{"name":"pkg:@starci/nivoos-sdk","sha256":"04688ec8f21120a94c23df0029713d0e415f3925155f6e2fcba2e9b576666c96"}
+{"name":"pkg:@starci/nivoos-cli","sha256":"ace81435ba595f3d1e907f2b0dc9ff7709a40ac889be0cbb8beca4acd5e32466"}
+{"name":"pkg:@starci/nivoos-provider-templates","sha256":"5723bec127a9c679cdce44086e4f1aa040523ff6a95423aaae6f8294af9917b5"}
+{"name":"pkg:@starci/nivoos-sdk","sha256":"8818e93d5bdd7c61e0881ed8a364affccd509d150aac147a7b53d3dda3383158"}
 {"name":"pkg:@starci/object-storage","sha256":"76db469ac225a02d191a1be970cd7f608c36530a4228bc6aaa0eebc925d4a2ec"}
 {"name":"pkg:@starci/prettier-config","sha256":"f03ea046c6e44ee950df7a1fefbc34a5fa22321686f6d1af8cb040b937c8a672"}
 {"name":"pkg:@starci/seed","sha256":"09602ac2b0352d85b590b6a77a7f997344a898661c48a6a087e8f78a6d714afb"}
