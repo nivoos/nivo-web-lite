@@ -1,17 +1,18 @@
 {"data":{},"findings":[],"hash":"ae83bcceacf5e3961f3053c8f1138e808ac96874850deeef0c8392de0230afa5","path":"packages/nivo-web/.gitignore","step":"file-rules"}
 {"data":{},"findings":[],"hash":"4ac630ef53d4c5497044de899c64f2d24de970dd7334a001b0e37ea5af0154fb","path":"packages/nivo-web/.sops.yaml","step":"file-rules"}
-{"data":{},"findings":[],"hash":"ec0eec6bcce635281e9b991d4fe8a9a0c750f0dcc4f9ca715bef1055d840c57d","path":"packages/nivo-web/README.md","step":"file-rules"}
-{"data":{},"findings":[],"hash":"32afbfa81cc22b8a6fcbb1152c24acd78557c71b67f934a7ec3d36657338348f","path":"packages/nivo-web/dev/deploy.mjs","step":"file-rules"}
+{"data":{},"findings":[],"hash":"fa4499833572300edefc3b248cdfeb25904ed917b5886be75e50ee9a26490100","path":"packages/nivo-web/README.md","step":"file-rules"}
+{"findings":[{"column":0,"line":45,"message":"packages/nivo-web/README.md cites unknown environment key CELLS_VERSION_IMMUTABLE; declare it in a typed environment reader or KEYS.md, or update the documentation","path":"packages/nivo-web/README.md","rule":"HFS_DOC_ENV_UNKNOWN"}],"hash":"72376b40801010a893a67b72f85d1c550f8db52589b96d8213816fe30dacbc84","path":"packages/nivo-web/README.md","step":"hfs"}
+{"data":{},"findings":[],"hash":"6ded88c23531eb25798bd1f36f8ce66a15aab89f9edc9ded02d41f2a00cb4d82","path":"packages/nivo-web/dev/deploy.mjs","step":"file-rules"}
 {"data":{},"findings":[],"hash":"755894f803e71c05df16b00ebd6b3e79115f2e599ad255da19db2aa49693553a","path":"packages/nivo-web/package.json","step":"file-rules"}
 {"data":{},"findings":[],"hash":"4e5406720938f26fc372d47db84ff31efbb28cb33281304076c8b0cb26ab39bb","path":"packages/nivo-web/secrets.env.template","step":"file-rules"}
-{"data":{},"findings":[],"hash":"a943d73aa2f4a21aa162fce6b49f6400e99c1419f4be4ac2edc6b132c56a9bac","path":"packages/nivo-web/seed/nivo-web@0.3.0.json","step":"file-rules"}
+{"data":{},"findings":[],"hash":"63742193e6c8622660c9c69e102ddf62dc8a8e559694720b4e56ca0708513996","path":"packages/nivo-web/seed/nivo-web@0.3.0.json","step":"file-rules"}
 {"data":{},"findings":[],"hash":"cc711ed9c999a05d6158e007d59a7f53ebedb0debfb5cd4a56933ac1730b9f76","path":"packages/nivo-web/src/accounts/crm-sandbox.account.ts","step":"file-rules"}
 {"data":{},"findings":[],"hash":"a49f81a145cddc91a8273474afcd89fe798a5dd9b2ad85d6826e08937fd0f468","path":"packages/nivo-web/src/accounts/zalo-main.account.ts","step":"file-rules"}
-{"data":{},"findings":[],"hash":"5a21b4165fdc1851e44f63452165e5f9c191c3f194282bccb2bc6569a5836fdf","path":"packages/nivo-web/src/agents/webdesk/front/answer.cell.ts","step":"file-rules"}
+{"data":{},"findings":[],"hash":"240b9d80dc7dd7b82090a2ed0b0a49072a43348847dacf19fbd170890663cf94","path":"packages/nivo-web/src/agents/webdesk/front/answer.cell.ts","step":"file-rules"}
 {"data":{},"findings":[],"hash":"850518b5e58beae86eccf4bf3c635ef2bcc18dbbcf2eca7273a5150db2de7366","path":"packages/nivo-web/src/agents/webdesk/front/ask-person.cell.ts","step":"file-rules"}
-{"data":{},"findings":[],"hash":"01b46916ecc3c100a79955beba67a3c683a44f70457c0b5d46506d299de7334a","path":"packages/nivo-web/src/agents/webdesk/front/complaint-notice.cell.ts","step":"file-rules"}
-{"data":{},"findings":[],"hash":"ab0f716e64f18e828488be8cefc83b4e98b26f78683d61889983cd0508ebe75f","path":"packages/nivo-web/src/agents/webdesk/front/complaint-reply.cell.ts","step":"file-rules"}
-{"data":{},"findings":[],"hash":"16f8c6674af1f046ee17dcb93bb099a3ac61a7a61c62dcdee9c952321d4b0bc9","path":"packages/nivo-web/src/agents/webdesk/front/front.workflow.ts","step":"file-rules"}
+{"data":{},"findings":[],"hash":"d7fac560a7c205fa37db3cdabec77f504fd0240c3a632436576083c3f0f8330d","path":"packages/nivo-web/src/agents/webdesk/front/complaint-notice.cell.ts","step":"file-rules"}
+{"data":{},"findings":[],"hash":"7911a47c24347ecaee6da572ae88c9317b056160132458323aca4ae9a6921cad","path":"packages/nivo-web/src/agents/webdesk/front/complaint-reply.cell.ts","step":"file-rules"}
+{"data":{},"findings":[],"hash":"5b9a92b643cbcad8abe6677f97a75c48d8e46f8d4c0a72f2e7337dd79c3f5d67","path":"packages/nivo-web/src/agents/webdesk/front/front.workflow.ts","step":"file-rules"}
 {"data":{},"findings":[],"hash":"654a901f917fc4c7dabe668985843628b0a83be5ff5e7dbbecd78e7a5ecac015","path":"packages/nivo-web/src/agents/webdesk/front/hand-off.cell.ts","step":"file-rules"}
 {"data":{},"findings":[],"hash":"90c69b67df47c1a8de9f4b1b63bfd39932d0f787e3ac917163c5a9f2c9071029","path":"packages/nivo-web/src/agents/webdesk/front/post-notice.cell.ts","step":"file-rules"}
 {"data":{},"findings":[],"hash":"952d1eab3a036a68054e3a83551541f356f1983f57011b7a8e3d3d7cae55a57d","path":"packages/nivo-web/src/agents/webdesk/front/send-line.cell.ts","step":"file-rules"}
@@ -35,9 +36,9 @@
 {"data":{},"findings":[],"hash":"818759f34c064771267b54490e8bf529e15cd7549d03d3b7fd1230eca4a2d7a1","path":"packages/nivo-web/src/agents/webdesk/front/steps/to-person.step.ts","step":"file-rules"}
 {"data":{},"findings":[],"hash":"1faa56f6db64a4a01587bf00c2a3a67334ea7bbbf44fb51932451d032633e9ae","path":"packages/nivo-web/src/agents/webdesk/front/steps/understand.step.ts","step":"file-rules"}
 {"data":{},"findings":[],"hash":"25be9e3284c4aa0843dd5438984004433f762b32db053d381b019d83d2ffb27f","path":"packages/nivo-web/src/agents/webdesk/front/steps/wait-person.step.ts","step":"file-rules"}
-{"data":{},"findings":[],"hash":"7d3f031a15702e839885dc9514118ac04a2e7cff78cc1e58d3db6b9db366de68","path":"packages/nivo-web/src/agents/webdesk/front/understand.cell.ts","step":"file-rules"}
+{"data":{},"findings":[],"hash":"ebed7dc8780a85cce185efbd596846453070a8eaa91a04737aaa50c67662aa65","path":"packages/nivo-web/src/agents/webdesk/front/understand.cell.ts","step":"file-rules"}
 {"data":{},"findings":[],"hash":"2d63ea0113a692fd3c8d040ae0feb745d76d8fbe42a348cc2c87dd2cb863a0a0","path":"packages/nivo-web/src/agents/webdesk/front/webdesk.guidance.ts","step":"file-rules"}
-{"data":{},"findings":[],"hash":"75865efde5a96134221ef100ca1042eafdbaca82c334582f6663f7655358d321","path":"packages/nivo-web/src/agents/webdesk/webdesk.agent.ts","step":"file-rules"}
+{"data":{},"findings":[],"hash":"76289d8591fe329e575971483c8a916b74a1facb88e089c800d4300b1c7c297f","path":"packages/nivo-web/src/agents/webdesk/webdesk.agent.ts","step":"file-rules"}
 {"data":{},"findings":[],"hash":"84e65f75fa5f6043bac1006cd1c501e1716390a365cda7803dc5ef41d8bada80","path":"packages/nivo-web/src/brain/gia-han.md","step":"file-rules"}
 {"data":{},"findings":[],"hash":"dfc40ff2ec22f8e7c360e12ae818339ec67d713babaf30ec0948049e0c978250","path":"packages/nivo-web/src/brain/giam-gia.md","step":"file-rules"}
 {"data":{},"findings":[],"hash":"899ab588825209bf5facad5ae6611b69290e9dc539613423515ece65e8de3a5f","path":"packages/nivo-web/src/brain/gioi-thieu.md","step":"file-rules"}
