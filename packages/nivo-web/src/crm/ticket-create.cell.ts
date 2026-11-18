@@ -1,6 +1,6 @@
 import { z } from "zod"
 import type { Operation, OperationReach } from "@starci/nivoos-sdk"
-import { bodyOf, type CrmBody, crmCodeOf, type CrmFields } from "./crm-calls.ts"
+import { type CrmBody, type CrmFields, jsonOf } from "./crm-calls.ts"
 import { TICKET_CHANNELS, TICKET_KINDS, TicketOut, ticketOf } from "./ticket.shape.ts"
 
 export const TicketCreateInput = z.strictObject({
@@ -17,11 +17,11 @@ export const TicketCreateOutput = z.strictObject({ ticket: TicketOut })
 type Fields = z.infer<typeof CrmFields>
 type In = z.infer<typeof TicketCreateInput>
 type Out = z.infer<typeof TicketCreateOutput>
-type Refusal = "ticket_service_unknown" | "idempotency_key_reused"
+type Refusal = "ticket_service_unknown"
 
 /**
  * `nivoweb-crm.tickets.create`: opens one ticket (`POST /v1/tickets`). The CRM dedupes by `Idempotency-Key`, which is the act's intent key (the same on every re-attempt of the
- * call), so a retried node opens ONE ticket. Declares `ticket_service_unknown` (a service code the workspace does not have) and `idempotency_key_reused` (the key met another request).
+ * call), so a retried node opens ONE ticket. Declares `ticket_service_unknown` (a service code the workspace does not have); the engine attaches the intent key from the declared wire (a reused key is an unclassified 4xx stop).
  */
 export class TicketCreate implements Operation<typeof TicketCreateInput, typeof TicketCreateOutput, Fields, Refusal> {
     readonly key = "nivoweb-crm.tickets.create"
@@ -33,11 +33,15 @@ export class TicketCreate implements Operation<typeof TicketCreateInput, typeof 
     readonly provider = "nivoweb-crm"
     readonly http = true
     readonly needs = ["baseUrl", "serviceKey"] as const
-    readonly refusals = ["ticket_service_unknown", "idempotency_key_reused"] as const
+    readonly refusals = ["ticket_service_unknown"] as const
+    readonly wire = {
+        ok: [200, 201],
+        errorField: "code",
+        errorCodes: { CRM_TICKET_SERVICE_UNKNOWN: "ticket_service_unknown" },
+        idempotency: { header: "idempotency-key" },
+    } as const
 
     run(input: In, reach: OperationReach<Fields, Refusal>): Out {
-        const intentKey = reach.facts.intentKey
-        if (intentKey === undefined) return reach.unknown("intent_key_missing")
         const body: CrmBody = {
             kind: input.kind,
             channel: input.channel,
@@ -50,13 +54,9 @@ export class TicketCreate implements Operation<typeof TicketCreateInput, typeof 
         const response = reach.http({
             method: "POST",
             path: "/v1/tickets",
-            headers: { "idempotency-key": intentKey },
             body,
         })
-        const code = crmCodeOf(response)
-        if (code === "CRM_TICKET_SERVICE_UNKNOWN") return reach.refuse("ticket_service_unknown")
-        if (code === "CRM_IDEMPOTENCY_KEY_REUSED") return reach.refuse("idempotency_key_reused")
-        const answer = bodyOf(response, 200, 201)
+        const answer = jsonOf(response)
         const ticket = answer === null ? null : ticketOf(answer)
         if (ticket === null) return reach.byStatus()
         return { ticket }

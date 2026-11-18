@@ -1,6 +1,6 @@
 import { z } from "zod"
 import type { Operation, OperationReach } from "@starci/nivoos-sdk"
-import { bodyOf, type CrmFields, intMember } from "./crm-calls.ts"
+import { type CrmFields, intMember, jsonOf } from "./crm-calls.ts"
 
 export const SummaryCountsInput = z.strictObject({})
 export const SummaryCountsOutput = z.strictObject({
@@ -27,9 +27,10 @@ export class SummaryCounts implements Operation<typeof SummaryCountsInput, typeo
     readonly http = true
     readonly needs = ["baseUrl", "serviceKey"] as const
     readonly refusals = [] as const
+    readonly wire = { ok: [200], errorField: "code" } as const
 
     run(_input: In, reach: OperationReach<Fields, never>): Out {
-        const body = bodyOf(reach.http({ method: "GET", path: "/v1/summary/counts" }), 200)
+        const body = jsonOf(reach.http({ method: "GET", path: "/v1/summary/counts" }))
         const customers = body === null ? null : intMember(body, "customers")
         const contracts = body === null ? null : intMember(body, "contracts")
         const invoices = body === null ? null : intMember(body, "invoices")

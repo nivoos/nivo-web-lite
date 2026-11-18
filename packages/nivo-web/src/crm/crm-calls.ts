@@ -68,13 +68,8 @@ export const textsMember = (source: CrmObject, member: string): ReadonlyArray<st
     return texts
 }
 
-/** The body of a 200 or 201 answer when it is a JSON object, else null (the caller then asks `reach.byStatus()`). */
-export const bodyOf = (response: HttpResponse, ...okStatuses: ReadonlyArray<number>): CrmObject | null =>
-    okStatuses.includes(response.status) && isObject(response.json) ? response.json : null
-
-/** The CRM's own error code of a refused call (`ErrorResponse.code`, e.g. `CRM_TICKET_NOT_FOUND`), or "" when the answer carries none. */
-export const crmCodeOf = (response: HttpResponse): string =>
-    isObject(response.json) ? (textMember(response.json, "code") ?? "") : ""
+/** The JSON object of an answer the wire accepted (its status is one of the operation's `ok`), or null when the body is not an object (the caller then asks `reach.byStatus()`). */
+export const jsonOf = (response: HttpResponse): CrmObject | null => (isObject(response.json) ? response.json : null)
 
 /** One page of a list: the items and the cursor of the next page (null at the end). */
 export const PageOut = <T extends z.ZodType>(item: T) =>
@@ -95,3 +90,6 @@ export const pageOf = <T>(
     }
     return { items, nextCursor: textMember(body, "nextCursor") }
 }
+
+/** The CRM's list paging: the cursor parameter, where the next cursor and the items sit in the answer. One page per call (`maxPages` 1), so the tool keeps handing the agent a page and its cursor. */
+export const PAGING = { cursorParam: "cursor", nextCursor: "nextCursor", items: "items", maxPages: 1 } as const

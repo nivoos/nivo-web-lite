@@ -1,6 +1,6 @@
 import { z } from "zod"
 import type { Operation, OperationReach } from "@starci/nivoos-sdk"
-import { bodyOf, crmCodeOf, type CrmFields } from "./crm-calls.ts"
+import { type CrmFields, jsonOf } from "./crm-calls.ts"
 import { CustomerOut, customerOf } from "./customer.shape.ts"
 
 export const CustomerGetInput = z.strictObject({ code: z.string().min(1).max(80) })
@@ -27,11 +27,15 @@ export class CustomerGet implements Operation<
     readonly http = true
     readonly needs = ["baseUrl", "serviceKey"] as const
     readonly refusals = ["customer_not_found"] as const
+    readonly wire = {
+        ok: [200],
+        errorField: "code",
+        errorCodes: { CRM_CUSTOMER_NOT_FOUND: "customer_not_found" },
+    } as const
 
     run(input: In, reach: OperationReach<Fields, "customer_not_found">): Out {
         const response = reach.http({ method: "GET", path: `/v1/customers/${encodeURIComponent(input.code)}` })
-        if (crmCodeOf(response) === "CRM_CUSTOMER_NOT_FOUND") return reach.refuse("customer_not_found")
-        const body = bodyOf(response, 200)
+        const body = jsonOf(response)
         const customer = body === null ? null : customerOf(body)
         if (customer === null) return reach.byStatus()
         return { customer }

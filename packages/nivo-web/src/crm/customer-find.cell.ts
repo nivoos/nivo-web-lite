@@ -1,6 +1,6 @@
 import { z } from "zod"
 import type { Operation, OperationReach } from "@starci/nivoos-sdk"
-import { bodyOf, type CrmFields, type CrmQuery, PageOut, pageOf } from "./crm-calls.ts"
+import { type CrmFields, type CrmQuery, PageOut, pageOf, jsonOf, PAGING } from "./crm-calls.ts"
 import { CustomerRowOut, customerRowOf } from "./customer.shape.ts"
 
 export const CustomerFindInput = z.strictObject({
@@ -26,12 +26,13 @@ export class CustomerFind implements Operation<typeof CustomerFindInput, typeof 
     readonly http = true
     readonly needs = ["baseUrl", "serviceKey"] as const
     readonly refusals = [] as const
+    readonly wire = { ok: [200], errorField: "code", paging: PAGING } as const
 
     run(input: In, reach: OperationReach<Fields, never>): Out {
         const query: CrmQuery = { q: input.q }
         if (input.limit !== undefined) query["limit"] = input.limit
         if (input.cursor !== undefined) query["cursor"] = input.cursor
-        const body = bodyOf(reach.http({ method: "GET", path: "/v1/customers", query }), 200)
+        const body = jsonOf(reach.http({ method: "GET", path: "/v1/customers", query }))
         const page = body === null ? null : pageOf(body, customerRowOf)
         if (page === null) return reach.byStatus()
         return page
