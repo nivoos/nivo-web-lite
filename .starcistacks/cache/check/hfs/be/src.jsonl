@@ -809,8 +809,8 @@
 {"findings":[],"hash":"b70a4cf1baa930c116f93e8eb8edb5dc56366a6e657c60fc6cb98c51d3b2a664","path":"be/src/modules/domain/identity/persistence/entities/identity-attempt.entity.ts","step":"unit:recurring-observations"}
 {"data":{},"findings":[],"hash":"5725dd068b00ad45024a8a7bd899b458822b980be2201edf17defbbea68aa4d7","path":"be/src/modules/domain/identity/persistence/entities/identity-email-token.entity.ts","step":"file-rules"}
 {"findings":[],"hash":"a922ccd9f3e4d29a3bd5986e7ae2da652e7319a7f194225af76d9229d3e67c17","path":"be/src/modules/domain/identity/persistence/entities/identity-email-token.entity.ts","step":"unit:recurring-observations"}
-{"data":{},"findings":[],"hash":"e7c738f379b85fb55d25722173231c0c4c4cfc25664fd0debb736a818c577c66","path":"be/src/modules/domain/identity/persistence/entities/identity-refresh-token.entity.ts","step":"file-rules"}
-{"findings":[],"hash":"9831dbc307294ee8e0fe85fcdc2572b0163ac457bd6525d437895ae5e7c7a353","path":"be/src/modules/domain/identity/persistence/entities/identity-refresh-token.entity.ts","step":"unit:recurring-observations"}
+{"data":{},"findings":[],"hash":"e91af1fb3d798af115b400507a186438a1e599e1a81e2378879becafbb5230b4","path":"be/src/modules/domain/identity/persistence/entities/identity-refresh-token.entity.ts","step":"file-rules"}
+{"findings":[],"hash":"8b6e277b8fa628a9f581eaafcd3c5d035f115564e9f38ac9306da8f30a5af6ad","path":"be/src/modules/domain/identity/persistence/entities/identity-refresh-token.entity.ts","step":"unit:recurring-observations"}
 {"data":{},"findings":[],"hash":"1197efa67dc9aafd1fcfd857a0601e9c339bfbea761958c5f9069f5881f9fbd9","path":"be/src/modules/domain/identity/persistence/entities/identity-session.entity.ts","step":"file-rules"}
 {"findings":[],"hash":"fc070f10ba710fdaccba3fbc042657b68d27aac71746b882fcda39783edef2eb","path":"be/src/modules/domain/identity/persistence/entities/identity-session.entity.ts","step":"unit:recurring-observations"}
 {"data":{},"findings":[],"hash":"d40db7a86ab0ac186ece8d61708dca7b58877888d06344a4d5f00290ab691889","path":"be/src/modules/domain/identity/persistence/entities/index.ts","step":"file-rules"}

@@ -62,16 +62,6 @@
       "ruling": "owner-2026-11-18-clean-db",
       "date": "2026-11-18",
       "reason": "owner 2026-11-18: wipe the database and rewrite the migrations from scratch: foreign key columns named after their tables, id uuid keys, an index on each foreign key; the app keeps no data worth migrating"
-    },
-    "keyExceptions": [
-      {
-        "table": "identity_attempts",
-        "reason": "the sign-in attempt counter of @starci/auth: one row per hashed key, upserted in one statement on that key"
-      },
-      {
-        "table": "http_security_rate_windows",
-        "reason": "the rate limit window of platform/http-security: one row per caller and tier key, upserted in one statement on that key"
-      }
-    ]
+    }
   }
 }

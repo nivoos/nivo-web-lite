@@ -12,7 +12,7 @@ way to write each thing; a name says exactly what it points at. When code and th
 - Constraint and index names: `<table>_pkey`, `<table>_<columns>_key`, `<table>_<columns>_idx`, `<table>_<column>_fkey`, `<table>_<rule>_check`.
 - Migration file: `db/migrations/<yyyymmddhhmmss>_<kebab-slug>.sql`, strictly increasing. Applied migrations are immutable: a later change is a new, additive
   forward migration; a destructive one is named `<stamp>_contract_<slug>.sql`.
-- The one baseline `20261118180000_baseline.sql` (the owner's clean reset of 2026-11-18, `hfs.json` `db.baselineReset`) follows these rules; two package-owned tables keep a natural primary key (`db.keyExceptions`), and `identity_refresh_tokens.session_id` keeps the name of the managed auth entity.
+- The one baseline `20261118180000_baseline.sql` (the owner's clean reset of 2026-11-18, `hfs.json` `db.baselineReset`) follows these rules.
 
 ## API and errors
 
