@@ -2,7 +2,12 @@
 // (nivo-web-lite); it deploys with its own installed packages (@starci/nivoos-cli, @starci/nivoos-sdk and @starci/nivoos-provider-templates from npm); only the dev stack and its secret custody are the
 // nivoos-lite checkout's. Run it once the nivoos-lite dev stack is up (`starci app stack up --env dev --execute` in nivoos-lite):
 //
-//   node packages/nivo-web/dev/deploy.mjs [--api http://localhost:3501] [--web http://localhost:3500] [--nivoos-lite D:/Repositories/nivoos-lite]
+//   node packages/nivo-web/dev/deploy.mjs [--env dev|staging] [--api http://localhost:3501] [--web http://localhost:3500] [--nivoos-lite D:/Repositories/nivoos-lite] [--provider-templates <dir>]
+//
+// `--env staging` targets the nivoos-lite staging instance (api https://api.nivo.staging.starci.org, web https://nivo.staging.starci.org; override with --api and --web). The owner is the staging
+// owner the staging seed level makes (sealed member `staging/seeds-owner`: EMAIL and PASSWORD), the master key is `staging/master/NIVOOS_MASTER_API_KEY`, and the Zalo OA and CRM sandbox accounts
+// carry unissued placeholders (staging holds no real OA and no CRM; the owner connects them in the console). The nivoos CLI runs with `--env dev`: its only other value, `prod`, is production,
+// and staging is not.
 //
 // What it does:
 //   1. signs the seeded owner in (the email of the seat and `seed/SEED_MEMBER_PASSWORD`) and issues the owner an API key in the home workspace (POST /api-keys);
@@ -37,11 +42,18 @@ if (!existsSync(STARCI)) {
 `)
     process.exit(1)
 }
-const API = argValue("--api", process.env.API_URL ?? "http://localhost:3501").replace(/\/$/u, "")
-const WEB_ORIGIN = argValue("--web", process.env.WEB_URL ?? "http://localhost:3500")
+/** The world this run deploys into: `dev` (the local dev stack) or `staging` (the nivoos-lite staging instance); it picks the custody environment, the owner and the URLs. */
+const TARGET = argValue("--env", process.env.DEPLOY_ENV ?? "dev")
+if (TARGET !== "dev" && TARGET !== "staging") {
+    process.stderr.write(`--env ${TARGET}: use dev or staging\n`)
+    process.exit(1)
+}
+const STAGING = TARGET === "staging"
+const API = argValue("--api", process.env.API_URL ?? (STAGING ? "https://api.nivo.staging.starci.org" : "http://localhost:3501")).replace(/\/$/u, "")
+const WEB_ORIGIN = argValue("--web", process.env.WEB_URL ?? (STAGING ? "https://nivo.staging.starci.org" : "http://localhost:3500"))
 /** The seeded home workspace the owner key is issued in; the shop's own workspace is the one the deploy makes. */
 const HOME_WORKSPACE_ID = "00000000-0000-0000-0000-000000000000"
-const OWNER_EMAIL = "owner@seed.example.test"
+const DEV_OWNER_EMAIL = "owner@seed.example.test"
 
 const say = (line) => process.stdout.write(`${line}\n`)
 const fail = (line) => {
@@ -51,7 +63,7 @@ const fail = (line) => {
 
 /** A dev custody value, read through the harness (never printed), or null when it is not sealed. */
 const custodyOrNull = (member, key) => {
-    const ran = spawnSync("node", [STARCI, "app", "secret", "get", "--env", "dev", member, key, "--to-file"], {
+    const ran = spawnSync("node", [STARCI, "app", "secret", "get", "--env", TARGET, member, key, "--to-file"], {
         cwd: NIVOOS_LITE,
         encoding: "utf8",
     })
@@ -66,7 +78,9 @@ const custody = (member, key) => {
     const value = custodyOrNull(member, key)
     if (value === null)
         fail(
-            `dev custody ${member}/${key} is not readable: the owner arms \`starci app secret init --env dev --execute\` (it makes every key the stack declares) first`,
+            STAGING
+                ? `staging custody ${member}/${key} is not readable: the member is sealed in the nivoos-lite checkout the staging seed level landed in (pass --nivoos-lite)`
+                : `dev custody ${member}/${key} is not readable: the owner arms \`starci app secret init --env dev --execute\` (it makes every key the stack declares) first`,
         )
     return value
 }
@@ -83,7 +97,11 @@ const json = async (response) => {
 const login = await fetch(`${API}/auth/login`, {
     method: "POST",
     headers: { "content-type": "application/json", origin: WEB_ORIGIN },
-    body: JSON.stringify({ email: OWNER_EMAIL, password: custody("seed", "SEED_MEMBER_PASSWORD") }),
+    body: JSON.stringify(
+        STAGING
+            ? { email: custody("seeds-owner", "EMAIL"), password: custody("seeds-owner", "PASSWORD") }
+            : { email: DEV_OWNER_EMAIL, password: custody("seed", "SEED_MEMBER_PASSWORD") },
+    ),
 })
 const grant = await json(login)
 if (!login.ok || grant === null || typeof grant.accessToken !== "string")
@@ -98,7 +116,7 @@ const issued = await fetch(`${API}/api-keys`, {
     method: "POST",
     headers: bearer,
     body: JSON.stringify({
-        name: `nivo-web dev ${new Date().toISOString().slice(0, 19).replace(/:/gu, "-")}`,
+        name: `nivo-web ${TARGET} ${new Date().toISOString().slice(0, 19).replace(/:/gu, "-")}`,
         scope: "owner",
     }),
 })
@@ -118,14 +136,17 @@ const nodeModules = (name) => {
     return fail(`${name} is not installed: run npm ci in this repository`)
 }
 const NIVOOS = resolve(nodeModules("@starci/nivoos-cli"), "dist/main.js")
-const PROVIDER_TEMPLATES_INSTALLED = nodeModules("@starci/nivoos-provider-templates")
+/** The catalogue package this run deploys: the installed (published) one, or a checkout's `packages/provider-templates` when `--provider-templates <dir>` names it (a catalogue fix that is not published yet). */
+const PROVIDER_TEMPLATES_INSTALLED = argValue("--provider-templates", undefined) === undefined ? nodeModules("@starci/nivoos-provider-templates") : resolve(argValue("--provider-templates", ""))
 const CRM_SANDBOX_URL = process.env.CRM_SANDBOX_URL ?? "http://127.0.0.1:3701"
 /** Until the operator issues the sandbox key the account holds this marker; the CRM refuses it (401) and a deploy that carries the real key rotates it. */
 const CRM_KEY_PLACEHOLDER = "unissued.sandbox-key-not-issued-yet"
-const crmKey = custodyOrNull("nivo-web", "CRM_SANDBOX_SERVICE_KEY")
-if (crmKey === undefined || crmKey === "")
+/** Staging holds no real Zalo OA: its account carries this marker until the owner connects the OA in the console. */
+const ZALO_PLACEHOLDER = "unissued.zalo-oa-not-connected-yet"
+const crmKey = STAGING ? null : custodyOrNull("nivo-web", "CRM_SANDBOX_SERVICE_KEY")
+if (crmKey === null || crmKey === "")
     say(
-        "CRM_SANDBOX_SERVICE_KEY is not sealed in dev custody member nivo-web: the crm-sandbox account is made with a placeholder key (issue one with `cli credential issue --workspace <uuid> --label nivo-sandbox` in this repository and deploy again)",
+        `CRM_SANDBOX_SERVICE_KEY is not sealed in ${TARGET} custody member nivo-web: the crm-sandbox account is made with a placeholder key (issue one with \`cli credential issue --workspace <uuid> --label nivo-sandbox\` in this repository and deploy again)`,
     )
 
 /** Deploys one package; returns false (never exits) when `staleIsFine` and the instance only refused versions it already holds newer content under. */
@@ -170,9 +191,9 @@ deploy(
     "src/nivo-web.package.ts",
     ownerKey,
     [
-        `ZALO_MAIN_OA_SECRET_KEY=${custody("nivo-web", "ZALO_MAIN_OA_SECRET_KEY")}`,
-        `ZALO_MAIN_ACCESS_TOKEN=${custody("nivo-web", "ZALO_MAIN_ACCESS_TOKEN")}`,
-        `CRM_SANDBOX_SERVICE_KEY=${crmKey === undefined || crmKey === "" ? CRM_KEY_PLACEHOLDER : crmKey}`,
+        `ZALO_MAIN_OA_SECRET_KEY=${STAGING ? ZALO_PLACEHOLDER : custody("nivo-web", "ZALO_MAIN_OA_SECRET_KEY")}`,
+        `ZALO_MAIN_ACCESS_TOKEN=${STAGING ? ZALO_PLACEHOLDER : custody("nivo-web", "ZALO_MAIN_ACCESS_TOKEN")}`,
+        `CRM_SANDBOX_SERVICE_KEY=${crmKey === null || crmKey === "" ? CRM_KEY_PLACEHOLDER : crmKey}`,
     ],
     { CRM_SANDBOX_URL },
 )
