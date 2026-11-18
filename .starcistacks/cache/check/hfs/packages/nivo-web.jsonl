@@ -2,7 +2,7 @@
 {"data":{},"findings":[],"hash":"4ac630ef53d4c5497044de899c64f2d24de970dd7334a001b0e37ea5af0154fb","path":"packages/nivo-web/.sops.yaml","step":"file-rules"}
 {"data":{},"findings":[],"hash":"309c40254a6bf2995fcaafbe4e33c5234a84b3a4218bfb491c080b50caed26f6","path":"packages/nivo-web/README.md","step":"file-rules"}
 {"data":{},"findings":[],"hash":"3a6086b35408d0976db92f5dea3ebb3d7b765949ce09a2340df655d5644c2269","path":"packages/nivo-web/dev/deploy.mjs","step":"file-rules"}
-{"data":{},"findings":[],"hash":"6f118076d51c8101c9da71c4a51d23f2941674597d2c66810e87c6f75aa232ef","path":"packages/nivo-web/package.json","step":"file-rules"}
+{"data":{},"findings":[],"hash":"783ceb380b245dbc09e937810e40d2a13bba17416de740c370b0085f871e2745","path":"packages/nivo-web/package.json","step":"file-rules"}
 {"data":{},"findings":[],"hash":"4e5406720938f26fc372d47db84ff31efbb28cb33281304076c8b0cb26ab39bb","path":"packages/nivo-web/secrets.env.template","step":"file-rules"}
 {"data":{},"findings":[],"hash":"1fad654281b9289dd9ba9a8da23b6111462409bc44759ce2d02f2aab7922f3b1","path":"packages/nivo-web/seed/nivo-web@0.3.0.json","step":"file-rules"}
 {"data":{},"findings":[],"hash":"cc711ed9c999a05d6158e007d59a7f53ebedb0debfb5cd4a56933ac1730b9f76","path":"packages/nivo-web/src/accounts/crm-sandbox.account.ts","step":"file-rules"}
