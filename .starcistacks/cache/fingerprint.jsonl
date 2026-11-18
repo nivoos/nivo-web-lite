@@ -9,7 +9,7 @@
 {"name":"file:be/tsconfig.json","sha256":"8c5c1ef6864461d6669857fb111d121b8e75f9ff0525683132573c8352feb941"}
 {"name":"file:codecov.yml","sha256":"a4dac87ba812a69316255ba857bb5d43d927346cef0610210af6a3b16a6efab0"}
 {"name":"file:eslint.config.mjs","sha256":"99a42afd63a281ee8a34b3c96abbfc443e50f65b83f42b18638d349a965371f9"}
-{"name":"file:hfs.json","sha256":"1566d0c6774a61602a65f41207c6166214229790d90a36289e21773ada97706e"}
+{"name":"file:hfs.json","sha256":"1a15ffb23c7e265cd5f137b33b4708a4057ff5534170873c65ab317ff4a32e68"}
 {"name":"file:packages/nivo-web-lite-shared/tsconfig.build.json","sha256":"9f0b2ed3ffbba9a50ce13d7af2b2560354a87ec057595f34312a2e3f9bc16ef6"}
 {"name":"file:packages/nivo-web-lite-shared/tsconfig.json","sha256":"77c2e20cd2eb7790a5e0c246b1fc837549d1e907842fc15167a9fbbd4b173542"}
 {"name":"file:packages/nivo-web/tsconfig.json","sha256":"e0c33aaa3675d2e79bd7e1f8d28f11044ede989f7e4bdeb888e31756977b4b3b"}

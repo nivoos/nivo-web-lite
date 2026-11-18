@@ -13,11 +13,11 @@ export class ProjectEntity extends UuidAbstractEntity {
     code!: string
 
     /** The customer. */
-    @Column({ name: "customer_id", type: "uuid" })
+    @Column({ name: "crm_customer_id", type: "uuid" })
     customerId!: string
 
     /** The website, when the project name is a domain. */
-    @Column({ name: "website_id", type: "uuid", nullable: true })
+    @Column({ name: "crm_website_id", type: "uuid", nullable: true })
     websiteId!: string | null
 
     /** The project or website name. */

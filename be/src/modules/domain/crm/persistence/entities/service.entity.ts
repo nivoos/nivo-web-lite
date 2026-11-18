@@ -14,11 +14,11 @@ export class ServiceEntity extends UuidAbstractEntity {
     code!: string
 
     /** The customer (UNASSIGNED when the source names an unknown code). */
-    @Column({ name: "customer_id", type: "uuid" })
+    @Column({ name: "crm_customer_id", type: "uuid" })
     customerId!: string
 
     /** The website, when the service name is a domain. */
-    @Column({ name: "website_id", type: "uuid", nullable: true })
+    @Column({ name: "crm_website_id", type: "uuid", nullable: true })
     websiteId!: string | null
 
     /** hosting, domain or ssl. */

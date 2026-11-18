@@ -9,7 +9,7 @@ export class ReceivablePaymentEntity extends UuidAbstractEntity {
     workspaceId!: string
 
     /** The receivable. */
-    @Column({ name: "receivable_id", type: "uuid" })
+    @Column({ name: "crm_receivable_id", type: "uuid" })
     receivableId!: string
 
     /** The bank row's id that proves the payment. */

@@ -10,7 +10,7 @@ export class PurchaseFollowupEntity extends UuidAbstractEntity {
     workspaceId!: string
 
     /** The purchase. */
-    @Column({ name: "purchase_id", type: "uuid" })
+    @Column({ name: "crm_purchase_id", type: "uuid" })
     purchaseId!: string
 
     /** The day of the follow-up (Asia/Ho_Chi_Minh). */

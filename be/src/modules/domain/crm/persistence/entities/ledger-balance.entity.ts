@@ -21,7 +21,7 @@ export class LedgerBalanceEntity extends UuidAbstractEntity {
     partyName!: string | null
 
     /** The customer, when the code is a customer code. */
-    @Column({ name: "customer_id", type: "uuid", nullable: true })
+    @Column({ name: "crm_customer_id", type: "uuid", nullable: true })
     customerId!: string | null
 
     /** Opening debit, VND. */

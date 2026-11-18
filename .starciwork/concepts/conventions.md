@@ -12,8 +12,7 @@ way to write each thing; a name says exactly what it points at. When code and th
 - Constraint and index names: `<table>_pkey`, `<table>_<columns>_key`, `<table>_<columns>_idx`, `<table>_<column>_fkey`, `<table>_<rule>_check`.
 - Migration file: `db/migrations/<yyyymmddhhmmss>_<kebab-slug>.sql`, strictly increasing. Applied migrations are immutable: a later change is a new, additive
   forward migration; a destructive one is named `<stamp>_contract_<slug>.sql`.
-- The baseline migration `20261111184812_baseline.sql` predates these rules: its keys and foreign key names stay as they are and the owner rules hold for every
-  table added after it.
+- The one baseline `20261118180000_baseline.sql` (the owner's clean reset of 2026-11-18, `hfs.json` `db.baselineReset`) follows these rules; two package-owned tables keep a natural primary key (`db.keyExceptions`), and `identity_refresh_tokens.session_id` keeps the name of the managed auth entity.
 
 ## API and errors
 

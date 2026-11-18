@@ -13,11 +13,11 @@ export class ReceivableEntity extends UuidAbstractEntity {
     projectCode!: string
 
     /** The project, when the list knows it. */
-    @Column({ name: "project_id", type: "uuid", nullable: true })
+    @Column({ name: "crm_project_id", type: "uuid", nullable: true })
     projectId!: string | null
 
     /** The project's customer. */
-    @Column({ name: "customer_id", type: "uuid", nullable: true })
+    @Column({ name: "crm_customer_id", type: "uuid", nullable: true })
     customerId!: string | null
 
     /** The contract the row names. */

@@ -21,7 +21,7 @@ export class ContractEntity extends UuidAbstractEntity {
     partnerName!: string | null
 
     /** The customer, when the partner matches one exactly. */
-    @Column({ name: "customer_id", type: "uuid", nullable: true })
+    @Column({ name: "crm_customer_id", type: "uuid", nullable: true })
     customerId!: string | null
 
     /** What the contract is for. */

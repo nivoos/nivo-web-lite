@@ -10,7 +10,7 @@ export class ReceivableNoticeEntity extends UuidAbstractEntity {
     workspaceId!: string
 
     /** The receivable. */
-    @Column({ name: "receivable_id", type: "uuid" })
+    @Column({ name: "crm_receivable_id", type: "uuid" })
     receivableId!: string
 
     /** zalo, email or phone. */

@@ -46,7 +46,7 @@ a manifest (counts and the sha256 of each file, no row). A table whose rows did 
 so an unchanged backup gives no diff. `cli backup restore --from <dir>` fills an EMPTY database: every file is verified
 (sha256, canonical text, count, the set of tables) before anything is written, then all rows are inserted in one transaction and
 recounted; any mismatch rolls everything back. Rows move through the database functions `public.crm_backup_*`
-(`db/migrations/20261111201809_crm-backup-functions.sql`, listed in `hfs.json` `sides.be.dbFunctions`): R334 keeps SQL text out
+(`db/migrations/20261118180000_baseline.sql`, listed in `hfs.json` `sides.be.dbFunctions`): R334 keeps SQL text out
 of TypeScript, an entity cannot copy every column with the database-set timestamps, and `sqlPassThrough` is only for text that
 is not the app's own. The commands print nothing but log the counts. Document binaries are NOT in this backup: the `documents`
 rows carry the storage key and the sha256, and the object storage is backed up by its own means.

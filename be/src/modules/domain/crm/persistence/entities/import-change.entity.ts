@@ -9,7 +9,7 @@ export class ImportChangeEntity extends UuidAbstractEntity {
     workspaceId!: string
 
     /** The run. */
-    @Column({ name: "import_run_id", type: "uuid" })
+    @Column({ name: "crm_import_run_id", type: "uuid" })
     importRunId!: string
 
     /** The entity. */

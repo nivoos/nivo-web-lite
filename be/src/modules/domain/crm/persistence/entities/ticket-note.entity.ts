@@ -10,7 +10,7 @@ export class TicketNoteEntity extends UuidAbstractEntity {
     workspaceId!: string
 
     /** The ticket. */
-    @Column({ name: "ticket_id", type: "uuid" })
+    @Column({ name: "crm_ticket_id", type: "uuid" })
     ticketId!: string
 
     /** The note. */

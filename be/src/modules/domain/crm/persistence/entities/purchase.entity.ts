@@ -51,7 +51,7 @@ export class PurchaseEntity extends UuidAbstractEntity {
     customerCode!: string | null
 
     /** The customer, once the purchase is accepted. */
-    @Column({ name: "customer_id", type: "uuid", nullable: true })
+    @Column({ name: "crm_customer_id", type: "uuid", nullable: true })
     customerId!: string | null
 
     /** The lines of the current quote. */

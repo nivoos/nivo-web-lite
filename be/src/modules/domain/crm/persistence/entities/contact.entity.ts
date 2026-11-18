@@ -10,7 +10,7 @@ export class ContactEntity extends UuidAbstractEntity {
     workspaceId!: string
 
     /** The customer. */
-    @Column({ name: "customer_id", type: "uuid" })
+    @Column({ name: "crm_customer_id", type: "uuid" })
     customerId!: string
 
     /** The person's name. */

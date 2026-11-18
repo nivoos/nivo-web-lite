@@ -22,15 +22,15 @@ export class InvoiceDraftEntity extends UuidAbstractEntity {
     workspaceId!: string
 
     /** The renewal request it drafts, or null for a purchase. */
-    @Column({ name: "renewal_id", type: "uuid", nullable: true })
+    @Column({ name: "crm_renewal_request_id", type: "uuid", nullable: true })
     renewalId!: string | null
 
     /** The purchase it drafts, or null for a renewal. */
-    @Column({ name: "purchase_id", type: "uuid", nullable: true })
+    @Column({ name: "crm_purchase_id", type: "uuid", nullable: true })
     purchaseId!: string | null
 
     /** The customer. */
-    @Column({ name: "customer_id", type: "uuid" })
+    @Column({ name: "crm_customer_id", type: "uuid" })
     customerId!: string
 
     /** The lines. */

@@ -13,7 +13,7 @@ export class InvoiceEntity extends UuidAbstractEntity {
     invoiceNo!: string
 
     /** The customer the ledger or the folder names. */
-    @Column({ name: "customer_id", type: "uuid", nullable: true })
+    @Column({ name: "crm_customer_id", type: "uuid", nullable: true })
     customerId!: string | null
 
     /** The issue date from the ledger. */

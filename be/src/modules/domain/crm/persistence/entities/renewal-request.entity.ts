@@ -10,7 +10,7 @@ export class RenewalRequestEntity extends UuidAbstractEntity {
     workspaceId!: string
 
     /** The service. */
-    @Column({ name: "service_id", type: "uuid" })
+    @Column({ name: "crm_service_id", type: "uuid" })
     serviceId!: string
 
     /** The provider key the books name for the service (tino, inet, azwebsite; manual: none). */

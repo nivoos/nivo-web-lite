@@ -10,7 +10,7 @@ export class TicketEntity extends UuidAbstractEntity {
     workspaceId!: string
 
     /** The customer, when known. */
-    @Column({ name: "customer_id", type: "uuid", nullable: true })
+    @Column({ name: "crm_customer_id", type: "uuid", nullable: true })
     customerId!: string | null
 
     /** The services it concerns. */

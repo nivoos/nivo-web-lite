@@ -13,7 +13,7 @@ export class WebsiteEntity extends UuidAbstractEntity {
     domain!: string
 
     /** The customer the first service of the domain names. */
-    @Column({ name: "customer_id", type: "uuid" })
+    @Column({ name: "crm_customer_id", type: "uuid" })
     customerId!: string
 
     /** The source file, relative to the imported folder. */

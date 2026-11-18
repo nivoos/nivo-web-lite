@@ -9,11 +9,11 @@ export class ProviderLinkEntity extends UuidAbstractEntity {
     workspaceId!: string
 
     /** The service. */
-    @Column({ name: "service_id", type: "uuid" })
+    @Column({ name: "crm_service_id", type: "uuid" })
     serviceId!: string
 
     /** The provider account. */
-    @Column({ name: "account_id", type: "uuid" })
+    @Column({ name: "crm_provider_account_id", type: "uuid" })
     accountId!: string
 
     /** The provider-side id. */

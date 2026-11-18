@@ -10,7 +10,7 @@ export class ServiceReminderEntity extends UuidAbstractEntity {
     workspaceId!: string
 
     /** The service. */
-    @Column({ name: "service_id", type: "uuid" })
+    @Column({ name: "crm_service_id", type: "uuid" })
     serviceId!: string
 
     /** zalo, email or phone. */

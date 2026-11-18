@@ -13,7 +13,7 @@ export class DocumentEntity extends UuidAbstractEntity {
     path!: string
 
     /** The customer whose folder holds it. */
-    @Column({ name: "customer_id", type: "uuid", nullable: true })
+    @Column({ name: "crm_customer_id", type: "uuid", nullable: true })
     customerId!: string | null
 
     /** invoice, invoice_replacement, contract, quote, minutes, note or other. */
