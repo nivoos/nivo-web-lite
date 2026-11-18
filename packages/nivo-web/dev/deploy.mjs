@@ -14,20 +14,29 @@
 //      (`cli credential issue --workspace <uuid> --label nivo-sandbox`); without it the account is made with an unissued placeholder and the CRM refuses its calls until a deploy carries the key.
 // It posts no chat. Every secret is read through `starci app secret get --to-file` and passed on; no value is printed. Safe to run twice.
 import { spawnSync } from "node:child_process"
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 /** This repository (nivo-web-lite). */
 const ROOT = resolve(HERE, "../../..")
-const STARCI = process.env.STARCI_CLI ?? "D:/.claude/cli/dist/main.js"
 const argValue = (name, fallback) => {
     const at = process.argv.indexOf(name)
     return at >= 0 ? process.argv[at + 1] : fallback
 }
 /** The platform checkout, used ONLY for its dev secret custody (the harness secret store of the dev stack); no package, CLI or SDK is read from it. */
-const NIVOOS_LITE = resolve(argValue("--nivoos-lite", process.env.NIVOOS_LITE_ROOT ?? resolve(ROOT, "../nivoos-lite")))
+const nivoosLiteCandidates = [process.env.NIVOOS_LITE_ROOT, resolve(ROOT, "../nivoos-lite"), "D:/Repositories/nivoos-lite"].filter((each) => each !== undefined)
+const NIVOOS_LITE = resolve(
+    argValue("--nivoos-lite", nivoosLiteCandidates.find((each) => existsSync(resolve(each, "node_modules/starci-harness/dist/main.js"))) ?? nivoosLiteCandidates[0] ?? ""),
+)
+/** The harness CLI that custody is read through: the one the nivoos-lite checkout installs (it matches that checkout's pin), never a global one. STARCI_CLI overrides it. */
+const STARCI = process.env.STARCI_CLI ?? resolve(NIVOOS_LITE, "node_modules/starci-harness/dist/main.js")
+if (!existsSync(STARCI)) {
+    process.stderr.write(`the harness CLI ${STARCI} does not exist: pass --nivoos-lite <a nivoos-lite checkout with npm ci run> or set STARCI_CLI
+`)
+    process.exit(1)
+}
 const API = argValue("--api", process.env.API_URL ?? "http://localhost:3501").replace(/\/$/u, "")
 const WEB_ORIGIN = argValue("--web", process.env.WEB_URL ?? "http://localhost:3500")
 /** The seeded home workspace the owner key is issued in; the shop's own workspace is the one the deploy makes. */
@@ -110,19 +119,6 @@ const nodeModules = (name) => {
 }
 const NIVOOS = resolve(nodeModules("@starci/nivoos-cli"), "dist/main.js")
 const PROVIDER_TEMPLATES_INSTALLED = nodeModules("@starci/nivoos-provider-templates")
-/** The published catalogue ships its sources without a tsconfig, which the deploy type-checks under: a throwaway copy of the package beside this repository's node_modules carries one (gitignored `.tmp-` folder, removed after). */
-const PROVIDER_TEMPLATES_COPY = mkdtempSync(resolve(ROOT, ".tmp-provider-templates-"))
-for (const each of ["package.json", "secrets.env.template", "src", "seed"])
-    cpSync(resolve(PROVIDER_TEMPLATES_INSTALLED, each), resolve(PROVIDER_TEMPLATES_COPY, each), { recursive: true })
-writeFileSync(
-    resolve(PROVIDER_TEMPLATES_COPY, "tsconfig.json"),
-    JSON.stringify({
-        extends: "@starci/tsconfig/package-cjs.json",
-        compilerOptions: { types: ["node"], noEmit: true, allowImportingTsExtensions: true },
-        include: ["src/**/*.ts"],
-    }),
-)
-process.on("exit", () => rmSync(PROVIDER_TEMPLATES_COPY, { recursive: true, force: true }))
 const CRM_SANDBOX_URL = process.env.CRM_SANDBOX_URL ?? "http://127.0.0.1:3701"
 /** Until the operator issues the sandbox key the account holds this marker; the CRM refuses it (401) and a deploy that carries the real key rotates it. */
 const CRM_KEY_PLACEHOLDER = "unissued.sandbox-key-not-issued-yet"
@@ -158,7 +154,7 @@ const deploy = (packageDir, entry, apiKey, secretsLines, publicFacts, staleIsFin
 }
 // The instance may hold a catalogue newer than the published one (the platform deploys it from its own checkout); the immutability guard then refuses the older content, which is not a failure here.
 const catalogueDeployed = deploy(
-    PROVIDER_TEMPLATES_COPY,
+    PROVIDER_TEMPLATES_INSTALLED,
     "src/provider-templates.package.ts",
     custody("master", "NIVOOS_MASTER_API_KEY"),
     [],

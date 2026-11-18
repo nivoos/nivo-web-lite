@@ -3146,7 +3146,7 @@
   "graphs": [
     {
       "key": "nivo-web.webdesk-front",
-      "version": 6,
+      "version": 7,
       "title": {
         "vi": "Tiếp nhận tin khách",
         "en": "Take a customer's message"
@@ -3447,7 +3447,7 @@
             "trigger": {
               "kind": "trigger",
               "key": "zalo.message.received",
-              "version": 3
+              "version": 4
             }
           }
         ],
@@ -3457,7 +3457,8 @@
             2,
             3,
             4,
-            5
+            5,
+            6
           ],
           "state": "(old) => old",
           "steps": {
@@ -3821,7 +3822,7 @@
   "agents": [
     {
       "key": "nivo-web.webdesk",
-      "version": 6,
+      "version": 7,
       "title": {
         "vi": "Hỗ trợ",
         "en": "Support"
@@ -3829,7 +3830,7 @@
       "workflows": [
         {
           "key": "nivo-web.webdesk-front",
-          "version": 6
+          "version": 7
         }
       ],
       "providers": [
@@ -3881,7 +3882,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 6
+            "version": 7
           },
           "step": "understand",
           "mode": "auto",
@@ -3890,7 +3891,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 6
+            "version": 7
           },
           "step": "hand-off",
           "mode": "auto",
@@ -3899,7 +3900,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 6
+            "version": 7
           },
           "step": "complaint-reply",
           "mode": "auto",
@@ -3908,7 +3909,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 6
+            "version": 7
           },
           "step": "send-complaint",
           "mode": "auto",
@@ -3917,7 +3918,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 6
+            "version": 7
           },
           "step": "complaint-notice",
           "mode": "auto",
@@ -3926,7 +3927,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 6
+            "version": 7
           },
           "step": "post-notice",
           "mode": "auto",
@@ -3935,7 +3936,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 6
+            "version": 7
           },
           "step": "answer",
           "mode": "auto",
@@ -3944,7 +3945,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 6
+            "version": 7
           },
           "step": "ask-team",
           "mode": "auto",
@@ -3953,7 +3954,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 6
+            "version": 7
           },
           "step": "holding-reply",
           "mode": "auto",
@@ -3962,7 +3963,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 6
+            "version": 7
           },
           "step": "send-answer",
           "mode": "auto",
