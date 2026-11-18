@@ -2363,7 +2363,7 @@
     {
       "kind": "node",
       "key": "nivo-web.webdesk-answer",
-      "version": 3,
+      "version": 4,
       "title": {
         "vi": "Trả lời từ thông tin công khai",
         "en": "Answer from public information"
@@ -2525,7 +2525,7 @@
     {
       "kind": "node",
       "key": "nivo-web.webdesk-complaint-notice",
-      "version": 3,
+      "version": 4,
       "title": {
         "vi": "Soạn báo đội về khiếu nại",
         "en": "Write the complaint notice"
@@ -2673,7 +2673,7 @@
     {
       "kind": "node",
       "key": "nivo-web.webdesk-complaint-reply",
-      "version": 3,
+      "version": 4,
       "title": {
         "vi": "Xin lỗi khách",
         "en": "Apologise to the customer"
@@ -2994,7 +2994,7 @@
     {
       "kind": "node",
       "key": "nivo-web.webdesk-understand",
-      "version": 3,
+      "version": 4,
       "title": {
         "vi": "Hiểu ý khách",
         "en": "Understand the customer"
@@ -3146,7 +3146,7 @@
   "graphs": [
     {
       "key": "nivo-web.webdesk-front",
-      "version": 5,
+      "version": 6,
       "title": {
         "vi": "Tiếp nhận tin khách",
         "en": "Take a customer's message"
@@ -3456,7 +3456,8 @@
             1,
             2,
             3,
-            4
+            4,
+            5
           ],
           "state": "(old) => old",
           "steps": {
@@ -3482,7 +3483,7 @@
             "cell": {
               "kind": "node",
               "key": "nivo-web.webdesk-understand",
-              "version": 3
+              "version": 4
             },
             "input": {
               "messages": {
@@ -3578,7 +3579,7 @@
             "cell": {
               "kind": "node",
               "key": "nivo-web.webdesk-complaint-reply",
-              "version": 3
+              "version": 4
             },
             "input": {
               "messages": {
@@ -3622,7 +3623,7 @@
             "cell": {
               "kind": "node",
               "key": "nivo-web.webdesk-complaint-notice",
-              "version": 3
+              "version": 4
             },
             "input": {
               "messages": {
@@ -3671,7 +3672,7 @@
             "cell": {
               "kind": "node",
               "key": "nivo-web.webdesk-answer",
-              "version": 3
+              "version": 4
             },
             "input": {
               "messages": {
@@ -3820,7 +3821,7 @@
   "agents": [
     {
       "key": "nivo-web.webdesk",
-      "version": 4,
+      "version": 6,
       "title": {
         "vi": "Hỗ trợ",
         "en": "Support"
@@ -3828,7 +3829,7 @@
       "workflows": [
         {
           "key": "nivo-web.webdesk-front",
-          "version": 5
+          "version": 6
         }
       ],
       "providers": [
@@ -3880,7 +3881,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 5
+            "version": 6
           },
           "step": "understand",
           "mode": "auto",
@@ -3889,7 +3890,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 5
+            "version": 6
           },
           "step": "hand-off",
           "mode": "auto",
@@ -3898,7 +3899,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 5
+            "version": 6
           },
           "step": "complaint-reply",
           "mode": "auto",
@@ -3907,7 +3908,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 5
+            "version": 6
           },
           "step": "send-complaint",
           "mode": "auto",
@@ -3916,7 +3917,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 5
+            "version": 6
           },
           "step": "complaint-notice",
           "mode": "auto",
@@ -3925,7 +3926,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 5
+            "version": 6
           },
           "step": "post-notice",
           "mode": "auto",
@@ -3934,7 +3935,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 5
+            "version": 6
           },
           "step": "answer",
           "mode": "auto",
@@ -3943,7 +3944,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 5
+            "version": 6
           },
           "step": "ask-team",
           "mode": "auto",
@@ -3952,7 +3953,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 5
+            "version": 6
           },
           "step": "holding-reply",
           "mode": "auto",
@@ -3961,7 +3962,7 @@
         {
           "graph": {
             "key": "nivo-web.webdesk-front",
-            "version": 5
+            "version": 6
           },
           "step": "send-answer",
           "mode": "auto",

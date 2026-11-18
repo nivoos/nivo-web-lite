@@ -10,7 +10,7 @@ import { Front } from "./front/front.workflow.ts"
  */
 export class Webdesk implements Agent {
     readonly key = keyOf("webdesk")
-    readonly version = 4
+    readonly version = 6
     readonly title = { vi: "Hỗ trợ", en: "Support" }
     readonly workflows = [Front]
     readonly providers = [ZaloMain, CrmSandbox]

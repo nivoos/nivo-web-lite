@@ -39,7 +39,7 @@ export class ComplaintReply implements Node<
     typeof ComplaintReplySettings
 > {
     readonly key = keyOf("webdesk-complaint-reply")
-    readonly version = 3
+    readonly version = 4
     readonly title = { vi: "Xin lỗi khách", en: "Apologise to the customer" }
     readonly input = ComplaintReplyInput
     readonly output = ComplaintReplyOutput

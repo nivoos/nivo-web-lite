@@ -63,7 +63,7 @@ const queryOf = (input: In): string => {
  */
 export class Answer implements Node<typeof AnswerInput, typeof AnswerOutput, typeof AnswerSettings> {
     readonly key = keyOf("webdesk-answer")
-    readonly version = 3
+    readonly version = 4
     readonly title = { vi: "Trả lời từ thông tin công khai", en: "Answer from public information" }
     readonly input = AnswerInput
     readonly output = AnswerOutput

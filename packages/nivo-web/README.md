@@ -42,5 +42,5 @@ cd D:/Repositories/nivo-web-lite
 node packages/nivo-web/dev/deploy.mjs --web https://nivo-app-dev.starci.org    # [--api ...] [--nivoos-lite <path>]
 ```
 
-It signs the seeded owner in, deploys the platform's provider catalogue (master key), then this package with the owner key, and prints no secret. The Zalo OA values come from the nivoos-lite dev
+It signs the seeded owner in, deploys the platform's provider catalogue (master key), then this package with the owner key, and prints no secret. The CLI and the provider catalogue are the installed `@starci/nivoos-*` packages (no link to a nivoos-lite checkout; only the dev secret custody is read from it, `--nivoos-lite <path>`). When the instance already holds a newer catalogue than the published one, the catalogue step is skipped with a notice. A changed cell, graph or agent needs its version raised: the instance refuses changed content under a version it holds (`CELLS_VERSION_IMMUTABLE`). The Zalo OA values come from the nivoos-lite dev
 custody member `nivo-web` (generated; the real OA is connected in the console). Safe to run twice.
