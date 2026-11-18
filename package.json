@@ -12,7 +12,7 @@
     "@nestjs/cqrs": "11.0.3",
     "@nestjs/platform-express": "11.2.7",
     "@nestjs/swagger": "11.4.8",
-    "@nestjs/typeorm": "11.0.3",
+    "@nestjs/typeorm": "12.0.3",
     "@starci/auth": "0.7.2",
     "@starci/common": "1.0.1",
     "@starci/mail": "0.3.0",
