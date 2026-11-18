@@ -2187,11 +2187,39 @@
           "messageId": {
             "type": "string",
             "maxLength": 200
+          },
+          "holding": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
           }
         },
         "required": [
           "asked",
-          "messageId"
+          "messageId",
+          "holding"
+        ],
+        "additionalProperties": false
+      },
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "answerMinutes": {
+            "default": 30,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10080
+          },
+          "holdingReply": {
+            "default": "Dạ em đã chuyển câu hỏi cho nhân viên, anh/chị chờ chút ạ",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "answerMinutes",
+          "holdingReply"
         ],
         "additionalProperties": false
       },
@@ -2206,8 +2234,8 @@
         "mutation": "room.message.post"
       },
       "source": {
-        "text": "/** The most characters of the typed reply (the Zalo line the customer gets is shorter than this). */\nconst REPLY_MAX = 2000;\n\n/**\n * `nivo-web.ask-person` (Hỏi người phụ trách): one act, `room.message.post` of a card with the question the public information could not answer and a box to type the reply. The run waits\n * for the typed answer (`engine.room.answered`); the send to the customer stays the approved, ask-locked step.\n */\nclass AskPerson {\n    run(input, reach) {\n        const { result } = reach.call(\"room.message.post\", {\n            text: `Cần người trả lời khách: ${input.question}`,\n            input: { max: REPLY_MAX, placeholder: \"Nhập câu trả lời gửi khách\" },\n        });\n        return { asked: true, messageId: result.messageId };\n    }\n}\n\nAskPerson;\n",
-        "sha256": "3142690f364cd50561e6d60decd577cd489982451ac7a87bc3deed59a5c6630e",
+        "text": "/** The most characters of the typed reply (the Zalo line the customer gets is shorter than this). */\nconst REPLY_MAX = 2000;\n\n/**\n * `nivo-web.ask-person` (Hỏi người phụ trách): one act, `room.message.post` of a card with the question the public information could not answer and a box to type the reply. The run waits\n * for the typed answer (`engine.room.answered`); the send to the customer stays the approved, ask-locked step.\n */\nclass AskPerson {\n    run(input, reach) {\n        const { result } = reach.call(\"room.message.post\", {\n            text: `Cần người trả lời khách: ${input.question}`,\n            input: { max: REPLY_MAX, placeholder: \"Nhập câu trả lời gửi khách\" },\n        });\n        return { asked: true, messageId: result.messageId, holding: reach.settings.holdingReply };\n    }\n}\n\nAskPerson;\n",
+        "sha256": "d117bccd4f6ad1c7e2ba2d45f9fd3f3ca100a381f6fcc3e813eff5b8b673b11f",
         "origin": "nivo-web:agents/webdesk/front/ask-person.cell.ts"
       }
     },
@@ -3403,11 +3431,17 @@
                 "messageId": {
                   "type": "string",
                   "maxLength": 200
+                },
+                "holding": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 300
                 }
               },
               "required": [
                 "asked",
-                "messageId"
+                "messageId",
+                "holding"
               ],
               "additionalProperties": false
             },
@@ -3711,6 +3745,48 @@
                   "source": "(s, answers) => {\n    for (const answer of answers) {\n        if (answer.text !== undefined && answer.text.trim() !== \"\")\n            s.answer = { answered: true, reply: answer.text.trim(), question: \"\" };\n    }\n}"
                 }
               ],
+              "timeoutFrom": {
+                "cell": {
+                  "kind": "node",
+                  "key": "nivo-web.ask-person",
+                  "version": 1
+                },
+                "key": "answerMinutes",
+                "unit": "minutes"
+              },
+              "next": "send-answer",
+              "onTimeout": "holding-reply"
+            }
+          },
+          "holding-reply": {
+            "kind": "node",
+            "cell": {
+              "kind": "node",
+              "key": "nivo-web.send-line",
+              "version": 2
+            },
+            "input": {
+              "to": {
+                "$ref": "state.messages.0.userId"
+              },
+              "text": {
+                "$ref": "state.asked.holding"
+              }
+            },
+            "into": [
+              "sent"
+            ],
+            "next": "await-person"
+          },
+          "await-person": {
+            "kind": "core.wait",
+            "config": {
+              "take": [
+                {
+                  "trigger": "engine.room.answered",
+                  "source": "(s, answers) => {\n    for (const answer of answers) {\n        if (answer.text !== undefined && answer.text.trim() !== \"\")\n            s.answer = { answered: true, reply: answer.text.trim(), question: \"\" };\n    }\n}"
+                }
+              ],
               "next": "send-answer"
             }
           },
@@ -3895,6 +3971,15 @@
             "version": 4
           },
           "step": "ask-team",
+          "mode": "auto",
+          "audience": "assignees"
+        },
+        {
+          "graph": {
+            "key": "nivo-web.webdesk-front",
+            "version": 4
+          },
+          "step": "holding-reply",
           "mode": "auto",
           "audience": "assignees"
         },

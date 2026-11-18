@@ -29,6 +29,8 @@ import { SendAnswer } from "./steps/send-answer.step.ts"
 import { SendComplaint } from "./steps/send-complaint.step.ts"
 import { ToPerson } from "./steps/to-person.step.ts"
 import { Understand } from "./steps/understand.step.ts"
+import { AwaitPerson } from "./steps/await-person.step.ts"
+import { HoldingReply } from "./steps/holding-reply.step.ts"
 import { WaitPerson } from "./steps/wait-person.step.ts"
 
 /** The one state object of a run: the customer's messages that opened it (appended), the decision, and what each route did. */
@@ -78,6 +80,8 @@ export class Front implements Workflow<typeof State> {
         CanAnswer,
         AskTeam,
         WaitPerson,
+        HoldingReply,
+        AwaitPerson,
         SendAnswer,
         AnswerSent,
         Answered,
