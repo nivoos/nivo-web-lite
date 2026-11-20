@@ -8,7 +8,7 @@ services:
   db:
     build:
       context: ../../../images/db
-    image: nivo-web-lite-db:local
+    image: nivo-web-db:local
     environment:
       POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
     ports:
@@ -43,7 +43,7 @@ services:
     build:
       context: ../../../..
       dockerfile: .starcistacks/images/storage/Dockerfile
-    image: nivo-web-lite-storage:local
+    image: nivo-web-storage:local
     environment:
       MINIO_ROOT_USER_FILE: /run/secrets/STORAGE_ACCESS_KEY_ID
       MINIO_ROOT_PASSWORD_FILE: /run/secrets/STORAGE_SECRET_ACCESS_KEY

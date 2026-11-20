@@ -5,8 +5,8 @@ state: todo
 rev: 1
 brand:
   identity:
-    name: "nivo-web-lite"
+    name: "nivo-web"
 review:
-  reviewer: the nivo-web-lite owner
+  reviewer: the nivo-web owner
   authority: "The lite scaffold seeds this record so the brand tree exists; the owner settles rev 1 of the brand before the first drawn surface."
   reviewedAt: "2026-10-14T00:00:00Z"

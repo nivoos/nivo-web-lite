@@ -147,7 +147,7 @@ jobs:
           while read -r service app; do
             ref=$(jq -r --arg service "$service" '.[$service] // empty' <<<"$IMAGES")
             if [[ -z "$ref" ]]; then
-              repo="ghcr.io/${owner}/nivo-web-lite-${app}"
+              repo="ghcr.io/${owner}/nivo-web-${app}"
               digest=$(docker buildx imagetools inspect "$repo:sha-$GITHUB_SHA" --format '{{json .Manifest}}' | jq -r .digest)
               ref="${repo}@${digest}"
             fi

@@ -7,7 +7,7 @@ sides: { be: true, fe: false, packages: true }
 # To render README badges, declare ci.github: {repository: owner/repo, defaultBranch: main}.
 # A GitHub package.json repository URL also enables the managed block.
 sources:
-  - repository: nivo-web-lite
+  - repository: nivo-web
 backing:
   db:
     provider: postgres
@@ -71,6 +71,7 @@ environments:
     # `starci app stack up --env dev --execute` reads this block (PROJECT-STACKS-6): host prerequisites, dev custody, setup, the compose services,
     # the environment's own database role, migrations, native api and web processes, readiness, origins.
     local:
+      project: nivo-web-lite-dev
       # The project base port: web = base, api = base+1, an AI gateway base+2, further native processes from base+3; the compose ports below are exempt (R389, PROJECT-STACKS-10).
       basePort: 3700
       ports:
@@ -86,6 +87,7 @@ environments:
         - {name: storage, wait: healthy}
       database:
         service: db
+        role: nivo_web_lite_dev
         port: db
         urlEnv: PRIMARY_DB_URL
         appRole: app_be
@@ -311,8 +313,8 @@ services:
       - id: analysis
         project: "nivo-web-lite"
         key: SONAR_TOKEN
-        custody: { repository: "nivo-web-lite", path: .starcistacks/dev/secrets/sonar.enc.yaml }
-    projects: [{ repository: "nivo-web-lite", key: "nivo-web-lite" }]
+        custody: { repository: "nivo-web", path: .starcistacks/dev/secrets/sonar.enc.yaml }
+    projects: [{ repository: "nivo-web", key: "nivo-web-lite" }]
     ci:
       {
         wiring: required,
@@ -358,6 +360,6 @@ services:
     purpose: Publish this app's deployment images with the workflow GitHub token.
     host: { public: https://ghcr.io }
     auth: github-token
-    projects: [{ repository: "nivo-web-lite", key: "nivo-web-lite" }]
+    projects: [{ repository: "nivo-web", key: "nivo-web-lite" }]
     ci: { wiring: required }
     ownerAction: none

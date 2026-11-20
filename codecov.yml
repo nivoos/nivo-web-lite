@@ -16,7 +16,7 @@ coverage:
           - "be/src/modules/integrations/*/**"
           - "be/src/modules/platform/*/**"
           - "be/src/modules/projections/*/**"
-          - "packages/nivo-web-lite-shared/src/**"
+          - "packages/nivo-web-shared/src/**"
     patch:
       default:
         target: 100%
@@ -26,7 +26,7 @@ coverage:
           - "be/src/modules/integrations/*/**"
           - "be/src/modules/platform/*/**"
           - "be/src/modules/projections/*/**"
-          - "packages/nivo-web-lite-shared/src/**"
+          - "packages/nivo-web-shared/src/**"
 component_management:
   default_rules:
     statuses:
@@ -53,10 +53,10 @@ component_management:
         - "be/src/modules/integrations/seed/**"
         - "be/src/modules/platform/*/**"
         - "be/src/modules/projections/*/**"
-    - component_id: package-nivo-web-lite-shared
-      name: package-nivo-web-lite-shared
+    - component_id: package-nivo-web-shared
+      name: package-nivo-web-shared
       paths:
-        - "packages/nivo-web-lite-shared/src/**"
+        - "packages/nivo-web-shared/src/**"
 ignore:
   - "be/**/*.args.ts"
   - "be/**/*.builder.ts"
@@ -157,6 +157,6 @@ ignore:
   - "be/tsconfig.build.json"
   - "be/tsconfig.json"
   - "fe/**"
-  - "packages/nivo-web-lite-shared/src/**/index.ts"
-  - "packages/nivo-web-lite-shared/src/**/*.types.ts"
-  - "packages/nivo-web-lite-shared/src/**/*-types.ts"
+  - "packages/nivo-web-shared/src/**/index.ts"
+  - "packages/nivo-web-shared/src/**/*.types.ts"
+  - "packages/nivo-web-shared/src/**/*-types.ts"

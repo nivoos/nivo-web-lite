@@ -1,4 +1,4 @@
-# nivo-web-lite gallery
+# nivo-web gallery
 
 One folder per screen: its shots at each width and the explanation of every region (PROJECT-GALLERY-1, PROJECT-GALLERY-2). The gallery app is a thin config over @starci/gallery: vite.config.js is the whole of it.
 

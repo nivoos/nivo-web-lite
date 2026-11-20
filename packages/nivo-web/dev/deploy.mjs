@@ -1,21 +1,21 @@
 // The NIVO Web dev world, deployed as an author deploys: through the real doors, with the real secrets of the harness secret store. NIVO Web lives in THIS repository
-// (nivo-web-lite); it deploys with its own installed packages (@starci/nivoos-cli, @starci/nivoos-sdk and @starci/nivoos-provider-templates from npm); only the dev stack and its secret custody are the
-// nivoos-lite checkout's. Run it once the nivoos-lite dev stack is up (`starci app stack up --env dev --execute` in nivoos-lite):
+// (nivo-web); it deploys with its own installed packages (@starci/nivoos-cli, @starci/nivoos-sdk and @starci/nivoos-provider-templates from npm); only the dev stack and its secret custody are the
+// nivoos checkout's. Run it once the nivoos dev stack is up (`starci app stack up --env dev --execute` in nivoos):
 //
-//   node packages/nivo-web/dev/deploy.mjs [--env dev|staging] [--api http://localhost:3501] [--web http://localhost:3500] [--nivoos-lite D:/Repositories/nivoos-lite] [--provider-templates <dir>]
+//   node packages/nivo-web/dev/deploy.mjs [--env dev|staging] [--api http://localhost:3501] [--web http://localhost:3500] [--nivoos-lite D:/Repositories/nivoos] [--provider-templates <dir>]
 //
-// `--env staging` targets the nivoos-lite staging instance (api https://api.nivo.staging.starci.org, web https://nivo.staging.starci.org; override with --api and --web). The owner is the staging
+// `--env staging` targets the nivoos staging instance (api https://api.nivo.staging.starci.org, web https://nivo.staging.starci.org; override with --api and --web). The owner is the staging
 // owner the staging seed level makes (sealed member `staging/seeds-owner`: EMAIL and PASSWORD), the master key is `staging/master/NIVOOS_MASTER_API_KEY`, and the Zalo OA and CRM sandbox accounts
 // carry unissued placeholders (staging holds no real OA and no CRM; the owner connects them in the console). The nivoos CLI runs with `--env dev`: its only other value, `prod`, is production,
 // and staging is not.
 //
 // What it does:
 //   1. signs the seeded owner in (the email of the seat and `seed/SEED_MEMBER_PASSWORD`) and issues the owner an API key in the home workspace (POST /api-keys);
-//   2. deploys the platform's provider catalogue with the instance master key (`master/NIVOOS_MASTER_API_KEY`; unchanged when already deployed) from the nivoos-lite checkout, then the nivo-web
+//   2. deploys the platform's provider catalogue with the instance master key (`master/NIVOOS_MASTER_API_KEY`; unchanged when already deployed) from the nivoos checkout, then the nivo-web
 //      package (from this repository) with the owner key, through `nivoos package deploy`: the package's Workspace class makes "NIVO Web" under its derived id (the owner owns it), with the
 //      Support agent, the brain, the Zalo OA account `zalo-main` and the sandbox CRM account `crm-sandbox` (provider `nivoweb-crm`, carried by the package). `zalo-main` takes the dev custody
-//      values `nivo-web/ZALO_MAIN_OA_SECRET_KEY` and `nivo-web/ZALO_MAIN_ACCESS_TOKEN` of the nivoos-lite dev custody (generated dev values: the real OA is connected by the owner in the
-//      console). `crm-sandbox` points at `CRM_SANDBOX_URL` (default http://127.0.0.1:3701, this repository's CRM api) with the service key `nivo-web/CRM_SANDBOX_SERVICE_KEY` of the nivoos-lite dev custody (sealed from the issuance output with `starci app secret`, never printed)
+//      values `nivo-web/ZALO_MAIN_OA_SECRET_KEY` and `nivo-web/ZALO_MAIN_ACCESS_TOKEN` of the nivoos dev custody (generated dev values: the real OA is connected by the owner in the
+//      console). `crm-sandbox` points at `CRM_SANDBOX_URL` (default http://127.0.0.1:3701, this repository's CRM api) with the service key `nivo-web/CRM_SANDBOX_SERVICE_KEY` of the nivoos dev custody (sealed from the issuance output with `starci app secret`, never printed)
 //      (`cli credential issue --workspace <uuid> --label nivo-sandbox`); without it the account is made with an unissued placeholder and the CRM refuses its calls until a deploy carries the key.
 // It posts no chat. Every secret is read through `starci app secret get --to-file` and passed on; no value is printed. Safe to run twice.
 import { spawnSync } from "node:child_process"
@@ -24,25 +24,25 @@ import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-/** This repository (nivo-web-lite). */
+/** This repository (nivo-web). */
 const ROOT = resolve(HERE, "../../..")
 const argValue = (name, fallback) => {
     const at = process.argv.indexOf(name)
     return at >= 0 ? process.argv[at + 1] : fallback
 }
 /** The platform checkout, used ONLY for its dev secret custody (the harness secret store of the dev stack); no package, CLI or SDK is read from it. */
-const nivoosLiteCandidates = [process.env.NIVOOS_LITE_ROOT, resolve(ROOT, "../nivoos-lite"), "D:/Repositories/nivoos-lite"].filter((each) => each !== undefined)
+const nivoosLiteCandidates = [process.env.NIVOOS_LITE_ROOT, resolve(ROOT, "../nivoos"), "D:/Repositories/nivoos"].filter((each) => each !== undefined)
 const NIVOOS_LITE = resolve(
     argValue("--nivoos-lite", nivoosLiteCandidates.find((each) => existsSync(resolve(each, "node_modules/starci-harness/dist/main.js"))) ?? nivoosLiteCandidates[0] ?? ""),
 )
-/** The harness CLI that custody is read through: the one the nivoos-lite checkout installs (it matches that checkout's pin), never a global one. STARCI_CLI overrides it. */
+/** The harness CLI that custody is read through: the one the nivoos checkout installs (it matches that checkout's pin), never a global one. STARCI_CLI overrides it. */
 const STARCI = process.env.STARCI_CLI ?? resolve(NIVOOS_LITE, "node_modules/starci-harness/dist/main.js")
 if (!existsSync(STARCI)) {
-    process.stderr.write(`the harness CLI ${STARCI} does not exist: pass --nivoos-lite <a nivoos-lite checkout with npm ci run> or set STARCI_CLI
+    process.stderr.write(`the harness CLI ${STARCI} does not exist: pass --nivoos-lite <a nivoos checkout with npm ci run> or set STARCI_CLI
 `)
     process.exit(1)
 }
-/** The world this run deploys into: `dev` (the local dev stack) or `staging` (the nivoos-lite staging instance); it picks the custody environment, the owner and the URLs. */
+/** The world this run deploys into: `dev` (the local dev stack) or `staging` (the nivoos staging instance); it picks the custody environment, the owner and the URLs. */
 const TARGET = argValue("--env", process.env.DEPLOY_ENV ?? "dev")
 if (TARGET !== "dev" && TARGET !== "staging") {
     process.stderr.write(`--env ${TARGET}: use dev or staging\n`)
@@ -79,7 +79,7 @@ const custody = (member, key) => {
     if (value === null)
         fail(
             STAGING
-                ? `staging custody ${member}/${key} is not readable: the member is sealed in the nivoos-lite checkout the staging seed level landed in (pass --nivoos-lite)`
+                ? `staging custody ${member}/${key} is not readable: the member is sealed in the nivoos checkout the staging seed level landed in (pass --nivoos-lite)`
                 : `dev custody ${member}/${key} is not readable: the owner arms \`starci app secret init --env dev --execute\` (it makes every key the stack declares) first`,
         )
     return value

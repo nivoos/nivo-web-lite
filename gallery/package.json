@@ -1,9 +1,9 @@
 {
-  "name": "nivo-web-lite-gallery",
+  "name": "nivo-web-gallery",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Screenshot gallery of every page of nivo-web-lite, a thin config over @starci/gallery.",
+  "description": "Screenshot gallery of every page of nivo-web, a thin config over @starci/gallery.",
   "scripts": {
     "dev": "vite --port 3750 --strictPort",
     "build": "vite build"

@@ -1,6 +1,6 @@
 # Conventions
 
-The naming and shape rules every table, column, migration, API field, error class and stored path of nivo-web-lite follows. Owner rule: one
+The naming and shape rules every table, column, migration, API field, error class and stored path of nivo-web follows. Owner rule: one
 way to write each thing; a name says exactly what it points at. When code and this page disagree, the code is wrong.
 
 ## Database

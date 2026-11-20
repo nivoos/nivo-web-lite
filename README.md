@@ -1,4 +1,4 @@
-# nivo-web-lite
+# nivo-web
 
 One StarCi lite app of the sides be, packages.
 
@@ -13,7 +13,7 @@ TypeScript everywhere: NestJS in `be/` serving REST with an OpenAPI 3 document (
 ## Repository layout
 
 - `be/`: the Nest back end, its api app in `be/apps/api`, serving REST controllers described by the committed OpenAPI document `be/contracts/api/openapi.json` (`npm run contract:emit` writes it).
-- `packages/`: the root workspace packages, `packages/nivo-web-lite-shared` first, built with `npm run build:modules`.
+- `packages/`: the root workspace packages, `packages/nivo-web-shared` first, built with `npm run build:modules`.
 - `packages/nivo-web/`: the NIVO Web workspace of the nivoos platform (agents, brain, the `nivoweb-crm` provider reaching this CRM service, the dev deploy). It is a root workspace and installs the published `@starci/nivoos-*` packages from npm (see its README).
 - `db/`: the SQL migrations, the schema authority of the database.
 

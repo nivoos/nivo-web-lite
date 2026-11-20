@@ -2,7 +2,7 @@
   "hfs": 3,
   "kind": "app",
   "edition": "lite",
-  "project": "nivo-web-lite",
+  "project": "nivo-web",
   "sides": {
     "be": {
       "apps": [
