@@ -1,4 +1,4 @@
-{"data":{},"findings":[],"hash":"ab489129705c315aaac5aec52750ba578fe56a86cded4e5911a636accb1974ce","path":".starcistacks/production/README.md","step":"file-rules"}
+{"data":{},"findings":[],"hash":"51d126dbd1bcf96d15c48833f570b116dbc7a78015415a511a0a06b815f6c434","path":".starcistacks/production/README.md","step":"file-rules"}
 {"data":{},"findings":[],"hash":"3c199fcf3d6f3797a35ed8c68485eb9d89bc9864413b99cf4c8b9af498e188b4","path":".starcistacks/production/environment.json","step":"file-rules"}
 {"data":{},"findings":[],"hash":"3cff90b38f468c2e877865f17a799a09e75a00b956d180a6bad78c601a73067c","path":".starcistacks/production/infra/swarm/Caddyfile","step":"file-rules"}
 {"data":{},"findings":[],"hash":"699665e3461389c7f98bccc349382254e11e093ee36ecdfbb54e94b69e596776","path":".starcistacks/production/infra/swarm/owner-actions.md","step":"file-rules"}
@@ -6,7 +6,7 @@
 {"data":{},"findings":[],"hash":"c6cd4baa46b2d1e747ca5ac73262454844e686d609ae6f8fafeb97f552838ce6","path":".starcistacks/production/infra/swarm/releases/current.yaml","step":"file-rules"}
 {"data":{},"findings":[],"hash":"88f60686c565ec48196039574e60de95fe15630d07f44e527a1f36d54ebb01ca","path":".starcistacks/production/infra/swarm/releases/images.lock.yaml","step":"file-rules"}
 {"data":{},"findings":[],"hash":"82544386730812f191e1689b2b48038afb8e71c9c8058b91946fc1ed610dff1a","path":".starcistacks/production/infra/swarm/releases/previous.yaml","step":"file-rules"}
-{"data":{},"findings":[],"hash":"73efbf50609a8dd3e66a7376be9c8485eadf7165a21cf918fdfaf9dd2529c3ec","path":".starcistacks/production/infra/swarm/stack.yaml","step":"file-rules"}
+{"data":{},"findings":[],"hash":"48598c1ad8cdbc09bdacb2703e694246844f9baabe2b95d720092a20767f0346","path":".starcistacks/production/infra/swarm/stack.yaml","step":"file-rules"}
 {"data":{},"findings":[],"hash":"1fbf8e3f3362dc389b3bfbbee09c791409d0ace0669c340ca493259c7a61041c","path":".starcistacks/production/runtime/env/KEYS.md","step":"file-rules"}
 {"data":{},"findings":[],"hash":"75a15c78e46e790145295579f21e850661c4f9fcb0f345a30316287a2e2a6ec8","path":".starcistacks/production/secrets/auth-jwt-private-key.enc","step":"file-rules"}
 {"data":{},"findings":[],"hash":"a5ffed6ce68a90c04cd20e7fd4c1285257c39d6047173f0132d0516f9f659950","path":".starcistacks/production/secrets/db-password.enc","step":"file-rules"}

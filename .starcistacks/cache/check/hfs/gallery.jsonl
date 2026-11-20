@@ -1,4 +1,4 @@
-{"data":{},"findings":[],"hash":"e5b715dbfd2decb72099741db021ce5f86e6f70d939e88eb336abeed9c6c05fb","path":"gallery/README.md","step":"file-rules"}
-{"data":{},"findings":[],"hash":"0f4b8c66728c28cde4d82c8b35cd36b5c2c50cac54729fdae625d20e5c33f654","path":"gallery/index.html","step":"file-rules"}
-{"data":{},"findings":[],"hash":"672aae828a6a06e4787739c0f85ff71001f932047d533bb481fcf77e848bf12d","path":"gallery/package.json","step":"file-rules"}
-{"data":{},"findings":[],"hash":"ef18244ec4227ceea127ccd6b565743f02759efa9a9c26129f7dd61f961ed160","path":"gallery/vite.config.js","step":"file-rules"}
+{"data":{},"findings":[],"hash":"8f92bb773338c2c30b515c936baca0f2ca9ad944f7df1e26edc8fe44f0ef1712","path":"gallery/README.md","step":"file-rules"}
+{"data":{},"findings":[],"hash":"702c73ba8cef42c267bac3263e5dca7e41208e0a03693af1daee68c717ab257f","path":"gallery/index.html","step":"file-rules"}
+{"data":{},"findings":[],"hash":"4127dbebe69364765523812909b44a477cf3f720bc6ad88532afd32c647ae760","path":"gallery/package.json","step":"file-rules"}
+{"data":{},"findings":[],"hash":"ecfc15f78c9801f355908a7c3169a2a85ecb99972704d88c993b84dcafb40667","path":"gallery/vite.config.js","step":"file-rules"}

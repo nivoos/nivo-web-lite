@@ -1,0 +1,6 @@
+{"data":{},"findings":[],"hash":"4030c89894655022f5985f101c66f29d4a9e9b9b0ca531de275de07871348764","path":"packages/nivo-web-shared/package.json","step":"file-rules"}
+{"data":{},"findings":[],"hash":"a5d40b197360b607fbd2ba601f23cf2c1b5bea89cc9c9169abd6f2295e7923d5","path":"packages/nivo-web-shared/src/index.ts","step":"file-rules"}
+{"data":{},"findings":[],"hash":"c3ca3c01ad13ee182727874ae00bb89c0106551e47d242848f0601025fc4dd70","path":"packages/nivo-web-shared/src/project-name.spec.ts","step":"file-rules"}
+{"data":{},"findings":[],"hash":"b61664983c4458994f48a588492285ca11195a51a5b7622e0e288ce68a03fb13","path":"packages/nivo-web-shared/src/project-name.ts","step":"file-rules"}
+{"data":{},"findings":[],"hash":"63dc234fabde9f5e24ad1dfc1fe7c60dcc0cd9486f8e9df90f335d9718436d0d","path":"packages/nivo-web-shared/tsconfig.build.json","step":"file-rules"}
+{"data":{},"findings":[],"hash":"1def871a4f5623d4ea5219430c9f7378fb3ce30ff0352aea2a36501363c4de02","path":"packages/nivo-web-shared/tsconfig.json","step":"file-rules"}
